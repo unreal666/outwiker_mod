@@ -18,10 +18,11 @@ class TableToken (object):
     """
     def __init__ (self, parser):
         self.parser = parser
+        self.tableEnd = "\n"
 
 
     def getToken (self):
-        tableCell = Regex (r"(?P<text>(.|(\\\n))*?)(\\\n\s*)?\|\|", re.UNICODE)
+        tableCell = Regex (r"(?P<text>(.|(\\\n))*?)(\\\n\s*)*\|\|", re.UNICODE)
         tableCell.setParseAction(self.__convertTableCell)
 
         tableRow = LineStart() + "||" + OneOrMore (tableCell) + Optional (LineEnd())
@@ -59,8 +60,10 @@ class TableToken (object):
     def __convertTableRow (self, s, l, t):
         if t[-1] == "\n":
             lastindex = len (t) - 1
+            self.tableEnd = "\n"
         else:
             lastindex = len (t)
+            self.tableEnd = ""
 
         result = u"<TR>"
         for element in t[1: lastindex]:
@@ -76,6 +79,6 @@ class TableToken (object):
         for element in t[2:]:
             result += element
 
-        result += "</TABLE>"
+        result += "</TABLE>" + self.tableEnd
 
         return result
