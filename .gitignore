@@ -56,3 +56,4 @@ htmlcov
 src/tests.log
 src/plugins/*
 .ropeproject
+src/.idea
