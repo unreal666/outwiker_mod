@@ -129,7 +129,7 @@ class Parser (object):
         # Нотация для ссылок
         self.linkMarkup = (self.attachImages |
                 self.urlImage |
-                self.text | 
+                self.text |
                 self.adhoctokens |
                 self.subscript |
                 self.superscript |
@@ -172,7 +172,31 @@ class Parser (object):
                 self.tex |
                 self.command
                 )
-
+        # Нотация для форматированного текста
+        self.textLevelItemMarkup = (self.attaches |
+                self.urlImage |
+                self.url |
+                self.text |
+                self.lineBreak |
+                self.lineJoin |
+                self.link |
+                self.adhoctokens |
+                self.subscript |
+                self.superscript |
+                self.boldItalicized |
+                self.bolded |
+                self.italicized |
+                self.code |
+                self.small |
+                self.big |
+                self.noformat |
+                self.thumb |
+                self.underlined |
+                self.strike |
+                self.horline |
+                self.tex |
+                self.command
+                )
 
     @property
     def head (self):
@@ -223,6 +247,13 @@ class Parser (object):
     def parseHeadingMarkup (self, text):
         try:
             return self.headingMarkup.transformString (text)
+        except Exception, e:
+            return self.error_template.format (error = traceback.format_exc())
+
+
+    def parseTextLevelItemMarkup (self, text):
+        try:
+            return self.textLevelItemMarkup.transformString (text)
         except Exception, e:
             return self.error_template.format (error = traceback.format_exc())
 
