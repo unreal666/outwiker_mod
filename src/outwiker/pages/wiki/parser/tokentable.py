@@ -18,7 +18,6 @@ class TableToken (object):
     """
     def __init__ (self, parser):
         self.parser = parser
-        self.tableEnd = "\n"
 
 
     def getToken (self):
@@ -60,10 +59,10 @@ class TableToken (object):
     def __convertTableRow (self, s, l, t):
         if t[-1] == "\n":
             lastindex = len (t) - 1
-            self.tableEnd = "\n"
+            self.unitEnd = "\n"
         else:
             lastindex = len (t)
-            self.tableEnd = ""
+            self.unitEnd = ""
 
         result = u"<TR>"
         for element in t[1: lastindex]:
@@ -79,6 +78,6 @@ class TableToken (object):
         for element in t[2:]:
             result += element
 
-        result += "</TABLE>" + self.tableEnd
+        result += "</TABLE>" + self.unitEnd
 
         return result

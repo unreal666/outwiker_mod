@@ -126,7 +126,7 @@ class ListToken (object):
 
         regex += r"]+) *(?P<item>(\\\n|.)*?)$\n{0,2}"
 
-        item =  Regex (regex, re.MULTILINE).setParseAction (noConvert).leaveWhitespace()
+        item = Regex (regex, re.MULTILINE).setParseAction (noConvert).leaveWhitespace()
 
         fullList = OneOrMore (item).setParseAction (self.__convertList)("list")
 
@@ -137,7 +137,14 @@ class ListToken (object):
         """
         Преобразовать список элементов списка в HTML-список (возможно, вложенный)
         """
-        return self.__generateListForItems (tokens)
+        if tokens[-1][-2:] == "\n\n":
+            self.unitEnd = "\n\n"
+        elif tokens[-1][-1] == "\n":
+            self.unitEnd = "\n"
+        else:
+            self.unitEnd = ""
+
+        return self.__generateListForItems (tokens) + self.unitEnd
 
 
     def __getListLevel (self, item, params):
