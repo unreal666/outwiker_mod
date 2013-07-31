@@ -9,7 +9,8 @@ from outwiker.core.version import Version, StatusSet
 from outwiker.core.system import getOS
 
 from .i18n import set_
-from .versionextractor import VersionExtractor
+from .versionextractor import extractVersion
+from .versionlist import VersionList
 from .controller import Controller
 
 
@@ -44,7 +45,7 @@ else:
         
         @property
         def description (self):
-            return _(u"Plugin description")
+            return _(u'''Check for update OutWiker and plug-ins for it. Append menu item "Help -> Check for Updates..."''')
 
 
         @property
@@ -54,7 +55,7 @@ else:
 
         @property
         def url (self):
-            return _(u"http://jenyay.net")
+            return _(u"http://jenyay.net/Outwiker/UpdateNotifierEn")
         
         
         def initialize(self):
@@ -83,5 +84,10 @@ else:
 
 
         @property
-        def VersionExtractor (self):
-            return VersionExtractor
+        def extractVersion (self):
+            return extractVersion
+
+
+        @property
+        def VersionList (self):
+            return VersionList
