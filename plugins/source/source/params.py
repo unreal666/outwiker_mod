@@ -29,11 +29,15 @@ TAB_WIDTH_DEFAULT = 4
 # Имя параметра для задания стиля оформления
 STYLE_PARAM_NAME = u"style"
 
+# Имя параметра, указывающий, что надо использовать фон страницы в блоке кода
+PARENT_BACKGROUND_PARAM_NAME = "parentbg"
+
 # Имя стиля по умолчанию
 STYLE_DEFAULT = u"default"
 
 # Стиль для общего div
-HIGHLIGHT_STYLE = u'{border-style: solid; border-color: gray; border-width: 1px; padding-left: 10px;}'
+# HIGHLIGHT_STYLE = u'{border-style: solid; border-color: gray; border-width: 1px; padding-left: 10px;}'
+HIGHLIGHT_STYLE = u'{padding-left: 10px; padding-right: 10px;}'
 
 # Список языков программирования по умолчанию
 LANGUAGE_LIST_DEFAULT = [
