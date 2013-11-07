@@ -200,8 +200,7 @@ def getPluginsDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_
     return getSpecialDirList (PLUGINS_DIR, configDirName, configFileName)
 
 
-def getStylesDirList (configDirName=DEFAULT_CONFIG_DIR, 
-        configFileName=DEFAULT_CONFIG_NAME):
+def getStylesDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
     """
     Возвращает список директорий, откуда должны грузиться плагины
     """ 

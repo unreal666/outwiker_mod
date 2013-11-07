@@ -5,7 +5,7 @@ import os.path
 import shutil
 
 from .exceptions import ReadonlyException
-from .system import getTemplatesDir
+from .system import getStylesDirList
 
 
 class Style (object):
@@ -35,9 +35,11 @@ class Style (object):
         """
         Возвращает путь до стиля по умолчанию
         """
-        return os.path.join (getTemplatesDir(), 
-                self._defaultDir, 
-                self._styleFname)
+        stylesDirList = getStylesDirList()
+        if self.check (os.path.join (stylesDirList[-1], self._defaultDir)):
+            return os.path.join (stylesDirList[-1], self._defaultDir, self._styleFname)
+        else:
+            return os.path.join (stylesDirList[0], self._defaultDir, self._styleFname)
 
 
     def setPageStyle (self, page, style):
