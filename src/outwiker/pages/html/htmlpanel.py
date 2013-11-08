@@ -137,7 +137,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_BOLD", 
                 lambda event: self.codeEditor.turnText (u"<b>", u"</b>"), 
                 _(u"Bold") + "\tCtrl+B", 
-                _(u"Bold (<b>…</b>)"), 
+                _(u"Bold (<b>…</b>)") + "  (Ctrl+B)", 
                 os.path.join (self.imagesDir, "text_bold.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -146,7 +146,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ITALIC", 
                 lambda event: self.codeEditor.turnText (u"<i>", u"</i>"), 
                 _(u"Italic") + "\tCtrl+I", 
-                _(u"Italic (<i>…</i>)"), 
+                _(u"Italic (<i>…</i>)") + "  (Ctrl+I)", 
                 os.path.join (self.imagesDir, "text_italic.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -155,7 +155,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_UNDERLINE", 
                 lambda event: self.codeEditor.turnText (u"<u>", u"</u>"), 
                 _(u"Underline") + "\tCtrl+U", 
-                _(u"Underline (<u>…</u>)"), 
+                _(u"Underline (<u>…</u>)") + "  (Ctrl+I)", 
                 os.path.join (self.imagesDir, "text_underline.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -164,7 +164,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_STRIKE", 
                 lambda event: self.codeEditor.turnText (u"<strike>", u"</strike>"), 
                 _(u"Strikethrough") + "\tCtrl+K", 
-                _(u"Strikethrough (<strike>…</strike>)"), 
+                _(u"Strikethrough (<strike>…</strike>)") + "  (Ctrl+K)", 
                 os.path.join (self.imagesDir, "text_strikethrough.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -173,7 +173,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_SUBSCRIPT", 
                 lambda event: self.codeEditor.turnText (u"<sub>", u"</sub>"), 
                 _(u"Subscript") + "\tCtrl+=", 
-                _(u"Subscript (<sub>…</sub>)"), 
+                _(u"Subscript (<sub>…</sub>)") + "  (Ctrl+=)", 
                 os.path.join (self.imagesDir, "text_subscript.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -182,7 +182,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_SUPERSCRIPT", 
                 lambda event: self.codeEditor.turnText (u"<sup>", u"</sup>"), 
                 _(u"Superscript") + "\tCtrl++", 
-                _(u"Superscript (<sup>…</sup>)"), 
+                _(u"Superscript (<sup>…</sup>)") + "  (Ctrl++)", 
                 os.path.join (self.imagesDir, "text_superscript.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -193,7 +193,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_LEFT", 
                 lambda event: self.codeEditor.turnText (u'<div align="left">', u'</div>'), 
                 _(u"Left align") + "\tCtrl+Alt+L", 
-                _(u"Left align"), 
+                _(u"Left align") + "  (Ctrl+Alt+L)", 
                 os.path.join (self.imagesDir, "text_align_left.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -202,7 +202,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_CENTER", 
                 lambda event: self.codeEditor.turnText (u'<div align="center">', u'</div>'), 
                 _(u"Center align") + "\tCtrl+Alt+C", 
-                _(u"Center align"), 
+                _(u"Center align") + "  (Ctrl+Alt+C)", 
                 os.path.join (self.imagesDir, "text_align_center.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -211,7 +211,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_RIGHT", 
                 lambda event: self.codeEditor.turnText (u'<div align="right">', u'</div>'), 
                 _(u"Right align") + "\tCtrl+Alt+R", 
-                _(u"Right align"), 
+                _(u"Right align") + "  (Ctrl+Alt+R)", 
                 os.path.join (self.imagesDir, "text_align_right.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -220,7 +220,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_JUSTIFY", 
                 lambda event: self.codeEditor.turnText (u'<div align="justify">', u'</div>'), 
                 _(u"Justify align") + "\tCtrl+Alt+J", 
-                _(u"Justify align"), 
+                _(u"Justify align") + "  (Ctrl+Alt+J)", 
                 os.path.join (self.imagesDir, "text_align_justify.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -234,7 +234,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_TABLE", 
                 lambda event: self.codeEditor.turnText (u'<table>', u'</table>'), 
                 _(u"Table") + "\tCtrl+Q", 
-                _(u"Table (<table>…</table>)"), 
+                _(u"Table (<table>…</table>)") + "  (Ctrl+Q)", 
                 os.path.join (self.imagesDir, "table.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -243,7 +243,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_TABLE_TR", 
                 lambda event: self.codeEditor.turnText (u'<tr>',u'</tr>'), 
                 _(u"Table row") + "\tCtrl+W", 
-                _(u"Table row (<tr>…</tr>)"), 
+                _(u"Table row (<tr>…</tr>)") + "  (Ctrl+W)", 
                 os.path.join (self.imagesDir, "table_insert_row.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -253,7 +253,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_TABLE_TD", 
                 lambda event: self.codeEditor.turnText (u'<td>', u'</td>'), 
                 _(u"Table cell") + "\tCtrl+Y", 
-                _(u"Table cell (<td>…</td>)"), 
+                _(u"Table cell (<td>…</td>)") + "  (Ctrl+Y)", 
                 os.path.join (self.imagesDir, "table_insert_cell.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -276,7 +276,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_NUMBER_LIST", 
                 lambda event: self.codeEditor.turnList (u'<ol>\n', u'</ol>', u'<li>', u'</li>'), 
                 _(u"Numbers list") + "\tCtrl+J", 
-                _(u"Numbers list (<ul>…</ul>)"), 
+                _(u"Numbers list (<ul>…</ul>)") + "  (Ctrl+J)", 
                 os.path.join (self.imagesDir, "text_list_numbers.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -290,7 +290,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H1", 
                 lambda event: self.codeEditor.turnText (u"<h1>", u"</h1>"), 
                 _(u"H1") + "\tCtrl+1", 
-                _(u"H1 (<h1>…</h1>)"), 
+                _(u"H1 (<h1>…</h1>)") + "  (Ctrl+1)", 
                 os.path.join (self.imagesDir, "text_heading_1.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -299,7 +299,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H2", 
                 lambda event: self.codeEditor.turnText (u"<h2>", u"</h2>"), 
                 _(u"H2") + "\tCtrl+2", 
-                _(u"H2 (<h2>…</h2>)"), 
+                _(u"H2 (<h2>…</h2>)") + "  (Ctrl+2)", 
                 os.path.join (self.imagesDir, "text_heading_2.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -308,7 +308,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H3", 
                 lambda event: self.codeEditor.turnText (u"<h3>", u"</h3>"), 
                 _(u"H3") + "\tCtrl+3", 
-                _(u"H3 (<h3>…</h3>)"), 
+                _(u"H3 (<h3>…</h3>)") + "  (Ctrl+3)", 
                 os.path.join (self.imagesDir, "text_heading_3.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -317,7 +317,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H4", 
                 lambda event: self.codeEditor.turnText (u"<h4>", u"</h4>"), 
                 _(u"H4") + "\tCtrl+4", 
-                _(u"H4 (<h4>…</h4>)"), 
+                _(u"H4 (<h4>…</h4>)") + "  (Ctrl+4)", 
                 os.path.join (self.imagesDir, "text_heading_4.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -326,7 +326,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H5", 
                 lambda event: self.codeEditor.turnText (u"<h5>", u"</h5>"), 
                 _(u"H5") + "\tCtrl+5", 
-                _(u"H5 (<h5>…</h5>)"), 
+                _(u"H5 (<h5>…</h5>)") + "  (Ctrl+5)", 
                 os.path.join (self.imagesDir, "text_heading_5.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -335,7 +335,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_H6", 
                 lambda event: self.codeEditor.turnText (u"<h6>", u"</h6>"), 
                 _(u"H6") + "\tCtrl+6", 
-                _(u"H6 (<h6>…</h6>)"), 
+                _(u"H6 (<h6>…</h6>)") + "  (Ctrl+6)", 
                 os.path.join (self.imagesDir, "text_heading_6.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -346,7 +346,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_CODE", 
                 lambda event: self.codeEditor.turnText (u"<code>", u"</code>"), 
                 _(u"Code") + "\tCtrl+Alt+D", 
-                _(u"Code (<code>…</code>)"), 
+                _(u"Code (<code>…</code>)") + "  (Ctrl+Alt+D)", 
                 os.path.join (self.imagesDir, "code.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -356,7 +356,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_PREFORMAT", 
                 lambda event: self.codeEditor.turnText (u"<pre>", u"</pre>"), 
                 _(u"Preformat") + "\tCtrl+Alt+F", 
-                _(u"Preformat (<pre>…</pre>)"), 
+                _(u"Preformat (<pre>…</pre>)") + "  (Ctrl+Alt+F)", 
                 None,
                 fullUpdate=False,
                 panelname="html")
@@ -366,7 +366,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_BLOCKQUOTE", 
                 lambda event: self.codeEditor.turnText (u"<blockquote>", u"</blockquote>"), 
                 _(u"Quote") + "\tCtrl+Alt+Q", 
-                _(u"Quote (<blockquote>…</blockquote>)"), 
+                _(u"Quote (<blockquote>…</blockquote>)") + "  (Ctrl+Alt+Q)", 
                 os.path.join (self.imagesDir, "quote.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -380,7 +380,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_IMAGE", 
                 lambda event: self.codeEditor.turnText (u'<img src="', u'"/>'), 
                 _(u'Image') + '\tCtrl+M', 
-                _(u'Image (<img src="…"/>'), 
+                _(u'Image (<img src="…"/>') + "  (Ctrl+M)", 
                 os.path.join (self.imagesDir, "image.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -389,7 +389,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_LINK", 
                 self.__onInsertLink, 
                 _(u"Link") + "\tCtrl+L", 
-                _(u'Link (<a href="…">…</a>)'), 
+                _(u'Link (<a href="…">…</a>)') + "  (Ctrl+L)", 
                 os.path.join (self.imagesDir, "link.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -399,7 +399,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_ANCHOR", 
                 lambda event: self.codeEditor.turnText (u'<a name="', u'"></a>'), 
                 _(u"Anchor") + "\tCtrl+Alt+N", 
-                _(u'Anchor (<a name="…">…</a>)'), 
+                _(u'Anchor (<a name="…">…</a>)') + "  (Ctrl+Alt+N)", 
                 os.path.join (self.imagesDir, "anchor.png"),
                 fullUpdate=False,
                 panelname="html")
@@ -409,7 +409,7 @@ class HtmlPagePanel (BaseHtmlPanel):
                 "ID_HORLINE", 
                 lambda event: self.codeEditor.replaceText (u'<hr>'), 
                 _(u"Horizontal line") + "\tCtrl+H", 
-                _(u"Horizontal line (<hr>)"), 
+                _(u"Horizontal line (<hr>)") + "  (Ctrl+H)", 
                 os.path.join (self.imagesDir, "text_horizontalrule.png"),
                 fullUpdate=False,
                 panelname="html")

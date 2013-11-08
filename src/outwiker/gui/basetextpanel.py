@@ -215,7 +215,7 @@ class BaseTextPanel (BasePagePanel):
                 u"ID_BASE_SEARCH",
                 self.onSearch,
                 _(u"&Search…") + "\tCtrl+F",
-                _(u"Search"),
+                _(u"Search") + "  (Ctrl+F)",
                 os.path.join (self.imagesDir, "local_search.png"),
                 False,
                 fullUpdate=False,

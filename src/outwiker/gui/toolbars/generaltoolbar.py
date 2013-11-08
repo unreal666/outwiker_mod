@@ -20,19 +20,19 @@ class GeneralToolBar (BaseToolBar):
         self.AddTool(MainId.ID_NEW, 
                 _(u"New…"), 
                 wx.Bitmap(os.path.join (self.imagesDir, "new.png"), wx.BITMAP_TYPE_ANY), 
-                _(u"Create new wiki…"),
+                _(u"Create new wiki…") + "  (Ctrl+N)",
                 fullUpdate=False)
 
         self.AddTool(MainId.ID_OPEN, 
                 _(u"Open…"), 
                 wx.Bitmap(os.path.join (self.imagesDir, "open.png"), wx.BITMAP_TYPE_ANY), 
-                _(u"Open wiki…"),
+                _(u"Open wiki…") + "  (Ctrl+O)",
                 fullUpdate=False)
 
         self.AddTool(MainId.ID_RELOAD, 
                 _("Reload"), 
                 wx.Bitmap(os.path.join (self.imagesDir, "reload.png"), wx.BITMAP_TYPE_ANY), 
-                _("Reload wiki"),
+                _("Reload wiki") + "  (Ctrl+R)",
                 fullUpdate=False)
 
         self.AddSeparator()
@@ -40,13 +40,13 @@ class GeneralToolBar (BaseToolBar):
         self.AddTool(MainId.ID_ATTACH, 
                 _(u"Attach files…"), 
                 wx.Bitmap(os.path.join (self.imagesDir, "attach.png"), wx.BITMAP_TYPE_ANY), 
-                _(u"Attach files…"),
+                _(u"Attach files…") + "  (Ctrl+Alt+A)",
                 fullUpdate=False)
 
         self.AddTool(MainId.ID_GLOBAL_SEARCH, 
                 _(u"Global search…"), 
                 wx.Bitmap(os.path.join (self.imagesDir, "global_search.png"), wx.BITMAP_TYPE_ANY), 
-                _(u"Global search…"),
+                _(u"Global search…") + "  (Ctrl+Shift+F)",
                 fullUpdate=False)
 
         self.AddSeparator()

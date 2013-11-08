@@ -353,7 +353,7 @@ class BaseHtmlPanel(BaseTextPanel):
                 "ID_RENDER", 
                 self.__switchView, 
                 _(u"&Code / Preview") + "\tF4", 
-                _(u"Code / Preview"), 
+                _(u"Code / Preview") + "  (F4)", 
                 os.path.join (self.imagesDir, "render.png"),
                 True,
                 False,

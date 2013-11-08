@@ -172,7 +172,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_BOLD", 
                 lambda event: self.codeEditor.turnText (u"'''", u"'''"), 
                 _(u"Bold") + "\tCtrl+B", 
-                _(u"Bold"), 
+                _(u"Bold") + "  (Ctrl+B)", 
                 os.path.join (self.imagesDir, "text_bold.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -181,7 +181,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ITALIC", 
                 lambda event: self.codeEditor.turnText (u"''", u"''"), 
                 _(u"Italic") + "\tCtrl+I", 
-                _(u"Italic"), 
+                _(u"Italic") + "  (Ctrl+I)", 
                 os.path.join (self.imagesDir, "text_italic.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -190,7 +190,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_BOLD_ITALIC", 
                 lambda event: self.codeEditor.turnText (u"''''", u"''''"), 
                 _(u"Bold italic") + "\tCtrl+Shift+I", 
-                _(u"Bold italic"), 
+                _(u"Bold italic") + "  (Ctrl+Shift+I)", 
                 os.path.join (self.imagesDir, "text_bold_italic.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -199,7 +199,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_UNDERLINE", 
                 lambda event: self.codeEditor.turnText (u"{+", u"+}"), 
                 _(u"Underline") + "\tCtrl+U", 
-                _(u"Underline"), 
+                _(u"Underline") + "  (Ctrl+U)", 
                 os.path.join (self.imagesDir, "text_underline.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -208,7 +208,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_STRIKE", 
                 lambda event: self.codeEditor.turnText (u"{-", u"-}"), 
                 _(u"Strikethrough") + "\tCtrl+K", 
-                _(u"Strikethrough"), 
+                _(u"Strikethrough") + "  (Ctrl+K)", 
                 os.path.join (self.imagesDir, "text_strikethrough.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -217,7 +217,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_SUBSCRIPT", 
                 lambda event: self.codeEditor.turnText (u"'_", u"_'"), 
                 _(u"Subscript") + "\tCtrl+=", 
-                _(u"Subscript"), 
+                _(u"Subscript") + "  (Ctrl+=)", 
                 os.path.join (self.imagesDir, "text_subscript.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -227,7 +227,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_SUPERSCRIPT", 
                 lambda event: self.codeEditor.turnText (u"'^", u"^'"), 
                 _(u"Superscript") + "\tCtrl++", 
-                _(u"Superscript"), 
+                _(u"Superscript") + "  (Ctrl++)", 
                 os.path.join (self.imagesDir, "text_superscript.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -237,7 +237,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_BIGFONT", 
                 self.__onBigFont, 
                 _(u"Big") + "\tCtrl+.", 
-                _(u"Big font"), 
+                _(u"Big font") + "  (Ctrl+.)", 
                 os.path.join (self.imagesDir, "text_big.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -247,7 +247,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_SMALLFONT", 
                 self.__onSmallFont, 
                 _(u"Small") + "\tCtrl+,", 
-                _(u"Small font"), 
+                _(u"Small font") + "  (Ctrl+,)", 
                 os.path.join (self.imagesDir, "text_small.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -257,7 +257,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_MONOSPACED", 
                 lambda event: self.codeEditor.turnText (u"@@", u"@@"), 
                 _(u"Monospaced") + "\tCtrl+7", 
-                _(u"Monospaced"), 
+                _(u"Monospaced") + "  (Ctrl+7)", 
                 os.path.join (self.imagesDir, "text_monospace.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -268,7 +268,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_LEFT", 
                 lambda event: self.codeEditor.turnText (u"%left%", u""), 
                 _(u"Left align") + "\tCtrl+Alt+L", 
-                _(u"Left align"), 
+                _(u"Left align") + "  (Ctrl+Alt+L)", 
                 os.path.join (self.imagesDir, "text_align_left.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -277,7 +277,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_CENTER", 
                 lambda event: self.codeEditor.turnText (u"%center%", u""), 
                 _(u"Center align") + "\tCtrl+Alt+C", 
-                _(u"Center align"), 
+                _(u"Center align") + "  (Ctrl+Alt+C)", 
                 os.path.join (self.imagesDir, "text_align_center.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -286,7 +286,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_RIGHT", 
                 lambda event: self.codeEditor.turnText (u"%right%", u""), 
                 _(u"Right align") + "\tCtrl+Alt+R", 
-                _(u"Right align"), 
+                _(u"Right align") + "  (Ctrl+Alt+R)", 
                 os.path.join (self.imagesDir, "text_align_right.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -295,7 +295,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ALIGN_JUSTIFY", 
                 lambda event: self.codeEditor.turnText (u"%justify%", u""), 
                 _(u"Justify align") + "\tCtrl+Alt+J", 
-                _(u"Justify align"), 
+                _(u"Justify align") + "  (Ctrl+Alt+J)", 
                 os.path.join (self.imagesDir, "text_align_justify.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -306,7 +306,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_PREFORMAT", 
                 lambda event: self.codeEditor.turnText (u"[@", u"@]"), 
                 _(u"Preformat [@…@]") + "\tCtrl+Alt+F", 
-                _(u"Preformat [@…@]"),
+                _(u"Preformat [@…@]") + "  (Ctrl+Alt+F)",
                 None,
                 fullUpdate=False)
 
@@ -328,7 +328,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_MARK_LIST", 
                 lambda event: self.codeEditor.turnList (u'* '), 
                 _(u"Bullets list") + "\tCtrl+G", 
-                _(u"Bullets list"), 
+                _(u"Bullets list") + "  (Ctrl+G)", 
                 os.path.join (self.imagesDir, "text_list_bullets.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -337,7 +337,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_NUMBER_LIST", 
                 lambda event: self.codeEditor.turnList (u'# '), 
                 _(u"Numbers list") + "\tCtrl+J", 
-                _(u"Numbers list"), 
+                _(u"Numbers list") + "  (Ctrl+J)", 
                 os.path.join (self.imagesDir, "text_list_numbers.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -351,7 +351,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H1", 
                 lambda event: self.codeEditor.turnText (u"\n!! ", u""), 
                 _(u"H1") + "\tCtrl+1", 
-                _(u"H1"), 
+                _(u"H1") + "  (Ctrl+1)", 
                 os.path.join (self.imagesDir, "text_heading_1.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -360,7 +360,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H2", 
                 lambda event: self.codeEditor.turnText (u"!!! ", u""), 
                 _(u"H2") + "\tCtrl+2", 
-                _(u"H2"), 
+                _(u"H2") + "  (Ctrl+2)", 
                 os.path.join (self.imagesDir, "text_heading_2.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -369,7 +369,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H3", 
                 lambda event: self.codeEditor.turnText (u"!!!! ", u""), 
                 _(u"H3") + "\tCtrl+3", 
-                _(u"H3"), 
+                _(u"H3") + "  (Ctrl+3)", 
                 os.path.join (self.imagesDir, "text_heading_3.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -378,7 +378,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H4", 
                 lambda event: self.codeEditor.turnText (u"!!!!! ", u""), 
                 _(u"H4") + "\tCtrl+4", 
-                _(u"H4"), 
+                _(u"H4") + "  (Ctrl+4)", 
                 os.path.join (self.imagesDir, "text_heading_4.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -387,7 +387,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H5", 
                 lambda event: self.codeEditor.turnText (u"!!!!!! ", u""), 
                 _(u"H5") + "\tCtrl+5", 
-                _(u"H5"), 
+                _(u"H5") + "  (Ctrl+5)", 
                 os.path.join (self.imagesDir, "text_heading_5.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -396,7 +396,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_H6", 
                 lambda event: self.codeEditor.turnText (u"!!!!!!! ", u""), 
                 _(u"H6") + "\tCtrl+6", 
-                _(u"H6"), 
+                _(u"H6") + "  (Ctrl+6)", 
                 os.path.join (self.imagesDir, "text_heading_6.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -410,7 +410,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_THUMB", 
                 self.__onThumb,
                 _(u"Thumbnail") + "\tCtrl+M", 
-                _(u"Thumbnail"), 
+                _(u"Thumbnail") + "  (Ctrl+M)", 
                 os.path.join (self.imagesDir, "images.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -419,7 +419,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_LINK", 
                 self.__onInsertLink, 
                 _(u"Link") + "\tCtrl+L", 
-                _(u'Link'), 
+                _(u'Link') + "  (Ctrl+L)", 
                 os.path.join (self.imagesDir, "link.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -429,7 +429,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_ANCHOR", 
                 lambda event: self.codeEditor.turnText (u'[[#', u']]'), 
                 _(u"Anchor") + "\tCtrl+Alt+N",
-                _(u'Anchor'), 
+                _(u'Anchor') + "  (Ctrl+Alt+N)", 
                 os.path.join (self.imagesDir, "anchor.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -439,7 +439,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_HORLINE", 
                 lambda event: self.codeEditor.replaceText (u'----'), 
                 _(u"Horizontal line") + "\tCtrl+H", 
-                _(u"Horizontal line"), 
+                _(u"Horizontal line") + "  (Ctrl+H)", 
                 os.path.join (self.imagesDir, "text_horizontalrule.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -448,7 +448,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_LINEBREAK", 
                 lambda event: self.codeEditor.replaceText (u'[[<<]]'), 
                 _(u"Line break") + "\tCtrl+Return", 
-                _(u"Line break"), 
+                _(u"Line break") + "  (Ctrl+Return)", 
                 os.path.join (self.imagesDir, "linebreak.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -457,7 +457,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_EQUATION", 
                 lambda event: self.codeEditor.turnText (u'{$', u'$}'), 
                 _(u"Equation") + "\tCtrl+Q", 
-                _(u'Equation'), 
+                _(u'Equation') + "  (Ctrl+Q)", 
                 os.path.join (self.imagesDir, "equation.png"),
                 fullUpdate=False,
                 panelname="wiki")
@@ -494,7 +494,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_HTMLCODE", 
                 self.__openHtmlCode, 
                 _(u"HTML Code") + "\tShift+F4", 
-                _(u"HTML Code"), 
+                _(u"HTML Code") + "  (Shift+F4)", 
                 os.path.join (self.imagesDir, "html.png"),
                 True,
                 fullUpdate=False,
@@ -504,7 +504,7 @@ class WikiPagePanel (BaseHtmlPanel):
                 "ID_UPDATE_HTML", 
                 self.__updateHtml, 
                 _(u"Update HTML Code") + "\tCtrl+F4", 
-                _(u"Update HTML Code"), 
+                _(u"Update HTML Code") + "  (Ctrl+F4)", 
                 None,
                 True,
                 fullUpdate=False,
