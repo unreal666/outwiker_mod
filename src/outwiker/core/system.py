@@ -25,6 +25,8 @@ DEFAULT_CONFIG_NAME = u"outwiker.ini"
 # Имя по умолчанию для папки с настройками в профиле пользователя
 DEFAULT_CONFIG_DIR = u".outwiker"
 
+# Имя маркерного файлы для определения расположения "приоритетной" папки IMAGES_DIR
+IMAGE_MARKER_NAME = u"outwiker.ico"
 
 class Windows (object):
     def __init__ (self):
@@ -184,14 +186,23 @@ def getConfigPath (dirname=DEFAULT_CONFIG_DIR, fname=DEFAULT_CONFIG_NAME):
 
     return path
 
-
 def getImagesDir ():
-    return os.path.join (getCurrentDir(), IMAGES_DIR)
-
+    """
+    Возвращает "приоритетную" директорию, откуда должны грузиться изображения
+    """ 
+    imagesDirList = getImagesDirList()
+    image_marker_file = os.path.join (imagesDirList[-1], IMAGE_MARKER_NAME)
+    return imagesDirList[-1] if (os.path.exists (image_marker_file) and
+            os.path.isfile (image_marker_file)) else imagesDirList[0]
 
 def getTemplatesDir ():
     return os.path.join (getCurrentDir(), STYLES_DIR)
 
+def getImagesDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
+    """
+    Возвращает список директорий, откуда должны грузиться изображения
+    """ 
+    return getSpecialDirList (IMAGES_DIR, configDirName, configFileName)
 
 def getPluginsDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
     """
@@ -202,10 +213,9 @@ def getPluginsDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_
 
 def getStylesDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
     """
-    Возвращает список директорий, откуда должны грузиться плагины
+    Возвращает список директорий, откуда должны грузиться стили
     """ 
     return getSpecialDirList (STYLES_DIR, configDirName, configFileName)
-
 
 def getSpecialDirList (dirname, 
         configDirName=DEFAULT_CONFIG_DIR,
