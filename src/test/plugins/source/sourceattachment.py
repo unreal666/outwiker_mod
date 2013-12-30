@@ -37,14 +37,7 @@ class SourceAttachmentPluginTest (unittest.TestCase):
 
         self.dialog = FakeInsertDialog ()
         self.controller = self.loader[self.__pluginname].insertDialogControllerClass(self.testPage, self.dialog, self.config)
-        
 
-    def __readFile (self, path):
-        with open (path) as fp:
-            result = unicode (fp.read(), "utf8")
-
-        return result
-    
 
     def __createWiki (self):
         # Здесь будет создаваться вики
@@ -162,7 +155,7 @@ class SourceAttachmentPluginTest (unittest.TestCase):
 
         result = self.controller.getCommandStrings()
 
-        self.assertEqual (result, (u'(:source file="Attach:source_cp1251.cs" lang="haskell" encoding="cp1251":)', u'(:sourceend:)'))
+        self.assertEqual (result, (u'(:source file="Attach:source_cp1251.cs" encoding="cp1251" lang="haskell":)', u'(:sourceend:)'))
 
 
     def testAttachment7 (self):

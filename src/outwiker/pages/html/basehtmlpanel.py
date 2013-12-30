@@ -14,6 +14,7 @@ from outwiker.core.config import IntegerOption
 from outwiker.gui.basetextpanel import BaseTextPanel
 from outwiker.gui.htmltexteditor import HtmlTextEditor
 from outwiker.gui.htmlrenderfactory import getHtmlRender
+from outwiker.actions.search import SearchAction, SearchNextAction, SearchPrevAction
 
 
 class BaseHtmlPanel(BaseTextPanel):
@@ -37,13 +38,18 @@ class BaseHtmlPanel(BaseTextPanel):
         self.imagesDir = getImagesDir()
 
         self.notebook = wx.Notebook(self, -1, style=wx.NB_BOTTOM)
-        self.codeEditor = self.GetTextEditor()(self.notebook)
+        self._codeEditor = self.GetTextEditor()(self.notebook)
         self.htmlWindow = getHtmlRender (self.notebook)
 
         self.__do_layout()
 
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onTabChanged, self.notebook)
         self.Bind (wx.EVT_CLOSE, self.onClose)
+
+
+    @property
+    def codeEditor (self):
+        return self._codeEditor
 
 
     @abstractproperty
@@ -62,6 +68,8 @@ class BaseHtmlPanel(BaseTextPanel):
             fullUpdate=True,
             panelname="plugins"):
         """
+        !!! Внимание. Это устаревший способ добавления элементов интерфейса. Сохраняется только для совместимости со старыми версиями плагинов и в будущих версиях программы может быть убран.
+
         Добавить пункт меню и кнопку на панель
         menu -- меню для добавления элемента
         id -- идентификатор меню и кнопки
@@ -81,40 +89,6 @@ class BaseHtmlPanel(BaseTextPanel):
             fullUpdate,
             panelname)
         
-        tool = self._tools[idstring]
-        self.enableTool (tool, self._isEnabledTool (tool))
-
-
-    def addCheckTool (self, 
-            menu, 
-            idstring, 
-            func, 
-            menuText, 
-            buttonText, 
-            image, 
-            alwaysEnabled = False,
-            fullUpdate=True,
-            panelname="plugins"):
-        """
-        Добавить пункт меню с галкой и залипающую кнопку на панель
-        menu -- меню для добавления элемента
-        id -- идентификатор меню и кнопки
-        func -- обработчик
-        menuText -- название пунта меню
-        buttonText -- подсказка для кнопки
-        image -- имя файла с картинкой
-        alwaysEnabled -- Кнопка должна быть всегда активна
-        """
-        super (BaseHtmlPanel, self).addCheckTool (menu, 
-            idstring, 
-            func, 
-            menuText, 
-            buttonText, 
-            image, 
-            alwaysEnabled,
-            fullUpdate,
-            panelname)
-
         tool = self._tools[idstring]
         self.enableTool (tool, self._isEnabledTool (tool))
 
@@ -320,9 +294,12 @@ class BaseHtmlPanel(BaseTextPanel):
         # Отдельно проверим возможность работы поиска по странице
         # Поиск не должен работать только на странице просмотра
         searchEnabled = self.selectedPageIndex != self.RESULT_PAGE_INDEX
-        self.enableTool (self._tools[u"ID_BASE_SEARCH"], searchEnabled)
-        self.enableTool (self._tools[u"ID_BASE_SEARCH_PREV"], searchEnabled)
-        self.enableTool (self._tools[u"ID_BASE_SEARCH_NEXT"], searchEnabled)
+
+        actionController = Application.actionController
+        actionController.enableTools (SearchAction.stringId, searchEnabled)
+        actionController.enableTools (SearchNextAction.stringId, searchEnabled)
+        actionController.enableTools (SearchPrevAction.stringId, searchEnabled)
+
         self.mainWindow.UpdateAuiManager()
         
         self.mainWindow.Thaw()
@@ -348,20 +325,14 @@ class BaseHtmlPanel(BaseTextPanel):
         return None
 
 
-    def _addRenderTools (self):
-        self.addTool (self.toolsMenu, 
-                "ID_RENDER", 
-                self.__switchView, 
-                _(u"&Code / Preview") + "\tF4", 
-                _(u"Code / Preview") + "  (F4)", 
-                os.path.join (self.imagesDir, "render.png"),
-                True,
-                False,
-                panelname=self.mainWindow.GENERAL_TOOLBAR_STR)
-
-
-
     def __switchView (self, event):
+        self.switchCodeResult()
+
+
+    def switchCodeResult (self):
+        """
+        Переключение между кодом и результатом
+        """
         if self._currentpage == None:
             return
 
@@ -370,3 +341,26 @@ class BaseHtmlPanel(BaseTextPanel):
         else:
             self.selectedPageIndex = self.CODE_PAGE_INDEX
 
+
+    def turnText (self, left, right):
+        """
+        Обернуть выделенный текст строками left и right.
+        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        """
+        Application.mainWindow.pagePanel.pageView.codeEditor.turnText (left, right)
+
+
+    def replaceText (self, text):
+        """
+        Заменить выделенный текст строкой text
+        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        """
+        Application.mainWindow.pagePanel.pageView.codeEditor.replaceText (text)
+
+
+    def escapeHtml (self):
+        """
+        Заменить символы на их HTML-представление
+        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        """
+        Application.mainWindow.pagePanel.pageView.codeEditor.escapeHtml ()

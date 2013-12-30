@@ -101,25 +101,6 @@ class InsertDialogController (object):
         return result
 
 
-    def _getStringsForText (self):
-        """
-        Возвращает кортеж строк для случая оформления исходников из текста (не из файла)
-        """
-        langStr = u' lang="{language}"'.format (language=self._dialog.language)
-        tabWidthStr = self._getTabWidthParam()
-        styleStr = self._getStyleParam()
-        parentbg = self._getParentBg()
-
-        startCommand = u'(:source{lang}{tabwidth}{style}{parentbg}:)\n'.format (lang=langStr,
-                tabwidth=tabWidthStr,
-                style=styleStr,
-                parentbg=parentbg)
-
-        endCommand = u'\n(:sourceend:)'
-
-        return (startCommand, endCommand)
-
-
     def _getTabWidthParam (self):
         if self._dialog.tabWidth != 0:
             return u' tabwidth="{0}"'.format(self._dialog.tabWidth)
@@ -134,8 +115,47 @@ class InsertDialogController (object):
         return u''
 
 
+    def _getLineNum (self):
+        if self._dialog.lineNum:
+            return u' linenum'
+
+        return u''
+
+
     def _getStyleParam (self):
         return u'' if self._dialog.style == getDefaultStyle (self._config) else ' style="{style}"'.format (style=self._dialog.style)
+
+
+    def _getCommonParams (self):
+        """
+        Получить список параметров, общий для исходников, вставляемых в виде текста и из файла
+        """
+        commonparams = u'{tabwidth}{style}{parentbg}{linenum}'
+
+        tabWidthStr = self._getTabWidthParam()
+        styleStr = self._getStyleParam()
+        parentbg = self._getParentBg()
+        linenum = self._getLineNum()
+
+        return commonparams.format (tabwidth=tabWidthStr,
+                style=styleStr,
+                parentbg=parentbg,
+                linenum=linenum)
+
+
+    def _getStringsForText (self):
+        """
+        Возвращает кортеж строк для случая оформления исходников из текста (не из файла)
+        """
+        langStr = u' lang="{language}"'.format (language=self._dialog.language)
+        commonparams = self._getCommonParams()
+
+        startCommand = u'(:source{lang}{commonparams}:)\n'.format (lang=langStr,
+                commonparams=commonparams)
+
+        endCommand = u'\n(:sourceend:)'
+
+        return (startCommand, endCommand)
 
 
     def _getStringsForAttachment (self):
@@ -149,17 +169,13 @@ class InsertDialogController (object):
         fnameStr = u' file="Attach:{fname}"'.format (fname=fname)
         encodingStr = u'' if encoding == "utf8" else u' encoding="{encoding}"'.format (encoding=encoding)
         langStr = u'' if language == None else u' lang="{lang}"'.format (lang=language)
-        tabWidthStr = self._getTabWidthParam()
 
-        styleStr = self._getStyleParam()
-        parentbg = self._getParentBg()
+        commonparams = self._getCommonParams()
 
-        startCommand = u'(:source{file}{lang}{encoding}{tabwidth}{style}{parentbg}:)'.format (file=fnameStr,
-                lang=langStr, 
+        startCommand = u'(:source{file}{encoding}{lang}{commonparams}:)'.format (file=fnameStr,
                 encoding=encodingStr,
-                tabwidth=tabWidthStr,
-                style=styleStr,
-                parentbg=parentbg)
+                lang=langStr, 
+                commonparams=commonparams)
 
         endCommand = u'(:sourceend:)'
 
@@ -196,7 +212,9 @@ class InsertDialogController (object):
         self._loadEncodingState()
         self._loadAttachmentState()
         self._loadStyleState()
-        self._loadParentBgState()
+
+        self._dialog.parentBgCheckBox.SetValue (self._config.parentbg.value)
+        self._dialog.lineNumCheckBox.SetValue (self._config.lineNum.value)
 
         self._updateDialogSize()
         self.enableFileGuiElements (False)
@@ -231,10 +249,6 @@ class InsertDialogController (object):
         fillStyleComboBox (self._config, 
                 self._dialog.styleComboBox, 
                 self._config.style.value.strip())
-
-
-    def _loadParentBgState (self):
-        self._dialog.parentBgCheckBox.SetValue (self._config.parentbg.value)
 
 
     def _loadEncodingState (self):
@@ -288,6 +302,7 @@ class InsertDialogController (object):
         self._config.dialogHeight.value = currentHeight
         self._config.style.value = self._dialog.style
         self._config.parentbg.value = self._dialog.parentbg
+        self._config.lineNum.value = self._dialog.lineNum
 
 
     def enableFileGuiElements (self, enabled):

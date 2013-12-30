@@ -9,13 +9,17 @@ import wx
 
 from outwiker.core.commands import MessageBox
 from outwiker.gui.buttonsdialog import ButtonsDialog
+from outwiker.gui.hotkey import HotKey
 from outwiker.core.pluginbase import Plugin
 from outwiker.core.system import getOS
+
+from .debugaction import DebugAction
 
 
 class PluginDebug (Plugin):
     def __init__ (self, application):
         Plugin.__init__ (self, application)
+        self._url = u"http://jenyay.net/Outwiker/DebugPlugin"
 
 
     def __createMenu (self):
@@ -27,6 +31,34 @@ class PluginDebug (Plugin):
 
         self._application.mainWindow.Bind(wx.EVT_MENU, self.__onPluginsList, id=self.ID_PLUGINSLIST)
         self._application.mainWindow.Bind(wx.EVT_MENU, self.__onButtonsDialog, id=self.ID_BUTTONSDIALOG)
+
+
+    def __createTestAction (self):
+        mainWindow = self._application.mainWindow
+
+        if mainWindow != None and mainWindow.PLUGINS_TOOLBAR_STR in mainWindow.toolbars:
+            action = DebugAction(self._application)
+            hotkey = HotKey ("T", ctrl=True, shift=True, alt=True)
+            toolbar = mainWindow.toolbars[mainWindow.PLUGINS_TOOLBAR_STR]
+            image = self.getImagePath ("bug.png")
+
+            controller = self._application.actionController
+
+            controller.register (action, hotkey=hotkey)
+
+            controller.appendMenuCheckItem (DebugAction.stringId, self.menu)
+            controller.appendToolbarCheckButton (DebugAction.stringId, 
+                    toolbar,
+                    image)
+
+
+    def getImagePath (self, imageName):
+        """
+        Получить полный путь до картинки
+        """
+        imagedir = unicode (os.path.join (os.path.dirname (__file__), "images"), getOS().filesEncoding)
+        fname = os.path.join (imagedir, imageName)
+        return fname
 
 
     def __onTreePopupMenu (self, menu, page):
@@ -96,9 +128,19 @@ class PluginDebug (Plugin):
 
     @property
     def version (self):
-        return u"0.3"
+        return u"0.4"
 
 
+    @property
+    def url (self):
+        return self._url
+
+
+    @url.setter
+    def url (self, value):
+        self._url = value
+    
+    
     def initialize(self):
         domain = u"testdebug"
         self.__ID_TREE_POPUP = wx.NewId()
@@ -116,22 +158,31 @@ class PluginDebug (Plugin):
         self.ID_BUTTONSDIALOG = wx.NewId()
 
         self.__menuName = _(u"Debug")
-        self.__createMenu()
 
-        self._application.onTreePopupMenu += self.__onTreePopupMenu
-        self._application.onTrayPopupMenu += self.__onTrayPopupMenu
+        if self._application.mainWindow != None:
+            self.__createMenu()
+            self.__createTestAction()
+
+            self._application.onTreePopupMenu += self.__onTreePopupMenu
+            self._application.onTrayPopupMenu += self.__onTrayPopupMenu
 
 
     def destroy (self):
         """
         Уничтожение (выгрузка) плагина. Здесь плагин должен отписаться от всех событий
         """
-        self._application.mainWindow.Unbind(wx.EVT_MENU, handler=self.__onPluginsList, id=self.ID_PLUGINSLIST)
-        self._application.mainWindow.Unbind(wx.EVT_MENU, handler=self.__onButtonsDialog, id=self.ID_BUTTONSDIALOG)
+        mainWindow = self._application.mainWindow
+        if mainWindow != None and mainWindow.PLUGINS_TOOLBAR_STR in mainWindow.toolbars:
+            self._application.actionController.removeMenuItem (DebugAction.stringId)
+            self._application.actionController.removeToolbarButton (DebugAction.stringId)
+            self._application.actionController.removeAction (DebugAction.stringId)
 
-        index = self._application.mainWindow.mainMenu.FindMenu (self.__menuName)
-        assert index != wx.NOT_FOUND
+            self._application.mainWindow.Unbind(wx.EVT_MENU, handler=self.__onPluginsList, id=self.ID_PLUGINSLIST)
+            self._application.mainWindow.Unbind(wx.EVT_MENU, handler=self.__onButtonsDialog, id=self.ID_BUTTONSDIALOG)
 
-        index = self._application.mainWindow.mainMenu.Remove (index)
+            index = self._application.mainWindow.mainMenu.FindMenu (self.__menuName)
+            assert index != wx.NOT_FOUND
+
+            index = self._application.mainWindow.mainMenu.Remove (index)
 
     #############################################

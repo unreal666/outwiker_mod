@@ -7,10 +7,8 @@ import sys
 import wx
 import wx.aui
 
-from outwiker.core.tree import WikiDocument, RootWikiPage
 import outwiker.core.config
 import outwiker.core.commands as cmd
-import outwiker.core.system
 from outwiker.core.application import Application
 
 import outwiker.pages.search.searchpage
@@ -18,9 +16,7 @@ from .guiconfig import MainWindowConfig
 
 from .mainid import MainId
 from .mainmenu import MainMenu
-from .pagedialog import createSiblingPage, createChildPage, editPage
 from .trayicon import OutwikerTrayIcon
-from .preferences.prefdialog import PrefDialog
 from .mainwndcontroller import MainWndController
 from .mainpanescontroller import MainPanesController
 from .shortcuter import Shortcuter
@@ -34,6 +30,34 @@ from outwiker.core.system import getImagesDir
 from toolbars.generaltoolbar import GeneralToolBar
 from toolbars.pluginstoolbar import PluginsToolBar
 from toolbars.toolbarscontroller import ToolBarsController
+
+from outwiker.actions.new import NewAction
+from outwiker.actions.open import OpenAction
+from outwiker.actions.openreadonly import OpenReadOnlyAction
+from outwiker.actions.close import CloseAction
+from outwiker.actions.save import SaveAction
+from outwiker.actions.printaction import PrintAction
+from outwiker.actions.exit import ExitAction
+from outwiker.actions.fullscreen import FullScreenAction
+from outwiker.actions.preferences import PreferencesAction
+from outwiker.actions.addsiblingpage import AddSiblingPageAction
+from outwiker.actions.addchildpage import AddChildPageAction
+from outwiker.actions.movepageup import MovePageUpAction
+from outwiker.actions.movepagedown import MovePageDownAction
+from outwiker.actions.sortchildalpha import SortChildAlphabeticalAction
+from outwiker.actions.sortsiblingsalpha import SortSiblingsAlphabeticalAction
+from outwiker.actions.renamepage import RenamePageAction
+from outwiker.actions.removepage import RemovePageAction
+from outwiker.actions.editpageprop import EditPagePropertiesAction
+from outwiker.actions.addbookmark import AddBookmarkAction
+from outwiker.actions.tabs import AddTabAction, CloseTabAction, PreviousTabAction, NextTabAction
+from outwiker.actions.globalsearch import GlobalSearchAction
+from outwiker.actions.attachfiles import AttachFilesAction
+import outwiker.actions.clipboard as clipboard
+import outwiker.actions.tags as tags
+from outwiker.actions.reloadwiki import ReloadWikiAction
+from outwiker.actions.openhelp import OpenHelpAction
+from outwiker.actions.about import AboutAction
 
 
 class MainWindow(wx.Frame):
@@ -52,7 +76,6 @@ class MainWindow(wx.Frame):
 
         self.mainMenu = MainMenu()
         self.SetMenuBar(self.mainMenu)
-        self.updateShortcuts()
 
         self.__createStatusBar()
 
@@ -72,14 +95,11 @@ class MainWindow(wx.Frame):
         self.toolbars[self.PLUGINS_TOOLBAR_STR] = PluginsToolBar (self, 
                 self.auiManager)
 
-        self.__panesController = MainPanesController (self, self.auiManager)
+        self.__panesController = MainPanesController (Application, self)
 
         self.__bindGuiEvents()
 
         self._dropTarget = DropFilesTarget (self.attachPanel.panel)
-        self.controller.enableGui()
-        self.controller.updateRecentMenu()
-        self.__panesController.updateViewMenu()
         self.Show()
 
         if self.mainWindowConfig.maximized.value:
@@ -88,6 +108,264 @@ class MainWindow(wx.Frame):
         self.taskBarIcon = OutwikerTrayIcon(self)
         self.tabsController = TabsController (self.pagePanel.panel.tabsCtrl, 
                 Application)
+
+
+    def createGui (self):
+        """
+        Создать пункты меню, кнопки на панелях инструментов и т.п.
+        """
+        self.__panesController.loadPanesSize ()
+        self.__addActionsGui()
+        self.controller.enableGui()
+        self.controller.updateRecentMenu()
+        self.__panesController.updateViewMenu()
+        self.treePanel.panel.addButtons()
+        self.updateShortcuts()
+
+        if self.mainWindowConfig.fullscreen.value:
+            Application.actionController.check (FullScreenAction.stringId, True)
+
+
+    def __createFileMenu (self):
+        """
+        Заполнить действиями меню Файл
+        """
+        imagesDir = getImagesDir()
+        toolbar = Application.mainWindow.mainToolbar
+        menu = Application.mainWindow.mainMenu.fileMenu
+        actionController = Application.actionController
+
+        # Открыть...
+        actionController.appendMenuItem (
+                OpenAction.stringId, 
+                menu)
+
+        actionController.appendToolbarButton (
+                OpenAction.stringId, 
+                toolbar,
+                os.path.join (imagesDir, u"open.png"),
+                True)
+
+        # Создать...
+        actionController.appendMenuItem (
+                NewAction.stringId, 
+                menu)
+
+        actionController.appendToolbarButton (
+                NewAction.stringId, 
+                toolbar,
+                os.path.join (imagesDir, u"new.png"),
+                True)
+
+        # Открыть только для чтения
+        actionController.appendMenuItem (
+                OpenReadOnlyAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+        toolbar.AddSeparator()
+
+        # Закрыть
+        actionController.appendMenuItem (
+                CloseAction.stringId, 
+                menu)
+
+        # Сохранить
+        actionController.appendMenuItem (
+                SaveAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+        # Печать
+        actionController.appendMenuItem (
+                PrintAction.stringId, 
+                menu)
+
+        # Выход
+        actionController.appendMenuItem (
+                ExitAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+
+    def __createTreeMenu (self):
+        """
+        Заполнить действиями меню Дерево
+        """
+        actionController = Application.actionController
+        menu = Application.mainWindow.mainMenu.treeMenu
+
+        actionController.appendMenuItem (
+                AddSiblingPageAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                AddChildPageAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+
+        actionController.appendMenuItem (
+                MovePageUpAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                MovePageDownAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                SortChildAlphabeticalAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                SortSiblingsAlphabeticalAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+
+        actionController.appendMenuItem (
+                RenamePageAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                RemovePageAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+        actionController.appendMenuItem (
+                EditPagePropertiesAction.stringId, 
+                menu)
+
+
+    def __createToolsMenu (self):
+        imagesDir = getImagesDir()
+        toolbar = Application.mainWindow.mainToolbar
+        menu = Application.mainWindow.mainMenu.toolsMenu
+        actionController = Application.actionController
+
+        actionController.appendMenuItem (
+                AddTabAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                CloseTabAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                PreviousTabAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                NextTabAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+        actionController.appendMenuItem (
+                GlobalSearchAction.stringId, 
+                menu)
+
+        actionController.appendToolbarButton (GlobalSearchAction.stringId, 
+                toolbar,
+                os.path.join (imagesDir, u"global_search.png"),
+                True)
+
+
+        actionController.appendMenuItem (
+                AttachFilesAction.stringId, 
+                menu)
+
+        actionController.appendToolbarButton (AttachFilesAction.stringId, 
+                toolbar,
+                os.path.join (imagesDir, u"attach.png"),
+                True)
+
+        menu.AppendSeparator()
+
+        actionController.appendMenuItem (
+                clipboard.CopyPageTitleAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                clipboard.CopyPagePathAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                clipboard.CopyAttachPathAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                clipboard.CopyPageLinkAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+        actionController.appendMenuItem (
+                tags.AddTagsToBranchAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                tags.RemoveTagsFromBranchAction.stringId, 
+                menu)
+
+        actionController.appendMenuItem (
+                tags.RenameTagAction.stringId, 
+                menu)
+
+        menu.AppendSeparator()
+
+        actionController.appendMenuItem (
+                ReloadWikiAction.stringId, 
+                menu)
+
+
+    def __createHelpMenu (self):
+        menu = Application.mainWindow.mainMenu.helpMenu
+        actionController = Application.actionController
+
+        actionController.appendMenuItem (
+                OpenHelpAction.stringId,
+                menu)
+
+        actionController.appendMenuItem (
+                AboutAction.stringId,
+                menu)
+
+
+    def __addActionsGui (self):
+        """
+        Создать элементы интерфейса, привязанные к actions
+        """
+        self.__createFileMenu ()
+        self.__createTreeMenu ()
+        self.__createToolsMenu ()
+        self.__createHelpMenu ()
+        self.__panesController.createViewMenuItems ()
+
+        actionController = Application.actionController
+
+        Application.mainWindow.mainMenu.viewMenu.AppendSeparator()
+
+        # Полноэкранный режим
+        actionController.appendMenuCheckItem (FullScreenAction.stringId, 
+                self.mainMenu.viewMenu)
+
+        # Вызов диалога настроек
+        Application.mainWindow.mainMenu.editMenu.AppendSeparator()
+
+        actionController.appendMenuItem (PreferencesAction.stringId,
+                Application.mainWindow.mainMenu.editMenu)
+
+        # Добавление / удаление закладки
+        actionController.appendMenuItem (AddBookmarkAction.stringId,
+                Application.mainWindow.mainMenu.bookmarksMenu)
+
+        Application.mainWindow.mainMenu.bookmarksMenu.AppendSeparator()
 
 
     @property
@@ -119,26 +397,22 @@ class MainWindow(wx.Frame):
         self.pagePanel = PageMainPane (
                 self, 
                 self.auiManager, 
-                Application, 
-                None)
+                Application)
 
         self.treePanel = TreeMainPane (
                 self, 
                 self.auiManager, 
-                Application, 
-                self.mainMenu.viewNotes)
+                Application)
 
         self.attachPanel = AttachMainPane (
                 self, 
                 self.auiManager, 
-                Application, 
-                self.mainMenu.viewAttaches)
+                Application)
 
         self.tagsCloudPanel = TagsCloudMainPane (
                 self, 
                 self.auiManager, 
-                Application, 
-                self.mainMenu.viewTagsCloud)
+                Application)
 
 
     def __createStatusBar (self):
@@ -157,126 +431,13 @@ class MainWindow(wx.Frame):
         """
         Подписаться на события меню, кнопок и т.п.
         """
-        self.Bind (wx.EVT_MENU, self.__onNew, id=MainId.ID_NEW)
-        self.Bind (wx.EVT_MENU, self.__onOpen, id=MainId.ID_OPEN)
-        self.Bind (wx.EVT_MENU, self.__onClose, id=MainId.ID_CLOSE)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onOpenReadOnly, 
-                id=MainId.ID_OPEN_READONLY)
-
-        self.Bind (wx.EVT_MENU, self.__onSave, id=MainId.ID_SAVE)
-        self.Bind (wx.EVT_MENU, self.__onPrint, id=wx.ID_PRINT)
         self.Bind (wx.EVT_MENU, self.__onStdEvent, id=MainId.ID_UNDO)
         self.Bind (wx.EVT_MENU, self.__onStdEvent, id=MainId.ID_REDO)
         self.Bind (wx.EVT_MENU, self.__onStdEvent, id=MainId.ID_CUT)
         self.Bind (wx.EVT_MENU, self.__onStdEvent, id=MainId.ID_COPY)
         self.Bind (wx.EVT_MENU, self.__onStdEvent, id=MainId.ID_PASTE)
-        self.Bind (wx.EVT_MENU, self.__onPreferences, id=MainId.ID_PREFERENCES)
-        self.Bind (wx.EVT_MENU, self.__onAddSiblingPage, id=MainId.ID_ADDPAGE)
-        self.Bind (wx.EVT_MENU, self.__onAddChildPage, id=MainId.ID_ADDCHILD)
-        self.Bind (wx.EVT_MENU, self.__onMovePageUp, id=MainId.ID_MOVE_PAGE_UP)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onMovePageDown, 
-                id=MainId.ID_MOVE_PAGE_DOWN)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onSortChildrenAlphabetical, 
-                id=MainId.ID_SORT_CHILDREN_ALPHABETICAL)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onSortSiblingAlphabetical, 
-                id=MainId.ID_SORT_SIBLINGS_ALPHABETICAL)
-
-        self.Bind (wx.EVT_MENU, self.__onRename, id=MainId.ID_RENAME)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onRemovePage, 
-                id=MainId.ID_REMOVE_PAGE)
-
-        self.Bind (wx.EVT_MENU, self.__onEditPage, id=MainId.ID_EDIT)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onGlobalSearch, 
-                id=MainId.ID_GLOBAL_SEARCH)
-
-        self.Bind (wx.EVT_MENU, self.__onAttach, id=MainId.ID_ATTACH)
-        self.Bind (wx.EVT_MENU, self.__onCopyTitle, id=MainId.ID_COPY_TITLE)
-        self.Bind (wx.EVT_MENU, self.__onCopyPath, id=MainId.ID_COPYPATH)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onCopyAttaches, 
-                id=MainId.ID_COPY_ATTACH_PATH)
-
-        self.Bind (wx.EVT_MENU, self.__onCopyLink, id=MainId.ID_COPY_LINK)
-        self.Bind (wx.EVT_MENU, self.__onReload, id=MainId.ID_RELOAD)
-
-        self.Bind (wx.EVT_MENU, 
-                self.__onFullscreen, 
-                self.mainMenu.viewFullscreen)
-
-        self.Bind (wx.EVT_MENU, self.__onHelp, id=MainId.ID_HELP)
-        self.Bind (wx.EVT_MENU, self.__onAbout, id=MainId.ID_ABOUT)
-        self.Bind (wx.EVT_TOOL, self.__onNew, id=MainId.ID_NEW)
-        self.Bind (wx.EVT_TOOL, self.__onOpen, id=MainId.ID_OPEN)
-        self.Bind (wx.EVT_TOOL, self.__onReload, id=MainId.ID_RELOAD)
-        self.Bind (wx.EVT_TOOL, self.__onAttach, id=MainId.ID_ATTACH)
-
-        self.Bind (wx.EVT_TOOL, 
-                self.__onGlobalSearch, 
-                id=MainId.ID_GLOBAL_SEARCH)
-
-        self.Bind (wx.EVT_TOOL, 
-                self.__onAddTagsToBranch, 
-                id=MainId.ID_ADD_TAGS_TO_BRANCH)
-
-        self.Bind (wx.EVT_TOOL, 
-                self.__onRemoveTagsFromBranch, 
-                id=MainId.ID_REMOVE_TAGS_FROM_BRANCH)
-
-        self.Bind (wx.EVT_TOOL, self.__onRenameTag, id=MainId.ID_RENAME_TAG)
-        self.Bind (wx.EVT_TOOL, self.__onAddNewTab, id=MainId.ID_ADD_TAB)
-        self.Bind (wx.EVT_TOOL, self.__onCloseTab, id=MainId.ID_CLOSE_TAB)
-        self.Bind (wx.EVT_TOOL, self.__onNextTab, id=MainId.ID_NEXT_TAB)
-        self.Bind (wx.EVT_TOOL, self.__onPrevTab, id=MainId.ID_PREV_TAB)
 
 
-    def __onNextTab (self, event):
-        """
-        Обработчик события переключения на следующую вкладку
-        """
-        cmd.nextTab (Application)
-
-
-    def __onPrevTab (self, event):
-        """
-        Обработчик события переключения на предыдущую вкладку
-        """
-        cmd.previousTab (Application)
-
-
-    def __onAddNewTab (self, event):
-        """
-        Обработчик события добавления новой вкладки
-        """
-        cmd.addNewTab (Application)
-
-
-    def __onCloseTab (self, event):
-        """
-        Обработчик события закрытия вкладки
-        """
-        cmd.closeCurrentTab (Application)
-
-
-    def __onClose (self, event):
-        """
-        Обработчик события закрытия программы
-        """
-        cmd.closeWiki (Application)
-
-    
     def __saveParams (self):
         """
         Сохранить параметры в конфиг
@@ -316,7 +477,7 @@ class MainWindow(wx.Frame):
         Установки иконки главного окна
         """
         icon = wx.EmptyIcon()
-        icon.CopyFromBitmap(wx.Bitmap(os.path.join (outwiker.core.system.getImagesDir(), 
+        icon.CopyFromBitmap(wx.Bitmap(os.path.join (getImagesDir(), 
             "outwiker.ico"), 
             wx.BITMAP_TYPE_ANY))
 
@@ -328,6 +489,7 @@ class MainWindow(wx.Frame):
         Убрать за собой
         """
         self.__saveParams()
+        Application.actionController.saveHotKeys()
 
         self.tabsController.destroy()
         self.toolbars.destroyAllToolBars()
@@ -344,34 +506,6 @@ class MainWindow(wx.Frame):
         super (MainWindow, self).Destroy()
     
 
-    def __onNew(self, event):
-        """
-        Обработчик события создания новой вики
-        """
-        cmd.createNewWiki(self)
-
-
-    def __onOpen(self, event):
-        """
-        Обработчик события открытия вики
-        """
-        cmd.openWikiWithDialog (self)
-    
-
-    def __onSave(self, event):
-        """
-        Обработчик события принудительного сохранения вики
-        """
-        Application.onForceSave()
-
-
-    def __onReload(self, event):
-        """
-        Обработчик события перезагрузки вики
-        """
-        cmd.reloadWiki (self)
-    
-
     def destroyPagePanel (self, save):
         """
         Уничтожить панель с текущей страницей.
@@ -381,98 +515,6 @@ class MainWindow(wx.Frame):
             self.pagePanel.panel.destroyPageView()
         else:
             self.pagePanel.panel.destroyWithoutSave()
-
-
-    def __onAddSiblingPage(self, event):
-        """
-        Создание страницы на уровне текущей страницы
-        """
-        createSiblingPage (self)
-
-    
-    def __onAddChildPage(self, event):
-        """
-        Создание дочерней страницы
-        """
-        createChildPage (self)
-
-
-    def __onAttach(self, event):
-        """
-        Обработчик события прикрепления файлов к странице
-        """
-        if Application.selectedPage != None:
-            cmd.attachFilesWithDialog (self, 
-                    Application.wikiroot.selectedPage)
-
-
-    def __onAbout(self, event):
-        """
-        Обработчик события показа диалога "О программе"
-        """
-        cmd.showAboutDialog (self)
-
-
-    def __onCopyPath(self, event):
-        """
-        Обработчик события копирования пути до текущей страницы в буфер обмена
-        """
-        if Application.selectedPage != None:
-            cmd.copyPathToClipboard (Application.wikiroot.selectedPage)
-
-
-    def __onCopyAttaches(self, event):
-        """
-        Обработчик события копирования пути до прикрепленных файлов в буфер обмена
-        """
-        if Application.selectedPage != None:
-            cmd.copyAttachPathToClipboard (Application.wikiroot.selectedPage)
-
-    
-    def __onCopyLink(self, event):
-        """
-        Обработчик события копирования ссылки на текущую страницу в буфер обмена
-        """
-        if Application.selectedPage != None:
-            cmd.copyLinkToClipboard (Application.wikiroot.selectedPage)
-
-    
-    def __onCopyTitle(self, event):
-        """
-        Обработчик события копирования заголовка текущей страницы в буфер обмена
-        """
-        if Application.selectedPage != None:
-            cmd.copyTitleToClipboard (Application.wikiroot.selectedPage)
-    
-
-    def __onEditPage(self, event):
-        """
-        Обработчик события изменения настроек страницы
-        """
-        if Application.selectedPage != None:
-            editPage (self, Application.selectedPage)
-
-
-    def __onRemovePage(self, event):
-        """
-        Обработчик события удаления текущей страницы
-        """
-        if Application.selectedPage != None:
-            cmd.removePage (Application.wikiroot.selectedPage)
-
-
-    @cmd.testreadonly
-    def __onGlobalSearch(self, event):
-        """
-        Обработчик события создания или показа страницы глобального поиска
-        """
-        if Application.wikiroot != None:
-            try:
-                outwiker.pages.search.searchpage.GlobalSearch.create (Application.wikiroot)
-            except IOError:
-                cmd.MessageBox (_(u"Can't create page"), 
-                        _(u"Error"), 
-                        wx.ICON_ERROR | wx.OK)
 
 
     def __onStdEvent(self, event):
@@ -486,43 +528,6 @@ class MainWindow(wx.Frame):
             if target != None:
                 target.ProcessEvent (event)
         self.__stdEventLoop = False
-
-
-    def __onRename(self, event):
-        """
-        Обработчик события переименования текущей страницы
-        """
-        self.treePanel.beginRename()
-
-
-    def __onHelp(self, event):
-        """
-        Обработчик события вызова справки
-        """
-        cmd.openHelp()
-
-
-    def __onOpenReadOnly(self, event):
-        """
-        Обработчик события открытия вики в режиме "только для чтения"
-        """
-        cmd.openWikiWithDialog (self, readonly=True)
-
-
-    def __onPreferences(self, event):
-        """
-        Обработчик события вызова диалога настроек программы
-        """
-        dlg = PrefDialog (self)
-        dlg.ShowModal()
-        dlg.Destroy()
-    
-
-    def __onFullscreen(self, event):
-        """
-        Обработчик события переключения в полноэкранный режим
-        """
-        self.setFullscreen(not self.IsFullScreen())
 
 
     def setFullscreen (self, fullscreen):
@@ -559,76 +564,6 @@ class MainWindow(wx.Frame):
         self.__panesController.showPanes()
         self.__panesController.loadPanesSize ()
         self.__panesController.updateViewMenu()
-
-    
-    def __onMovePageUp(self, event):
-        """
-        Обработчик события перемещения страницы вверх
-        """
-        cmd.moveCurrentPageUp()
-
-
-    def __onMovePageDown(self, event):
-        """
-        Обработчик события перемещения страницы вниз
-        """
-        cmd.moveCurrentPageDown()
-        
-
-    def __onSortChildrenAlphabetical(self, event):
-        """
-        Обработчик события сортировки дочерних страниц по алфавиту
-        """
-        cmd.sortChildrenAlphabeticalGUI()
-
-
-    def __onSortSiblingAlphabetical(self, event):
-        """
-        Обработчик события сортировки братских страниц по алфавиту
-        """
-        cmd.sortSiblingsAlphabeticalGUI()
-
-
-    def __onPrint(self, event):
-        """
-        Печать текущей страницы
-        """
-        self.pagePanel.panel.Print()
-
-
-    def __onAddTagsToBranch (self, event):
-        """
-        Обработчик события добавления меток к ветке
-        """
-        if Application.wikiroot == None:
-            return
-
-        if Application.selectedPage == None:
-            cmd.addTagsToBranchGui (Application.wikiroot, 
-                    self)
-        else:
-            cmd.addTagsToBranchGui (Application.selectedPage, self)
-
-
-    def __onRemoveTagsFromBranch (self, event):
-        """
-        Обработчик события удаления меток из ветки
-        """
-        if Application.wikiroot == None:
-            return
-
-        if Application.selectedPage == None:
-            cmd.removeTagsFromBranchGui (Application.wikiroot, self)
-        else:
-            cmd.removeTagsFromBranchGui (Application.selectedPage, self)
-
-
-    def __onRenameTag (self, event):
-        """
-        Обработчик события переименования метки
-        """
-        if Application.wikiroot != None:
-            cmd.renameTagGui (Application.wikiroot, self)
 
 # end of class MainWindow
 

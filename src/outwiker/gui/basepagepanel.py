@@ -37,6 +37,9 @@ class BasePagePanel (wx.Panel):
 
     @property
     def allTools (self):
+        """
+        Возвращает список ToolsInfo.
+        """
         return self._tools.values()
 
 
@@ -75,14 +78,17 @@ class BasePagePanel (wx.Panel):
             fullUpdate=True,
             panelname="plugins"):
         """
+        !!! Внимание. Это устаревший способ добавления элементов интерфейса. Сохраняется только для совместимости со старыми версиями плагинов и в будущих версиях программы может быть убран.
+
         Добавить пункт меню и кнопку на панель
-        menu -- меню для добавления элемента
-        id -- идентификатор меню и кнопки
-        func -- обработчик
-        menuText -- название пунта меню
-        buttonText -- подсказка для кнопки
-        image -- имя файла с картинкой
-        alwaysEnabled -- Кнопка должна быть всегда активна
+        Добавить пункт меню и кнопку на панель
+        menu - меню для добавления элемента
+        id - идентификатор меню и кнопки
+        func - обработчик
+        menuText - название пунта меню
+        buttonText - подсказка для кнопки
+        image - имя файла с картинкой
+        alwaysEnabled - Кнопка должна быть всегда активна
         fullUpdate - нужно ли полностью обновлять окно после добавления кнопки
         panelname - имя панели, куда добавляется кнопка
         """
@@ -115,63 +121,6 @@ class BasePagePanel (wx.Panel):
         if self.mainWindow.toolbars[tool.panelname].FindById (tool.id) != None:
             self.mainWindow.toolbars[tool.panelname].EnableTool (tool.id, enabled)
             self.mainWindow.toolbars[tool.panelname].Realize()
-
-
-    def addCheckTool (self, 
-            menu, 
-            idstring, 
-            func, 
-            menuText, 
-            buttonText, 
-            image, 
-            alwaysEnabled = False,
-            fullUpdate=True,
-            panelname="plugins"):
-        """
-        Добавить пункт меню с галкой и залипающую кнопку на панель
-        menu -- меню для добавления элемента
-        id -- идентификатор меню и кнопки
-        func -- обработчик
-        menuText -- название пунта меню
-        buttonText -- подсказка для кнопки
-        image -- имя файла с картинкой
-        alwaysEnabled -- Кнопка должна быть всегда активна
-        fullUpdate - нужно ли полностью обновлять окно после добавления кнопки
-        panelname - имя панели, куда добавляется кнопка
-        """
-        assert idstring not in self._tools
-
-        id = wx.NewId()
-        tool = ToolsInfo (id, alwaysEnabled, menu, panelname)
-        self._tools[idstring] = tool
-
-        menu.AppendCheckItem (id, menuText, "")
-        self.mainWindow.Bind(wx.EVT_MENU, func, id = id)
-
-        if image != None and len (image) != 0:
-            self.mainWindow.toolbars[tool.panelname].AddTool(id, 
-                    buttonText,
-                    wx.Bitmap(image, wx.BITMAP_TYPE_ANY), 
-                    buttonText,
-                    wx.ITEM_CHECK,
-                    fullUpdate=fullUpdate)
-
-
-    def checkTools (self, idstring, checked):
-        """
-        Активировать/деактивировать залипающие элементы управления
-        idstring - строка, описывающая элементы управления
-        checked - устанавливаемое состояние
-        """
-        assert idstring in self._tools
-        assert self.mainWindow != None
-
-        tools = self._tools[idstring]
-
-        if tools.menu != None:
-            tools.menu.Check (tools.id, checked)
-
-        self.mainWindow.toolbars[tools.panelname].ToggleTool (tools.id, checked)
 
 
     ###############################################

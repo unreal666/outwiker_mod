@@ -69,6 +69,7 @@ if __name__ == '__main__':
     from test.parsertests.parserurl import ParserUrlTest
     from test.parsertests.parsertex import ParserTexTest
     from test.parsertests.parserlinebreak import ParserLineBreakTest
+    from test.parsertests.parserquote import ParserQuoteTest
 
     from test.parsertests.wikicommands import WikiCommandsTest
     from test.parsertests.wikicommandinclude import WikiIncludeCommandTest
@@ -96,9 +97,11 @@ if __name__ == '__main__':
     from test.version import VersionTest, StatusTest
     from test.treesort import TreeSortTest
     from test.emptycontent import EmptyContentTest
+    from test.hotkey import HotKeyTest
+    from test.hotkeyparser import HotKeyParserTest
+    from test.hotkeyconfig import HotKeyConfigTest
 
     #from test.guitests.tray import TrayNormalTest#, TrayIconizedTest
-    from test.guitests.mainid import MainIdTest
     from test.guitests.mainwnd import MainWndTest
     from test.guitests.bookmarks import BookmarksGuiTest
     from test.guitests.attach import AttachPanelTest
@@ -106,10 +109,17 @@ if __name__ == '__main__':
     from test.guitests.pagepanel import PagePanelTest
     from test.guitests.tagspanel import TagsPanelTest
     from test.guitests.tabs import TabsTest
+    from test.guitests.actiontabs import ActionTabsTest
     from test.guitests.linkdialogcontrollertest import LinkDialogControllerTest
     from test.guitests.thumbdialogcontrollertest import ThumbDialogControllerTest
-    from test.guitests.wikipagepanel import WikiPagePanelTest
-    from test.guitests.htmlpagepanel import HtmlPagePanelTest
+    from test.guitests.wikipageview import WikiPageViewTest
+    from test.guitests.htmlpageview import HtmlPageViewTest
+    from test.guitests.actioncontroller import ActionControllerTest
+    from test.guitests.polyaction import PolyActionTest
+    from test.guitests.mainpanes import MainPanesTest
+    from test.guitests.fullscreen import FullScreenTest
+    from test.guitests.wikiactions import WikiActionsTest
+    from test.guitests.htmlactions import HtmlActionsTest
 
     from test.plugins.loader import PluginsLoaderTest
     from test.plugins.testwikicommand import PluginWikiCommandTest

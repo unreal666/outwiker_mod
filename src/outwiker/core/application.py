@@ -17,6 +17,7 @@ class ApplicationParams (object):
         self.__mainWindow = None
         self.config = None
         self.recentWiki = None
+        self.actionController = None
         self.plugins = PluginsLoader (self)
 
         # Создать экземпляры событий
@@ -53,7 +54,7 @@ class ApplicationParams (object):
         # Параметр - экземпляр класса Bookmarks
         self.onBookmarksChanged = Event()
 
-        # Удаленеи страницы
+        # Удаление страницы
         # Параметр - удаленная страница
         self.onPageRemove = Event()
 

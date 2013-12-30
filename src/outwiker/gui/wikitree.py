@@ -8,13 +8,17 @@ import ConfigParser
 import wx
 
 from outwiker.core.application import Application
-import outwiker.core.exceptions
 import outwiker.core.commands
 import outwiker.core.system
 import outwiker.gui.pagedialog
 from outwiker.core.config import BooleanOption
-from .mainid import MainId
-from .pagepopupmenu import PagePopupMenu
+from outwiker.gui.pagepopupmenu import PagePopupMenu
+from outwiker.actions.addsiblingpage import AddSiblingPageAction
+from outwiker.actions.addchildpage import AddChildPageAction
+from outwiker.actions.movepageup import MovePageUpAction
+from outwiker.actions.movepagedown import MovePageDownAction
+from outwiker.actions.removepage import RemovePageAction
+from outwiker.actions.editpageprop import EditPagePropertiesAction
 
 
 class WikiTree(wx.Panel):
@@ -32,7 +36,7 @@ class WikiTree(wx.Panel):
 
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
-        self.toolbar = self.__getToolbar(self, -1)
+        self.toolbar = wx.ToolBar (self, -1, style=wx.TB_HORIZONTAL|wx.TB_FLAT|wx.TB_DOCKABLE)
 
         treeStyle = (wx.TR_HAS_BUTTONS | 
                 wx.TR_EDIT_LABELS | 
@@ -164,11 +168,6 @@ class WikiTree(wx.Panel):
         self.__UnBindApplicationEvents()
 
 
-    def __onPropertiesButton (self, event):
-        if Application.selectedPage != None:
-            outwiker.gui.pagedialog.editPage (self, Application.selectedPage)
-
-
     def __onPageCreate (self, newpage):
         """
         Обработка создания страницы
@@ -183,25 +182,30 @@ class WikiTree(wx.Panel):
             self.expand (newpage)
 
 
+    def __onPropertiesButton (self, event):
+        Application.actionController.getAction (EditPagePropertiesAction.stringId).run (None)
+
+
     def __onAddSiblingPage (self, event):
-        outwiker.gui.pagedialog.createSiblingPage (self)
+        Application.actionController.getAction (AddSiblingPageAction.stringId).run (None)
 
 
     def __onAddChildPage (self, event):
-        outwiker.gui.pagedialog.createChildPage (self)
+        Application.actionController.getAction (AddChildPageAction.stringId).run (None)
 
 
     def __onRemovePage (self, event):
-        if Application.wikiroot != None and Application.wikiroot.selectedPage != None:
-            outwiker.core.commands.removePage (Application.wikiroot.selectedPage)
+        Application.actionController.getAction (RemovePageAction.stringId).run (None)
 
 
     def __onMoveUp (self, event):
-        outwiker.core.commands.moveCurrentPageUp()
+        if Application.wikiroot.selectedPage != None:
+            Application.actionController.getAction (MovePageUpAction.stringId).run (None)
 
 
     def __onMoveDown (self, event):
-        outwiker.core.commands.moveCurrentPageDown()
+        if Application.wikiroot.selectedPage != None:
+            Application.actionController.getAction (MovePageDownAction.stringId).run (None)
 
 
     def __onPageRemove (self, page):
@@ -266,20 +270,15 @@ class WikiTree(wx.Panel):
 
         popupPage = self.treeCtrl.GetItemData (popupItem).GetData()
         self.popupMenu = PagePopupMenu (self, popupPage, Application)
-        self.popupMenu.menu.Insert (3, self.ID_RENAME, _(u"Rename"))
-        self.popupMenu.menu.Bind (wx.EVT_MENU, self.__onRename, id=self.ID_RENAME)
-
         self.PopupMenu (self.popupMenu.menu)
 
 
-    def __onRename (self, event):
-        assert self.popupMenu != None
-        assert self.popupMenu.popupPage != None
-        self.treeCtrl.EditLabel (self._pageCache[self.popupMenu.popupPage])
+    def beginRename (self, page=None):
+        """
+        Начать переименование страницы в дереве. Если page == None, то начать переименование текущей страницы
+        """
+        selectedItem = self.treeCtrl.GetSelection() if page == None else self._pageCache[page]
 
-
-    def beginRename (self):
-        selectedItem = self.treeCtrl.GetSelection()
         if not selectedItem.IsOk():
             return
 
@@ -446,14 +445,11 @@ class WikiTree(wx.Panel):
         """
         Обновить дерево
         """
-        # Так как мы сами будем сворачивать/разворачивать узлы дерева, 
-        # на эти события реагировать не надо пока строится дерево
-        # self.treeCtrl.Unbind (wx.EVT_TREE_ITEM_COLLAPSED, handler = self.__onTreeStateChanged)
-        # self.treeCtrl.Unbind (wx.EVT_TREE_ITEM_EXPANDED, handler = self.__onTreeStateChanged)
-        
         self.treeCtrl.DeleteAllItems()
         self.imagelist.RemoveAll()
         self.defaultImageId = self.imagelist.Add (self.defaultBitmap)
+
+        # Ключ - страница, значение - экземпляр класса TreeItemId
         self._pageCache = {}
 
         if rootPage != None:
@@ -469,9 +465,6 @@ class WikiTree(wx.Panel):
             self.selectedPage = rootPage.selectedPage
             self.expand (rootPage)
 
-        # self.treeCtrl.Bind (wx.EVT_TREE_ITEM_COLLAPSED, self.__onTreeStateChanged)
-        # self.treeCtrl.Bind (wx.EVT_TREE_ITEM_EXPANDED, self.__onTreeStateChanged)
-    
 
     def __appendChildren (self, parentPage):
         """
@@ -568,7 +561,7 @@ class WikiTree(wx.Panel):
 
     def __scrollToCurrentPage (self):
         """
-        Если текущая страницавылезла за пределы видимости, то прокрутить к ней
+        Если текущая страница вылезла за пределы видимости, то прокрутить к ней
         """
         selectedPage = Application.selectedPage
         if selectedPage == None:
@@ -579,73 +572,84 @@ class WikiTree(wx.Panel):
             self.treeCtrl.ScrollTo (item)
 
 
-    def __getToolbar (self, parent, id):
+    def addButtons (self):
+        """
+        Добавить кнопки на панель
+        Т.к. текст подсказок берется из Actions, этот метод вызывается после создания окна
+        """
         imagesDir = outwiker.core.system.getImagesDir()
+        actionController =  Application.actionController
 
-        toolbar = wx.ToolBar (parent, id, style=wx.TB_HORIZONTAL|wx.TB_FLAT|wx.TB_DOCKABLE)
-
-        toolbar.AddLabelTool(self.ID_MOVE_DOWN, 
-                _(u"Move Page Down"), 
+        moveDownTitle = actionController.getTitle (MovePageDownAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_MOVE_DOWN, 
+                moveDownTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "move_down.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Move Page Down"), 
+                moveDownTitle, 
                 "")
 
-        toolbar.AddLabelTool(self.ID_MOVE_UP, 
-                _(u"Move Page Up"), 
+
+        moveUpTitle = actionController.getTitle (MovePageUpAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_MOVE_UP, 
+                moveUpTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "move_up.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Move Page Up"), 
+                moveUpTitle, 
                 "")
-        toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
 
 
-        toolbar.AddLabelTool(self.ID_ADD_SIBLING_PAGE,
-                _(u"Add Sibling Page…"), 
+        siblingTitle = actionController.getTitle (AddSiblingPageAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_ADD_SIBLING_PAGE,
+                siblingTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "node-insert-next.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Add Sibling Page…"), 
+                siblingTitle, 
                 "")
 
-        toolbar.AddLabelTool(self.ID_ADD_CHILD_PAGE,
-                _(u"Add Child Page…"), 
+
+        childTitle = actionController.getTitle (AddChildPageAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_ADD_CHILD_PAGE,
+                childTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "node-insert-child.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Add Child Page…"), 
+                childTitle, 
                 "")
 
-        toolbar.AddLabelTool(self.ID_REMOVE_PAGE,
-                _(u"Remove Page…"), 
+
+        removeTitle = actionController.getTitle (RemovePageAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_REMOVE_PAGE,
+                removeTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "node-delete.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Remove Page…"), 
+                removeTitle, 
                 "")
 
-        toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
 
-        toolbar.AddLabelTool(self.ID_PROPERTIES_BUTTON,
-                _(u"Page Properties…"), 
+
+        propertiesTitle = actionController.getTitle (EditPagePropertiesAction.stringId)
+        self.toolbar.AddLabelTool(self.ID_PROPERTIES_BUTTON,
+                propertiesTitle, 
                 wx.Bitmap(os.path.join (imagesDir, "edit.png"),
                     wx.BITMAP_TYPE_ANY),
                 wx.NullBitmap, 
                 wx.ITEM_NORMAL,
-                _(u"Page Properties…"), 
+                propertiesTitle, 
                 "")
 
 
-        toolbar.Realize()
-        return toolbar
-
-
+        self.toolbar.Realize()
+        
 # end of class WikiTree
 

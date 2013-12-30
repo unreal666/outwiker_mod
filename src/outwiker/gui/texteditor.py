@@ -220,7 +220,7 @@ class TextEditor(wx.Panel):
             self.textCtrl.SetSelection (newPos, newPos)
 
 
-    def escapeHtml (self, event):
+    def escapeHtml (self):
         selText = self.textCtrl.GetSelectedText()
         text = cgi.escape (selText, quote=True)
         self.textCtrl.ReplaceSelection (text)
@@ -244,6 +244,16 @@ class TextEditor(wx.Panel):
 
     def GetSelectedText (self):
         return self.textCtrl.GetSelectedText()
+
+
+    def SetSelection (self, start, end):
+        startText = self.GetText()[:start]
+        endText = self.GetText()[:end]
+
+        firstByte = self.calcByteLen (startText)
+        endByte = self.calcByteLen (endText)
+
+        self.textCtrl.SetSelection (firstByte, endByte)
 
 # end of class TextEditor
 

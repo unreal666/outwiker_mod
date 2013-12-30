@@ -9,7 +9,16 @@ import os.path
 from outwiker.core.config import BooleanOption
 from outwiker.core.tree import WikiPage
 from outwiker.core.factory import PageFactory
-from .htmlpanel import HtmlPagePanel
+from outwiker.gui.hotkey import HotKey
+from outwiker.pages.html.htmlpageview import HtmlPageView
+
+from actions.autolinewrap import HtmlAutoLineWrap
+from actions.switchcoderesult import SwitchCodeResultAction
+
+_actions = [
+        (HtmlAutoLineWrap, None),
+        (SwitchCodeResultAction, HotKey ("F4")),
+        ]
 
 
 class HtmlWikiPage (WikiPage):
@@ -26,7 +35,7 @@ class HtmlWikiPage (WikiPage):
     @property
     def autoLineWrap (self):
         """
-        Добавлять ли теги <BR> и <P> вместо разрывов строк?
+        Добавлять ли теги <br> и <p> вместо разрывов строк?
         """
         option = BooleanOption (self.params, self.__autoLineWrapSection, self.__autoLineWrapParam, True)
         return option.value
@@ -35,7 +44,7 @@ class HtmlWikiPage (WikiPage):
     @autoLineWrap.setter
     def autoLineWrap (self, value):
         """
-        Добавлять ли теги <BR> и <P> вместо разрывов строк?
+        Добавлять ли теги <br> и <p> вместо разрывов строк?
         """
         option = BooleanOption (self.params, self.__autoLineWrapSection, self.__autoLineWrapParam, True)
         option.value = value
@@ -52,15 +61,27 @@ class HtmlPageFactory (PageFactory):
     def getPageType():
         return HtmlWikiPage
 
+
     @staticmethod
     def getTypeString ():
         return HtmlPageFactory.getPageType().getTypeString()
 
+
+    @staticmethod
+    def registerActions (application):
+        """
+        Зарегистрировать все действия, связанные с HTML-страницей
+        """
+        map (lambda actionTuple: application.actionController.register (actionTuple[0](application), actionTuple[1] ), _actions)
+
+
+    @staticmethod
+    def removeActions (application):
+        map (lambda actionTuple: application.actionController.removeAction (actionTuple[0].stringId), _actions)
+
+
     # Название страницы, показываемое пользователю
     title = _(u"HTML Page")
-
-    def __init__ (self):
-        pass
 
 
     @staticmethod
@@ -76,7 +97,7 @@ class HtmlPageFactory (PageFactory):
         """
         Вернуть контрол, который будет отображать и редактировать страницу
         """
-        panel = HtmlPagePanel (parent)
+        panel = HtmlPageView (parent)
 
         return panel
 

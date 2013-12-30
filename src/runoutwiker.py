@@ -20,6 +20,8 @@ import wx
 from outwiker.core.application import Application
 from outwiker.core.system import getOS, getPluginsDirList, getConfigPath
 from outwiker.core.starter import Starter
+from outwiker.core.commands import registerActions
+from outwiker.gui.actioncontroller import ActionController
 
 
 class OutWiker(wx.App):
@@ -45,7 +47,13 @@ class OutWiker(wx.App):
         wx.InitAllImageHandlers()
         self.mainWnd = MainWindow(None, -1, "")
         self.SetTopWindow (self.mainWnd)
+
         Application.mainWindow = self.mainWnd
+        Application.actionController = ActionController (self.mainWnd, Application.config)
+
+        registerActions(Application)
+        self.mainWnd.createGui()
+
         Application.plugins.load (getPluginsDirList())
 
         self.bindActivateApp()

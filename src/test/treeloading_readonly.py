@@ -27,11 +27,10 @@ class ReadonlyLoadTest (unittest.TestCase):
     def setUp(self):
         self.path = u"../test/samplewiki"
         self.root = WikiDocument.load (self.path, readonly=True)
-        #print self.root
 
 
     def testLoadWiki(self):
-        self.assertEqual ( len (self.root), 5, "Pages count == 5")
+        self.assertEqual ( len (self.root), 6)
     
 
     def testPageType1 (self):

@@ -36,14 +36,7 @@ class SourceGuiPluginTest (unittest.TestCase):
 
         self.dialog = FakeInsertDialog ()
         self.controller = self.loader[self.__pluginname].insertDialogControllerClass(self.testPage, self.dialog, self.config)
-        
 
-    def __readFile (self, path):
-        with open (path) as fp:
-            result = unicode (fp.read(), "utf8")
-
-        return result
-    
 
     def __createWiki (self):
         # Здесь будет создаваться вики
@@ -434,6 +427,11 @@ class SourceGuiPluginTest (unittest.TestCase):
         self.assertEqual (self.dialog.style, "default")
 
 
+    def testStyleConfig5 (self):
+        self.controller.showDialog ()
+        self.assertEqual (self.dialog.style, "default")
+
+
     def testParentBgConfig1 (self):
         self.config.parentbg.value = u"  False  "
         self.controller.showDialog ()
@@ -453,3 +451,87 @@ class SourceGuiPluginTest (unittest.TestCase):
         self.controller.showDialog ()
 
         self.assertEqual (self.dialog.parentbg, False)
+
+
+    def testParentBgConfig4 (self):
+        # Если нет вообще записей в файле настроек
+        self.controller.showDialog ()
+
+        self.assertEqual (self.dialog.parentbg, False)
+
+
+    def testLineNumConfig1 (self):
+        # Если нет вообще записей в файле настроек
+        self.controller.showDialog ()
+
+        self.assertEqual (self.dialog.lineNum, False)
+
+
+    def testLineNumConfig2 (self):
+        self.config.lineNum.value = u"  False  "
+        self.controller.showDialog ()
+
+        self.assertEqual (self.dialog.lineNum, False)
+
+
+    def testLineNumConfig3 (self):
+        self.config.lineNum.value = u"  блаблабла  "
+        self.controller.showDialog ()
+
+        self.assertEqual (self.dialog.lineNum, False)
+
+
+    def testLineNumConfig4 (self):
+        self.config.lineNum.value = u"True"
+        self.controller.showDialog ()
+
+        self.assertEqual (self.dialog.lineNum, True)
+
+
+    def testDialogParengBg (self):
+        self.config.languageList.value = [u"python", u"cpp", u"haskell"]
+        self.config.defaultLanguage.value = u"python"
+
+        self.controller.showDialog()
+        self.dialog.parentBgCheckBox.SetValue (True)
+
+        result = self.controller.getCommandStrings()
+
+        self.assertEqual (result, (u'(:source lang="python" parentbg:)\n', u'\n(:sourceend:)'))
+
+
+    def testDialogLineNum (self):
+        self.config.languageList.value = [u"python", u"cpp", u"haskell"]
+        self.config.defaultLanguage.value = u"python"
+
+        self.controller.showDialog()
+        self.dialog.lineNumCheckBox.SetValue (True)
+
+        result = self.controller.getCommandStrings()
+
+        self.assertEqual (result, (u'(:source lang="python" linenum:)\n', u'\n(:sourceend:)'))
+
+
+    def testDialogParentBgLineNum (self):
+        self.config.languageList.value = [u"python", u"cpp", u"haskell"]
+        self.config.defaultLanguage.value = u"python"
+
+        self.controller.showDialog()
+        self.dialog.parentBgCheckBox.SetValue (True)
+        self.dialog.lineNumCheckBox.SetValue (True)
+
+        result = self.controller.getCommandStrings()
+
+        self.assertEqual (result, (u'(:source lang="python" parentbg linenum:)\n', u'\n(:sourceend:)'))
+
+
+    def testDialogTabWidth (self):
+        self.config.languageList.value = [u"python", u"cpp", u"haskell"]
+        self.config.defaultLanguage.value = u"python"
+
+        self.controller.showDialog()
+        self.dialog.tabWidthSpin.SetValue (10)
+
+        result = self.controller.getCommandStrings()
+
+        self.assertEqual (result, (u'(:source lang="python" tabwidth="10":)\n', u'\n(:sourceend:)'))

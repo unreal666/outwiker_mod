@@ -26,9 +26,6 @@ pip-log.txt
 .tox
 nosetests.xml
 
-# Translations
-*.mo
-
 # Mr Developer
 .mr.developer.cfg
 .project
@@ -57,3 +54,4 @@ src/tests.log
 src/plugins/*
 .ropeproject
 src/.idea
+doc/doxygen/html

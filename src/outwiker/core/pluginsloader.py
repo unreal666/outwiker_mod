@@ -33,6 +33,14 @@ class PluginsLoader (object):
         # Имя классов плагинов должно начинаться с "Plugins"
         self.__pluginsStartName = "Plugin"
 
+        # Установить в False, если не нужно выводить ошибки (например, в тестах)
+        self.enableOutput = True
+
+
+    def _print (self, text):
+        if self.enableOutput:
+            print text
+
 
     @property
     def disabledPlugins (self):
@@ -137,38 +145,50 @@ class PluginsLoader (object):
         for packageName in dirPackagesList:
             packagePath = os.path.join (baseDir, packageName)
 
+            # Флаг, обозначающий, что удалось импортировать хотя бы один модуль
+            success = False
+
+            # Список строк, описывающий возникшие ошибки во время импортирования
+            # Выводятся только если не удалось импортировать ни одного модуля
+            errors = []
+
             # Проверить, что это директория
             if os.path.isdir (packagePath):
                 # Переберем все файлы внутри packagePath 
                 # и попытаемся их импортировать
                 for fileName in os.listdir (packagePath):
-                    module = self._importSingleModule (packageName, fileName)
-                    if module != None:
-                        modules.append (module)
+                    try:
+                        module = self._importSingleModule (packageName, fileName)
+                        if module != None:
+                            modules.append (module)
+                            success = True
+                    except ImportError as e:
+                        errors.append ("*** Plugin loading error ***\n{package}/{fileName}\n{error}".format (
+                            package = packageName, 
+                            fileName = fileName,
+                            error=str(e) ))
+
+            if not success:
+                self._print (u"\n\n".join (errors) + u"\n")
 
         return modules
 
 
-    @staticmethod
-    def _importSingleModule (packageName, fileName):
+    def _importSingleModule (self, packageName, fileName):
         """
         Импортировать один модуль по имени пакета и файла с модулем
         """
         extension = ".py"
+        result = None
 
         # Проверим, что файл может быть модулем
         if fileName.endswith (extension) and fileName != "__init__.py":
             modulename = fileName[: -len (extension)]
-            try:
-                # Попытаться импортировать модуль
-                package = __import__ (packageName + "." + modulename)
-                return getattr (package, modulename)
-            except ImportError as e:
-                # print "*** {modulename}\n{error}\n".format (modulename=modulename, error=str(e))
-                # Ну не шмогли импортировать, тогда этот модуль игнорируем
-                pass
+            # Попытаться импортировать модуль
+            package = __import__ (packageName + "." + modulename)
+            result = getattr (package, modulename)
 
-        return None
+        return result
 
 
     def __loadPlugins (self, modules):
@@ -201,8 +221,9 @@ class PluginsLoader (object):
             try:
                 plugin = obj (self.__application)
             except BaseException as e:
-                print "*** {classname}\n{error}\n".format (classname=name, 
-                        error=str(e))
+                self._print ("*** Plugin loading error ***\n{classname}\n{error}\n".format (
+                    classname=name, 
+                    error=str(e) ) )
                 return
 
             if not self.__isNewPlugin (plugin.name):

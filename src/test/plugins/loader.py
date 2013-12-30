@@ -39,12 +39,12 @@ class PluginsLoaderTest(unittest.TestCase):
         self.assertEqual (loader[u"TestEmpty2"].version, u"0.1")
         self.assertEqual (loader[u"TestEmpty2"].description, u"This plugin is empty")
 
-        loader.clear()
-        self.assertEqual (len (loader), 0)
-
         # Проверим, как работает итерация
         for plugin in loader:
             self.assertTrue (plugin == loader[u"TestEmpty1"] or plugin == loader[u"TestEmpty2"])
+
+        loader.clear()
+        self.assertEqual (len (loader), 0)
 
 
     def testLoadInvalid (self):
@@ -58,10 +58,11 @@ class PluginsLoaderTest(unittest.TestCase):
                 u"../plugins/testinvalid7",
                 u"../plugins/testempty1", 
                 u"../plugins/testempty2",
-                u"../plugins/testempty2",                # Ссылка на плагин testempty посторияется еще раз
+                u"../plugins/testempty2",                # Ссылка на плагин testempty2 повторяется еще раз
                 u"../plugins/testwikicommand"]
 
         loader = PluginsLoader(Application)
+        loader.enableOutput = False
         loader.load (dirlist)
 
         self.assertEqual (len (loader), 3)

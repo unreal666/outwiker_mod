@@ -5,10 +5,36 @@
 """
 
 from outwiker.core.tree import WikiPage
-from wikipanel import WikiPagePanel
+from wikipageview import WikiPageView
 from wikipreferences import WikiPrefGeneralPanel
 from outwiker.core.factory import PageFactory
 from outwiker.gui.preferences.preferencepanelinfo import PreferencePanelInfo
+from outwiker.gui.hotkey import HotKey
+
+from actions.fontsizebig import WikiFontSizeBigAction
+from actions.fontsizesmall import WikiFontSizeSmallAction
+from actions.nonparsed import WikiNonParsedAction
+from actions.thumb import WikiThumbAction
+from actions.equation import WikiEquationAction
+from actions.openhtmlcode import WikiOpenHtmlCodeAction
+from actions.updatehtml import WikiUpdateHtmlAction
+from actions.attachlist import WikiAttachListAction
+from actions.childlist import WikiChildListAction
+from actions.include import WikiIncludeAction
+
+
+_actions = [
+        (WikiFontSizeBigAction, HotKey (".", ctrl=True)),
+        (WikiFontSizeSmallAction, HotKey (",", ctrl=True)),
+        (WikiNonParsedAction, None),
+        (WikiThumbAction, HotKey ("M", ctrl=True)),
+        (WikiEquationAction, HotKey ("Q", ctrl=True)),
+        (WikiOpenHtmlCodeAction, HotKey ("F4", shift=True)),
+        (WikiUpdateHtmlAction, HotKey ("F4", ctrl=True)),
+        (WikiAttachListAction, None),
+        (WikiChildListAction, None),
+        (WikiIncludeAction, None),
+        ]
 
 
 class WikiWikiPage (WikiPage):
@@ -38,10 +64,6 @@ class WikiPageFactory (PageFactory):
     title = _(u"Wiki Page")
 
 
-    def __init__ (self):
-        pass
-
-
     @staticmethod
     def create (parent, title, tags):
         """
@@ -55,7 +77,7 @@ class WikiPageFactory (PageFactory):
         """
         Вернуть контрол, который будет отображать и редактировать страницу
         """
-        panel = WikiPagePanel (parent)
+        panel = WikiPageView (parent)
 
         return panel
 
@@ -70,3 +92,15 @@ class WikiPageFactory (PageFactory):
 
         return [ PreferencePanelInfo (generalPanel, _(u"General") ) ]
 
+
+    @staticmethod
+    def registerActions (application):
+        """
+        Зарегистрировать все действия, связанные с викистраницей
+        """
+        map (lambda actionTuple: application.actionController.register (actionTuple[0](application), actionTuple[1] ), _actions)
+
+
+    @staticmethod
+    def removeActions (application):
+        map (lambda actionTuple: application.actionController.removeAction (actionTuple[0].stringId), _actions)
