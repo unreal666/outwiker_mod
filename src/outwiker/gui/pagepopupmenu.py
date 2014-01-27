@@ -10,6 +10,7 @@ from outwiker.actions.addsiblingpage import AddSiblingPageAction
 from outwiker.actions.removepage import RemovePageAction
 from outwiker.actions.renamepage import RenamePageAction
 from outwiker.actions.editpageprop import EditPagePropertiesAction
+from outwiker.gui.pagedialog import createSiblingPage, createChildPage
 
 
 class PagePopupMenu (object):
@@ -49,12 +50,12 @@ class PagePopupMenu (object):
 
     def __onAddChild (self, event):
         assert self.popupPage != None
-        self._application.actionController.getAction (AddChildPageAction.stringId).run (None)
+        createChildPage (self.parent, self.popupPage)
 
 
     def __onAddSibling (self, event):
         assert self.popupPage != None
-        self._application.actionController.getAction (AddSiblingPageAction.stringId).run (None)
+        createSiblingPage (self.parent, self.popupPage)
 
 
     def __onPropertiesPopup (self, event):
@@ -102,7 +103,8 @@ class PagePopupMenu (object):
         Удалить страницу
         """
         assert self.popupPage != None
-        self._application.actionController.getAction (RemovePageAction.stringId).run (None)
+        if self.popupPage != None:
+            outwiker.core.commands.removePage (self.popupPage)
 
 
     def __onRename (self, event):

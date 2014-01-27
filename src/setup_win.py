@@ -21,9 +21,6 @@ def getCurrentVersion ():
     return version_str
 
 includefiles = ['images', 
-    'msvcr90.dll', 
-    'msvcp90.dll', 
-    'Microsoft.VC90.CRT.manifest', 
     'help', 
     'locale', 
     'version.txt', 
@@ -33,13 +30,21 @@ includefiles = ['images',
 
 includes = []
 excludes = []
-packages = ['urllib', 'urllib2']
+# Добавляем 'outwiker.pages.wiki.wikipanel', 
+# т.к. этот модуль используется только в старых версиях плагинов
+packages = ['urllib', 'urllib2', 'outwiker.pages.wiki.wikipanel']
 
 
 setup(
     name = "OutWiker",
     version = getCurrentVersion(),
     description = "Wiki + Outliner",
-    options = {'build_exe': {'excludes':excludes, 'packages':packages, 'include_files':includefiles, 'build_exe':'../build/outwiker_win'}},
+    options = {'build_exe': {
+        'excludes':excludes, 
+        'packages':packages, 
+        'include_files':includefiles, 
+        'build_exe':'../build/outwiker_win',
+        'include_msvcr': True,
+        }},
     executables = [Executable("runoutwiker.py", base = 'Win32GUI', icon = "images/outwiker.ico", targetName="outwiker.exe")])
 

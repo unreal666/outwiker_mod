@@ -15,7 +15,7 @@ from .controller import Controller
 
 
 if getCurrentVersion() < Version (1, 7, 0, 684, status=StatusSet.DEV):
-    print ("Spoiler plugin. OutWiker version requirement: 1.7.0.684")
+    print ("UpdateNotifier plugin. OutWiker version requirement: 1.7.0.684")
 else:
     class PluginUpdateNotifier (Plugin):
         """
@@ -50,7 +50,7 @@ else:
 
         @property
         def version (self):
-            return u"1.0"
+            return u"1.1"
 
 
         @property
@@ -91,3 +91,9 @@ else:
         @property
         def VersionList (self):
             return VersionList
+
+
+        @property
+        def loaders (self):
+            import loaders
+            return loaders
