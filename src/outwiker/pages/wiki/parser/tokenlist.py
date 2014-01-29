@@ -137,8 +137,10 @@ class ListToken (object):
         """
         Преобразовать список элементов списка в HTML-список (возможно, вложенный)
         """
-        if tokens[-1][-1] == "\n":
-            self.unitEnd = "\n"
+        if tokens[-1][-2:] == "\n\n":
+            self.unitEnd = "\n\n"
+        elif tokens[-1][-1] == "\n":
+           self.unitEnd = "\n"
         else:
             self.unitEnd = ""
 
