@@ -13,14 +13,12 @@ class BaseSearchAction (BaseAction):
         self._application = application
 
 
-    def _showSearchPanel (self, searchPanel):
-        if not searchPanel.IsShown():
-            searchPanel.Show()
-            searchPanel.GetParent().Layout()
-
-
     def _getPageView (self):
         return self._application.mainWindow.pagePanel.panel.pageView
+
+
+    def _getSearchPanel (self):
+        return self._getPageView().GetSearchPanel()
 
 
 
@@ -41,10 +39,11 @@ class SearchAction (BaseSearchAction):
 
 
     def run (self, params):
-        searchPanel = self._getPageView().GetSearchPanel()
+        searchPanel = self._getSearchPanel()
 
         if searchPanel != None:
-            self._showSearchPanel (searchPanel)
+            searchPanel.switchToSearchMode()
+            searchPanel.show()
             searchPanel.startSearch()
 
 
@@ -65,10 +64,10 @@ class SearchNextAction (BaseSearchAction):
 
 
     def run (self, params):
-        searchPanel = self._getPageView().GetSearchPanel()
+        searchPanel = self._getSearchPanel()
 
         if searchPanel != None:
-            self._showSearchPanel (searchPanel)
+            searchPanel.show()
             searchPanel.nextSearch()
 
 
@@ -89,8 +88,33 @@ class SearchPrevAction (BaseSearchAction):
 
 
     def run (self, params):
-        searchPanel = self._getPageView().GetSearchPanel()
+        searchPanel = self._getSearchPanel()
 
         if searchPanel != None:
-            self._showSearchPanel (searchPanel)
+            searchPanel.show()
             searchPanel.prevSearch()
+
+
+class SearchAndReplaceAction (BaseSearchAction):
+    """
+    Начать поиск и замену на странице
+    """
+    stringId = u"SearchReplace"
+
+    @property
+    def title (self):
+        return _(u"Search and Replace")
+
+
+    @property
+    def description (self):
+        return _(u"Begin search and replace on page")
+
+
+    def run (self, params):
+        searchPanel = self._getSearchPanel()
+
+        if searchPanel != None:
+            searchPanel.switchToReplaceMode()
+            searchPanel.show()
+            searchPanel.startSearch()

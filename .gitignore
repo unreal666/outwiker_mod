@@ -55,3 +55,4 @@ src/plugins/*
 .ropeproject
 src/.idea
 doc/doxygen/html
+tests_win
