@@ -92,13 +92,13 @@ class TextEditor(wx.Panel):
 
 
     def __do_layout(self):
-        mainSizer = wx.FlexGridSizer(2, 1, 0, 0)
-        mainSizer.Add(self.textCtrl, 1, wx.EXPAND, 0)
-        mainSizer.Add(self._searchPanel, 1, wx.EXPAND, 0)
-        self.SetSizer(mainSizer)
-        mainSizer.Fit(self)
+        mainSizer = wx.FlexGridSizer(rows=2)
         mainSizer.AddGrowableRow(0)
         mainSizer.AddGrowableCol(0)
+
+        mainSizer.Add(self.textCtrl, 0, wx.EXPAND, 0)
+        mainSizer.Add(self._searchPanel, 0, wx.EXPAND, 0)
+        self.SetSizer(mainSizer)
 
         self._searchPanel.Hide()
         self.Layout()
@@ -135,6 +135,41 @@ class TextEditor(wx.Panel):
 
         self.__setMarginWidth (self.textCtrl)
         self.textCtrl.SetTabWidth (self.config.tabWidth.value)
+
+        if self.config.homeEndKeys.value == EditorConfig.HOME_END_OF_LINE:
+            # Клавиши Home / End переносят курсор на начало / конец строки
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_HOME, 
+                    0, 
+                    wx.stc.STC_CMD_HOMEDISPLAY)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_HOME, 
+                    wx.stc.STC_SCMOD_ALT, 
+                    wx.stc.STC_CMD_HOME)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_END, 
+                    0, 
+                    wx.stc.STC_CMD_LINEENDDISPLAY)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_END, 
+                    wx.stc.STC_SCMOD_ALT, 
+                    wx.stc.STC_CMD_LINEEND)
+        else:
+            # Клавиши Home / End переносят курсор на начало / конец абзаца
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_HOME, 
+                    0, 
+                    wx.stc.STC_CMD_HOME)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_HOME, 
+                    wx.stc.STC_SCMOD_ALT, 
+                    wx.stc.STC_CMD_HOMEDISPLAY)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_END, 
+                    0, 
+                    wx.stc.STC_CMD_LINEEND)
+
+            self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_END, 
+                    wx.stc.STC_SCMOD_ALT, 
+                    wx.stc.STC_CMD_LINEENDDISPLAY)
 
 
     def __setMarginWidth (self, editor):

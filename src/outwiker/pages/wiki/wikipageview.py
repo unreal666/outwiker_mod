@@ -96,7 +96,6 @@ class WikiPageView (BaseHtmlPanel):
         self._wikiPanelName = "wiki"
 
         self.mainWindow.toolbars[self._wikiPanelName] = WikiToolBar(self.mainWindow, self.mainWindow.auiManager)
-        self.mainWindow.toolbars[self._wikiPanelName].UpdateToolBar()
 
         self.notebook.SetPageText (0, _(u"Wiki"))
 
@@ -206,8 +205,6 @@ class WikiPageView (BaseHtmlPanel):
     def _enableActions (self, enabled):
         actionController = self._application.actionController
 
-        self.mainWindow.Freeze()
-
         # Активируем / дизактивируем собственные действия
         map (lambda action: actionController.enableTools (action.stringId, enabled), 
                 self.__wikiNotationActions)
@@ -215,8 +212,6 @@ class WikiPageView (BaseHtmlPanel):
         # Активируем / дизактивируем полиморфные действия
         map (lambda strid: actionController.enableTools (strid, enabled), 
                 self.__polyActions)
-
-        self.mainWindow.Thaw()
 
 
     def _onSwitchToCode (self):
@@ -372,26 +367,6 @@ class WikiPageView (BaseHtmlPanel):
                 fullUpdate=False)
 
 
-        # Цитата
-        self._application.actionController.getAction (QUOTE_STR_ID).setFunc (lambda param: self.turnText (u'[>', u'<]'))
-
-        self._application.actionController.appendMenuItem (QUOTE_STR_ID, menu)
-        self._application.actionController.appendToolbarButton (QUOTE_STR_ID, 
-                toolbar,
-                os.path.join (self.imagesDir, "quote.png"),
-                fullUpdate=False)
-
-
-        # Моноширинный шрифт
-        self._application.actionController.getAction (CODE_STR_ID).setFunc (lambda param: self.turnText (u'@@', u'@@'))
-
-        self._application.actionController.appendMenuItem (CODE_STR_ID, menu)
-        self._application.actionController.appendToolbarButton (CODE_STR_ID, 
-                toolbar,
-                os.path.join (self.imagesDir, "code.png"),
-                fullUpdate=False)
-
-
     def __addAlignTools (self):
         toolbar = self.mainWindow.toolbars[self.__toolbarName]
         menu = self.__alignMenu
@@ -438,13 +413,34 @@ class WikiPageView (BaseHtmlPanel):
 
     def __addFormatTools (self):
         menu = self.__formatMenu
+        toolbar = self.mainWindow.toolbars[self.__toolbarName]
+
+        # Текст, который не нужно разбирать википарсером
+        self._application.actionController.appendMenuItem (WikiNonParsedAction.stringId, menu)
 
         # Форматированный текст
         self._application.actionController.getAction (PREFORMAT_STR_ID).setFunc (lambda param: self.turnText (u"[@", u"@]"))
         self._application.actionController.appendMenuItem (PREFORMAT_STR_ID, menu)
 
-        # Текст, который не нужно разбирать википарсером
-        self._application.actionController.appendMenuItem (WikiNonParsedAction.stringId, menu)
+        # Цитата
+        self._application.actionController.getAction (QUOTE_STR_ID).setFunc (lambda param: self.turnText (u'[>', u'<]'))
+
+        self._application.actionController.appendMenuItem (QUOTE_STR_ID, menu)
+        self._application.actionController.appendToolbarButton (QUOTE_STR_ID, 
+                toolbar,
+                os.path.join (self.imagesDir, "quote.png"),
+                fullUpdate=False)
+
+
+        # Моноширинный шрифт
+        self._application.actionController.getAction (CODE_STR_ID).setFunc (lambda param: self.turnText (u'@@', u'@@'))
+
+        self._application.actionController.appendMenuItem (CODE_STR_ID, menu)
+        self._application.actionController.appendToolbarButton (CODE_STR_ID, 
+                toolbar,
+                os.path.join (self.imagesDir, "code.png"),
+                fullUpdate=False)
+        
 
 
     def __addListTools (self):
@@ -616,8 +612,6 @@ class WikiPageView (BaseHtmlPanel):
         self.__listMenu = wx.Menu()
         self.__commandsMenu = wx.Menu()
 
-        self.mainWindow.Freeze()
-
         self._addRenderTools()
 
         # Переключиться на код HTML
@@ -650,8 +644,6 @@ class WikiPageView (BaseHtmlPanel):
         self.mainWindow.mainMenu.Insert (self.__WIKI_MENU_INDEX, 
                 self.__wikiMenu, 
                 _(u"Wiki") )
-
-        self.mainWindow.Thaw()
 
 
     @property
