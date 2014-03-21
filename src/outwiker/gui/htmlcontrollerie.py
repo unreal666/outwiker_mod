@@ -40,12 +40,17 @@ class UriIdentifierIE (UriIdentifier):
         if anchor != None and self._currentPage[anchor.replace("\\", "/")] != None:
             return self._currentPage[anchor.replace("\\", "/")]
 
+        if len (subpath) > 1 and subpath[1] == ":":
+            if subpath.startswith (self._currentPage.path):
+                subpath = subpath[len (self._currentPage.path) + 1: ]
+            elif subpath.startswith (self._currentPage.root.path):
+                subpath = subpath[len (self._currentPage.root.path): ]
+            else:
+                subpath = subpath[2:]
 
-        if subpath.startswith (self._currentPage.path):
-            subpath = subpath[len (self._currentPage.path) + 1: ].replace ("\\", "/")
-        elif len (subpath) > 1 and subpath[1] == ":":
-            subpath = subpath[2:].replace ("\\", "/")
-            #print subpath
+            subpath = subpath.replace ("\\", "/")
+            if len (subpath) > 1 and subpath.endswith ("/"):
+                subpath = subpath[:-1]
 
         if subpath.startswith ("about:"):
             subpath = self.__removeAboutBlank (subpath).replace ("\\", "/")
