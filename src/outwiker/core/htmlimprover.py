@@ -38,9 +38,7 @@ class HtmlImprover (object):
 
         blocktags = r"[uod]l|h[1-6]|pre|table|div|blockquote|hr"
         opentags = r"[uod]l|table"
-        opentags += r"|" + opentags
         closetags = r"li|d[td]|t[rdh]|caption|thead|tfoot|tbody|colgroup|col"
-        closetags += r"|" + closetags
 
         ro1 = r"<p>((?:<br>)?)(?=<(?:" + blocktags + r")[ >])"
         ro2 = r"(</(?:" + blocktags + r")>|<hr ?/?>)</p>"
