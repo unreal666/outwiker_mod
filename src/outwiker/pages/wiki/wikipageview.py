@@ -168,10 +168,10 @@ class WikiPageView (BaseHtmlPanel):
         self.htmlCodeWindow = HtmlTextEditor(self.notebook, -1)
         self.htmlCodeWindow.SetReadOnly (True)
         parentSizer.Add(self.htmlCodeWindow, 1, wx.TOP|wx.BOTTOM|wx.EXPAND, 2)
-        
+
         self.addPage (self.htmlCodeWindow, _("HTML"))
         return self.pageCount - 1
-    
+
 
     def GetTextEditor(self):
         return WikiEditor
@@ -186,7 +186,7 @@ class WikiPageView (BaseHtmlPanel):
         return None
 
 
-    def onTabChanged(self, event):
+    def onTabChanged (self):
         if self._currentpage == None:
             return
 
@@ -214,26 +214,25 @@ class WikiPageView (BaseHtmlPanel):
                 self.__polyActions)
 
 
-    def _onSwitchToCode (self):
-        """
-        Обработка события при переключении на код страницы
-        """
-        self._enableActions (True)
-        super (WikiPageView, self)._onSwitchToCode()
-
-
-    def _onSwitchToPreview (self):
-        """
-        Обработка события при переключении на просмотр страницы
-        """
-        self._enableActions (False)
-        super (WikiPageView, self)._onSwitchToPreview()
-
-
     def _onSwitchCodeHtml (self):
         assert self._currentpage != None
 
         self._enableActions (False)
+        self._updateHtmlCode ()
+        self._enableAllTools ()
+        self.htmlCodeWindow.SetFocus()
+        self.htmlCodeWindow.Update()
+
+
+    def _updateResult (self):
+        super (WikiPageView, self)._updateResult ()
+        self._updateHtmlCode()
+
+
+    def _updateHtmlCode (self):
+        if self.htmlcodePageIndex == -1:
+            # Нет вкладки с кодом HTML. Ничего не делаем
+            return
 
         self.Save()
         status_item = 0
@@ -255,10 +254,6 @@ class WikiPageView (BaseHtmlPanel):
 
         setStatusText (u"", status_item)
         self._application.onHtmlRenderingEnd (self._currentpage, self.htmlWindow)
-
-        self._enableAllTools ()
-        self.htmlCodeWindow.SetFocus()
-        self.htmlCodeWindow.Update()
 
 
     def _showHtmlCode (self, path):
