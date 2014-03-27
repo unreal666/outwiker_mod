@@ -29,31 +29,6 @@ class HtmlImprover (object):
         result = text.replace ("\r\n", "\n")
         result = HtmlImprover.__replaceEndlines (result)
 
-        # Компенсация восстановления переносов строк после списков
-        ro0 = r"(?<=</[uo]l>)<p><br>(?=<[uo]l>)"
-        result = re.sub(ro0, "\n\n", result, flags=re.I)
-
-        # Сохраним исходный регистр тега <p>.
-        result = re.sub ("<(p)>", r"</\1>\n\n<\1>", result, flags=re.I)
-
-        blocktags = r"[uod]l|h[1-6]|pre|table|div|blockquote|hr"
-        opentags = r"[uod]l|table"
-        closetags = r"li|d[td]|t[rdh]|caption|thead|tfoot|tbody|colgroup|col"
-
-        ro1 = r"<p>((?:<br>)?)(?=<(?:" + blocktags + r")[ >])"
-        ro2 = r"(</(?:" + blocktags + r")>|<hr ?/?>)</p>"
-        ro3 = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + r")>)[\s\n]*<br ?/?>"
-        ro4 = r"<br ?/?>[\s\n]*(?=<(?:" + opentags + r")[ >]|<hr ?/?>)"
-        ro5 = r"<p>(?=</)"
-        ro6 = r"(?=<li>|</[uo]l>|<[bh]r ?/?>|<pre>)"
-
-        result = re.sub(ro1, r"\1", result, flags=re.I)  # Удаление тега <P> перед некоторыми блочными элементами
-        result = re.sub(ro2, r"\1", result, flags=re.I)  # Удаление тега </P> после некоторых блочных элементов
-        result = re.sub(ro3, r"\1", result, flags=re.I)  # Удаление тега <BR> после некоторых блочных элементов
-        result = re.sub(ro4, "", result, flags=re.I)     # Удаление тега <BR> перед некоторыми блочными элементами
-        result = re.sub(ro5, "", result, flags=re.I)     # Удаление некоторого разного мусора/бесполезного кода
-        result = re.sub(ro6, "\n", result, flags=re.I)   # Добавление переноса строки перед некоторыми элементами
-
         return result
 
 
@@ -82,33 +57,72 @@ class HtmlImprover (object):
         index = 0
 
         for n in range (len (parts)):
-            item = text[index: index + len (parts[n]) ]
+            textitem = text[index: index + len (parts[n]) ]
             if n % 2 == 0:
-                item = item.replace ("\n\n", "<p>")
-                item = item.replace ("\n", "<br>")
-                item = item.replace ("<br><li>", "<li>")
-
-                item = item.replace ("<br><h1>", "<h1>")
-                item = item.replace ("<br><h2>", "<h2>")
-                item = item.replace ("<br><h3>", "<h3>")
-                item = item.replace ("<br><h4>", "<h4>")
-                item = item.replace ("<br><h5>", "<h5>")
-                item = item.replace ("<br><h6>", "<h6>")
+                textitem = HtmlImprover.__improveTags (textitem)
                 index += len (parts[n]) + len (starttag)
             else:
-                item = "<pre" + item + "</pre>"
+                textitem = "\n<pre" + textitem + "</pre>\n"
                 index += len (parts[n]) + len (endtag)
 
-            result += item
+            result += textitem
 
         return result
 
 
     @staticmethod
-    def ireplace (text, old, new):
+    def __improveTags (text):
         """
-        Замена заглавных и прописных строк тегов
+        Улучшения переводов строк до и после некоторых тегов
         """
-        result = text.replace (old.lower(), new.lower())
-        result = result.replace (old.upper(), new.upper())
+        result = text
+        result = re.sub(r'(\n+)\n\n', lambda m: '<p>&nbsp;</p>' * len(m.group(1)), result)
+        result = result.replace ("\n\n", "<p>")
+        result = result.replace ("\n", "<br>")
+
+        # Компенсация восстановления переносов строк после списков
+        ro0 = r"(?<=</[uo]l>)<p><br>(?=<[uo]l>)"
+        result = re.sub(ro0, "\n", result, flags=re.I)
+
+        # Сохраним исходный регистр тега <p>.
+        result = re.sub ("<(p)>", r"</\1>\n<\1>", result, flags=re.I)
+
+        block_tags = r"[uod]l|h\d|pre|table|div|blockquote|hr"
+        opening_tags = r"[uod]l|hr|h\d|table"
+        inner_table_tags = r"t[rdh]|caption|thead|tfoot|tbody|colgroup|col"
+        inner_list_tags = r"li|d[td]"
+        closing_tags = inner_list_tags + "|" + inner_table_tags + r"|h\d"
+
+        # Удаление тега <P> перед некоторыми блочными элементами
+        remove_p_before = r"<p>((?:<br>)?)(?=<(?:" + block_tags + r")[ >])"
+        result = re.sub(remove_p_before, r"\1", result, flags=re.I)
+
+        # Удаление тега <P> перед некоторыми блочными элементами
+        remove_p_after = r"(</(?:" + block_tags + r")>|<hr ?/?>)</p>"
+        result = re.sub(remove_p_after, r"\1", result, flags=re.I)
+
+        # Удаление тега <BR> перед некоторыми блочными элементами
+        remove_br_before = r"<br\s*/?>[\s\n]*(?=<(?:" + opening_tags + r")[ >/])"
+        result = re.sub(remove_br_before, "", result, flags=re.I)
+
+        # Удаление тега <BR> после некоторых блочных элементов
+        remove_br_after = r"(<(?:" + opening_tags + r")[ />]|</(?:" + closing_tags + r")>)[\s\n]*<br\s*/?>"
+        result = re.sub(remove_br_after, r"\1", result, flags=re.I)
+
+        # Удаление некоторого разного мусора/бесполезного кода
+        remove_other_trash = r"<p>(?=</)"
+        result = re.sub(remove_other_trash, "", result, flags=re.I)
+
+        # Добавление переноса строки перед некоторыми элементами
+        append_eol_before = r"\n*(?=<(?:h\d|/?[uod]l|/?table|p|div|blockquote)[\s>]|<hr\s*/?>)"
+        result = re.sub(append_eol_before, "\n", result, flags=re.I)
+
+        # Добавление переноса строки + табуляции перед некоторыми элементами
+        append_eol_tab_before = r"\n*(?=<(?:" + inner_list_tags + "|" + inner_table_tags + ")[\s>])"
+        result = re.sub(append_eol_tab_before, "\n\t", result, flags=re.I)
+
+        # Добавление переноса строки после некоторых элементов
+        append_eol_after = r"(<[hb]r\s*/?>|</\s*(?:h\d|[uod]l|table|p|div|blockquote)>)\n*"
+        result = re.sub(append_eol_after, "\\1\n", result, flags=re.I)
+
         return result
