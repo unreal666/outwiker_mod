@@ -12,6 +12,7 @@ import locale
 import wx
 
 from .pagetitletester import WindowsPageTitleTester, LinuxPageTitleTester
+from outwiker.gui.fileicons import WindowsFileIcons, UnixFileIcons
 
 
 # Папки, используемые в программе
@@ -69,6 +70,11 @@ class Windows (object):
     @property
     def pageTitleTester (self):
         return WindowsPageTitleTester()
+
+
+    @property
+    def fileIcons (self):
+        return WindowsFileIcons()
 
 
 
@@ -146,6 +152,11 @@ class Unix (object):
     @property
     def pageTitleTester (self):
         return LinuxPageTitleTester()
+
+
+    @property
+    def fileIcons (self):
+        return UnixFileIcons()
 
 
 def getOS ():

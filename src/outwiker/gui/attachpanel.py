@@ -7,7 +7,7 @@ import wx
 
 from outwiker.core.application import Application
 from outwiker.core.commands import MessageBox
-import outwiker.core.system
+from outwiker.core.system import getOS, getImagesDir
 from outwiker.core.attachment import Attachment
 from outwiker.actions.attachfiles import AttachFilesAction
 from outwiker.core.events import PAGE_UPDATE_ATTACHMENT
@@ -27,6 +27,9 @@ class AttachPanel(wx.Panel):
 
         self.__set_properties()
         self.__do_layout()
+
+        self.__fileIcons = getOS().fileIcons
+        self.__attachList.SetImageList (self.__fileIcons.imageList, wx.IMAGE_LIST_SMALL)
 
         self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.__onBeginDrag, self.__attachList)
 
@@ -68,11 +71,12 @@ class AttachPanel(wx.Panel):
         self.__unbindAppEvents()
         self.toolBar.ClearTools()
         self.attachList.ClearAll()
+        self.__fileIcons.clear()
         self.Destroy()
-    
+
 
     def __createToolBar (self, parent, id):
-        imagesDir = outwiker.core.system.getImagesDir()
+        imagesDir = getImagesDir()
 
         toolbar = wx.ToolBar (parent, id, style=wx.TB_DOCKABLE)
 
@@ -169,10 +173,20 @@ class AttachPanel(wx.Panel):
             files = Attachment (Application.selectedPage).attachmentFull
             files.sort(Attachment.sortByName, reverse=True)
 
-
             for fname in files:
                 if not os.path.basename(fname).startswith("__") or not os.path.isdir (fname):
-                    self.__attachList.InsertImageStringItem (0, os.path.basename (fname), 0)
+                    # Отключим уведомления об ошибках во всплывающих окнах
+                    # иначе они появляются при попытке прочитать испорченные иконки
+                    # На результат работы это не сказывается, все-равно бракованные
+                    # иконки отлавливаются.
+                    wx.Log_EnableLogging(False)
+
+                    imageIndex = self.__fileIcons.getFileImage (fname)
+
+                    # Вернем всплывающие окна с ошибками
+                    wx.Log_EnableLogging(True)
+
+                    self.__attachList.InsertImageStringItem (0, os.path.basename (fname), imageIndex)
 
         self.__attachList.Thaw()
 
@@ -247,14 +261,14 @@ class AttachPanel(wx.Panel):
             for file in files:
                 fullpath = os.path.join (Attachment (Application.selectedPage).getAttachPath(), file)
                 try:
-                    outwiker.core.system.getOS().startFile (fullpath)
+                    getOS().startFile (fullpath)
                 except OSError:
                     text = _(u"Can't execute file '%s'") % file
                     MessageBox (text, _(u"Error"), wx.ICON_ERROR | wx.OK)
 
 
     def __onBeginDrag(self, event):
-        data = outwiker.core.system.getOS().dragFileDataObject()
+        data = getOS().dragFileDataObject()
 
         for fname in self.__getSelectedFiles():
             data.AddFile (os.path.join (Attachment (Application.selectedPage).getAttachPath(), fname) )
@@ -263,8 +277,5 @@ class AttachPanel(wx.Panel):
         dragSource.SetData(data)
 
         result = dragSource.DoDragDrop ()
-        
-
-# end of class AttachPanel
 
 
