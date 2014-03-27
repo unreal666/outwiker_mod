@@ -82,10 +82,10 @@ class HtmlImprover (object):
 
         # Компенсация восстановления переносов строк после списков
         ro0 = r"(?<=</[uo]l>)<p><br>(?=<[uo]l>)"
-        result = re.sub(ro0, "\n", result, flags=re.I)
+        result = re.sub(ro0, "\n\n", result, flags=re.I)
 
         # Сохраним исходный регистр тега <p>.
-        result = re.sub ("<(p)>", r"</\1>\n<\1>", result, flags=re.I)
+        # result = re.sub ("<(p)>", r"</\1>\n<\1>", result, flags=re.I)
 
         block_tags = r"[uod]l|h\d|pre|table|div|blockquote|hr"
         opening_tags = r"[uod]l|hr|h\d|table"
