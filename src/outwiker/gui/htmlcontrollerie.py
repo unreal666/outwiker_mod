@@ -25,20 +25,25 @@ class UriIdentifierIE (UriIdentifier):
         return href
 
 
-    def _findWikiPage (self, subpath):
+    def _findWikiPage (self, subpath, anchor=None):
         """
         Попытка найти страницу вики
         """
-        if self._currentPage == None:
+        if self._currentPage is None:
             return None
 
         newSelectedPage = None
 
         # Проверим, вдруг IE посчитал, что это не ссылка, а якорь
         # В этом случае ссылка будет выглядеть, как x:\...\{contentfile}#link
-        anchor = self._findAnchor (subpath)
-        if anchor != None and self._currentPage[anchor.replace("\\", "/")] != None:
-            return self._currentPage[anchor.replace("\\", "/")]
+        if anchor is not None:
+            return (self._currentPage[anchor.replace("\\", "/")], anchor)
+            # Если ссылка выглядит как x:\...\{contentfile}#link, то код ниже в любом случае возвратит None
+
+        # Если есть якорь, то отделить его от ссылки
+        if "#" in subpath:
+            pos = subpath.find("#")
+            (subpath, anchor) = (subpath[:pos], subpath[pos:])
 
         if len (subpath) > 1 and subpath[1] == ":":
             if subpath.startswith (self._currentPage.path):
@@ -55,18 +60,19 @@ class UriIdentifierIE (UriIdentifier):
         if subpath.startswith ("about:"):
             subpath = self.__removeAboutBlank (subpath).replace ("\\", "/")
         
-        if len (subpath) > 0 and subpath[0] == "/":
-            # Поиск страниц осуществляем только с корня
-            newSelectedPage = self._currentPage.root[subpath[1:] ]
-        else:
-            # Сначала попробуем найти вложенные страницы с таким subpath
-            newSelectedPage = self._currentPage[subpath]
+        if len (subpath) > 0:
+            if subpath[0] == "/":
+                # Поиск страниц осуществляем только с корня
+                newSelectedPage = self._currentPage.root[subpath[1:] ]
+            else:
+                # Сначала попробуем найти вложенные страницы с таким subpath
+                newSelectedPage = self._currentPage[subpath]
 
-            if newSelectedPage == None:
-                # Если страница не найдена, попробуем поискать, начиная с корня
-                newSelectedPage = self._currentPage.root[subpath]
+                if newSelectedPage is None:
+                    # Если страница не найдена, попробуем поискать, начиная с корня
+                    newSelectedPage = self._currentPage.root[subpath]
 
-        return newSelectedPage
+        return (newSelectedPage, anchor)
 
 
     def __removeAboutBlank (self, href):
@@ -91,7 +97,7 @@ class UriIdentifierIE (UriIdentifier):
         Удалить якорь из адреса текущей загруженной страницы
         То есть из x:\\bla-bla-bla\\__content.html#anchor сделать x:\\bla-bla-bla\\__content.html
         """
-        if currentpage == None:
+        if currentpage is None:
             return href
 
         # assert currentpage != None

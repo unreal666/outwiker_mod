@@ -97,9 +97,9 @@ class HtmlRenderWX (wx.Panel):
             page = self.__findWikiPage (href)
             file = self.__findFile (href)
 
-            if page != None:
+            if page is not None:
                 self._currentPage.root.selectedPage = page
-            elif file != None:
+            elif file is not None:
                 try:
                     outwiker.core.system.getOS().startFile (file)
                 except OSError:
@@ -126,17 +126,17 @@ class HtmlRenderWX (wx.Panel):
         Попытка найти страницу вики, если ссылка, на которую щелкнули не интернетная (http, ftp, mailto)
         """
         assert self._currentPage != None
-        
+
         newSelectedPage = None
 
         if subpath[0] == "/":
             # Поиск страниц осуществляем только с корня
-            newSelectedPage = self._currentPage.root[subpath[1:] ]
+            newSelectedPage = self._currentPage.root[subpath[1:]]
         else:
             # Сначала попробуем найти вложенные страницы с таким subpath
             newSelectedPage = self._currentPage[subpath]
 
-            if newSelectedPage == None:
+            if newSelectedPage is None:
                 # Если страница не найдена, попробуем поискать, начиная с корня
                 newSelectedPage = self._currentPage.root[subpath]
 

@@ -132,7 +132,7 @@ class HtmlRenderWebKit(HtmlRender):
 
 
     def __onHoveredOverLink (self, view, title, uri):
-        if uri == None:
+        if uri is None:
             outwiker.core.commands.setStatusText (u"", self._status_item)
             return
 
@@ -144,19 +144,19 @@ class HtmlRenderWebKit(HtmlRender):
 
         (url, page, filename, anchor) = self.__identifyUri (href)
 
-        if url != None:
+        if url is not None:
             outwiker.core.commands.setStatusText (url, self._status_item)
             return
 
-        if page != None:
+        if page is not None:
             outwiker.core.commands.setStatusText (page.subpath, self._status_item)
             return
 
-        if filename != None:
+        if filename is not None:
             outwiker.core.commands.setStatusText (filename, self._status_item)
             return
 
-        if anchor != None:
+        if anchor is not None:
             outwiker.core.commands.setStatusText (anchor, self._status_item)
             return
 
@@ -203,23 +203,23 @@ class HtmlRenderWebKit(HtmlRender):
 
         (url, page, filename, anchor) = self.__identifyUri (href)
 
-        if url != None:
+        if url is not None:
             self.openUrl (url)
 
-        elif page != None and (button == middle_button or modifier == ctrl_key):
+        elif page is not None and (button == middle_button or modifier == ctrl_key):
             Application.mainWindow.tabsController.openInTab (page, True)
 
-        elif page != None:
+        elif page is not None:
             self._currentPage.root.selectedPage = page
 
-        elif filename != None:
+        elif filename is not None:
             try:
                 outwiker.core.system.getOS().startFile (filename)
             except OSError:
                 text = _(u"Can't execute file '%s'") % filename
                 outwiker.core.commands.MessageBox (text, _(u"Error"), wx.ICON_ERROR | wx.OK)
 
-        elif anchor != None:
+        elif anchor is not None:
             return False
 
         return True

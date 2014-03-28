@@ -9,8 +9,8 @@ def getHtmlRender (parent):
     Возвращает используемый HTML-рендер
     """
     if os.name == "nt":
-        from htmlrenderie import HtmlRenderIE
-        return HtmlRenderIE (parent)
+        from htmlrenderie import HtmlRenderIE as HtmlRenderEngine
     else:
-        from htmlrenderwebkit import HtmlRenderWebKit
-        return HtmlRenderWebKit (parent)
+        from htmlrenderwebkit import HtmlRenderWebKit as HtmlRenderEngine
+
+    return HtmlRenderEngine (parent)

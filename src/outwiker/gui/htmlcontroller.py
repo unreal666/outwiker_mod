@@ -33,9 +33,9 @@ class UriIdentifier (object):
 
         href_clear = self._prepareHref (href)
 
-        page = self._findWikiPage (href_clear)
-        filename = self._findFile (href_clear)
         anchor = self._findAnchor (href_clear)
+        (page, anchor) = self._findWikiPage (href_clear, anchor)
+        filename = self._findFile (href_clear)
 
         return (None, page, filename, anchor)
 
@@ -49,7 +49,7 @@ class UriIdentifier (object):
 
 
     @abstractmethod
-    def _findWikiPage (self, subpath):
+    def _findWikiPage (self, subpath, anchor=None):
         """
         Попытка найти страницу вики
         """

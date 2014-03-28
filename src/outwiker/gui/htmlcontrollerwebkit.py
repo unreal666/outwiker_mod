@@ -21,7 +21,7 @@ class UriIdentifierWebKit (UriIdentifier):
         Удалить якорь из адреса текущей загруженной страницы
         То есть из /bla-bla-bla/#anchor сделать /bla-bla-bla/
         """
-        if currentpage == None:
+        if currentpage is None:
             return href
 
         result = self.__removeFileProtokol (href)
@@ -52,11 +52,11 @@ class UriIdentifierWebKit (UriIdentifier):
         return href
 
 
-    def _findWikiPage (self, href):
+    def _findWikiPage (self, href, anchor=None):
         """
-        Попытка найти страницу вики, если ссылка, на которую щелкнули не интернетная (http, ftp, mailto)
+        Попытка найти страницу вики, если ссылка, на которую щелкнули, не интернетная (http, ftp, mailto)
         """
-        if self._currentPage == None:
+        if self._currentPage is None:
             return None
 
         newSelectedPage = None
@@ -71,8 +71,8 @@ class UriIdentifierWebKit (UriIdentifier):
             # Сначала попробуем найти вложенные страницы с таким href
             newSelectedPage = self._currentPage[href]
 
-            if newSelectedPage == None:
+            if newSelectedPage is None:
                 # Если страница не найдена, попробуем поискать, начиная с корня
                 newSelectedPage = self._currentPage.root[href]
 
-        return newSelectedPage
+        return (newSelectedPage, anchor)
