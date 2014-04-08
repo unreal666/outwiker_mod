@@ -4,8 +4,9 @@
 
 import wx
 
-from .texteditor import TextEditor
+from outwiker.gui.texteditor import TextEditor
 from outwiker.core.application import Application
+from outwiker.gui.guiconfig import HtmlEditorStylesConfig
 
 
 class HtmlTextEditor (TextEditor):
@@ -20,32 +21,17 @@ class HtmlTextEditor (TextEditor):
 
     
     def setupHtmlStyles (self, textCtrl):
-        # Значения по умолчанию для стилей
-        stylesdefault = {
-                wx.stc.STC_H_TAG: "fore:#000080,bold",
-                wx.stc.STC_H_TAGUNKNOWN: "fore:#FF0000",
-                wx.stc.STC_H_ATTRIBUTE: "fore:#008080",
-                wx.stc.STC_H_ATTRIBUTEUNKNOWN: "fore:#FF0000",
-                wx.stc.STC_H_NUMBER: "fore:#000000",
-                wx.stc.STC_H_DOUBLESTRING: "fore:#0000FF",
-                wx.stc.STC_H_SINGLESTRING: "fore:#0000FF",
-                wx.stc.STC_H_COMMENT: "fore:#12B535"
-                }
-
         # Устанавливаемые стили
-        styles = {}
-        
-        try:
-            styles = self.loadStyles()
-        except:
-            styles = stylesdefault
-            self.saveStyles(styles)
+        styles = self.loadStyles()
         
         textCtrl.SetLexer (wx.stc.STC_LEX_HTML)
         textCtrl.StyleClearAll()
 
         for key in styles.keys():
             textCtrl.StyleSetSpec (key, styles[key])
+            textCtrl.StyleSetSize (key, self.config.fontSize.value)
+            textCtrl.StyleSetFaceName (key, self.config.fontName.value)
+            textCtrl.StyleSetBackground (key, self.config.backColor.value)
 
         tags = u"a abbr acronym address applet area b base basefont \
             bdo big blockquote body br button caption center \
@@ -89,35 +75,22 @@ class HtmlTextEditor (TextEditor):
         """
         Загрузить стили из конфига
         """
-        config = Application.config
+        config = HtmlEditorStylesConfig (Application.config)
 
         styles = {}
 
-        styles[wx.stc.STC_H_TAG] = config.get (self._htmlStylesSection, "tag")
-        styles[wx.stc.STC_H_TAGUNKNOWN] = config.get (self._htmlStylesSection, "tag_unknoun")
-        styles[wx.stc.STC_H_ATTRIBUTE] = config.get (self._htmlStylesSection, "attribute")
-        styles[wx.stc.STC_H_ATTRIBUTEUNKNOWN] = config.get (self._htmlStylesSection, "attribute_unknown")
-        styles[wx.stc.STC_H_NUMBER] = config.get (self._htmlStylesSection, "number")
-        styles[wx.stc.STC_H_DOUBLESTRING] = config.get (self._htmlStylesSection, "doublestring")
-        styles[wx.stc.STC_H_SINGLESTRING] = config.get (self._htmlStylesSection, "singlestring")
-        styles[wx.stc.STC_H_COMMENT] = config.get (self._htmlStylesSection, "comment")
+        styles[wx.stc.STC_H_TAG] = config.tag.value.tostr()
+        styles[wx.stc.STC_H_TAGUNKNOWN] = config.tagUnknown.value.tostr()
+        styles[wx.stc.STC_H_ATTRIBUTE] = config.attribute.value.tostr()
+        styles[wx.stc.STC_H_ATTRIBUTEUNKNOWN] = config.attributeUnknown.value.tostr()
+        styles[wx.stc.STC_H_NUMBER] = config.number.value.tostr()
+        styles[wx.stc.STC_H_DOUBLESTRING] = config.string.value.tostr()
+        styles[wx.stc.STC_H_SINGLESTRING] = config.string.value.tostr()
+        styles[wx.stc.STC_H_COMMENT] = config.comment.value.tostr()
 
         return styles
 
     
-    def saveStyles (self, styles):
-        config = Application.config
-
-        config.set (self._htmlStylesSection, "tag", styles[wx.stc.STC_H_TAG])
-        config.set (self._htmlStylesSection, "tag_unknoun", styles[wx.stc.STC_H_TAGUNKNOWN])
-        config.set (self._htmlStylesSection, "attribute", styles[wx.stc.STC_H_ATTRIBUTE])
-        config.set (self._htmlStylesSection, "attribute_unknown", styles[wx.stc.STC_H_ATTRIBUTEUNKNOWN])
-        config.set (self._htmlStylesSection, "number", styles[wx.stc.STC_H_NUMBER])
-        config.set (self._htmlStylesSection, "doublestring", styles[wx.stc.STC_H_DOUBLESTRING])
-        config.set (self._htmlStylesSection, "singlestring", styles[wx.stc.STC_H_SINGLESTRING])
-        config.set (self._htmlStylesSection, "comment", styles[wx.stc.STC_H_COMMENT])
-
-
     def turnList (self, start, end, itemStart, itemEnd):
         """
         Создать список

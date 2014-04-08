@@ -5,7 +5,8 @@ import locale
 
 import wx
 
-from outwiker.core.config import StringOption, BooleanOption, IntegerOption, ListOption
+from outwiker.core.config import StringOption, BooleanOption, IntegerOption, ListOption, StcStyleOption
+from outwiker.gui.stcstyle import StcStyle
 
 
 class GeneralGuiConfig (object):
@@ -161,6 +162,14 @@ class EditorConfig (object):
     HOME_END_KEYS_SECTION = u"HomeEndKeys"
     HOME_END_KEYS_DEFAULT = HOME_END_OF_LINE
 
+    # Цвет шрифта
+    FONT_COLOR_SECTION = u"FontColor"
+    FONT_COLOR_DEFAULT = u"#000000"
+
+    # Цвет фона
+    BACK_COLOR_SECTION = u"BackColor"
+    BACK_COLOR_DEFAULT = u"#FFFFFF"
+
 
     def __init__ (self, config):
         self.config = config
@@ -204,6 +213,83 @@ class EditorConfig (object):
                 GeneralGuiConfig.GENERAL_SECTION,
                 EditorConfig.HOME_END_KEYS_SECTION,
                 EditorConfig.HOME_END_KEYS_DEFAULT)
+
+        self.fontColor = StringOption (self.config,
+                GeneralGuiConfig.GENERAL_SECTION,
+                EditorConfig.FONT_COLOR_SECTION,
+                EditorConfig.FONT_COLOR_DEFAULT)
+
+        self.backColor = StringOption (self.config,
+                GeneralGuiConfig.GENERAL_SECTION,
+                EditorConfig.BACK_COLOR_SECTION,
+                EditorConfig.BACK_COLOR_DEFAULT)
+
+
+class HtmlEditorStylesConfig (object):
+    """
+    Класс для хранения настроек стилей редактора HTML
+    """
+    HTML_STYLES_SECTION = u"EditorStyles"
+
+    STYLE_TAG_SECTION = u"tag"
+    STYLE_TAG_DEFAULT = StcStyle.parse (u"fore:#000080,bold")
+
+    STYLE_TAG_UNKNOWN_SECTION = u"tag_unknown"
+    STYLE_TAG_UNKNOWN_DEFAULT = StcStyle.parse (u"fore:#FF0000")
+
+    STYLE_ATTRIBUTE_SECTION = u"attribute"
+    STYLE_ATTRIBUTE_DEFAULT = StcStyle.parse (u"fore:#008080")
+
+    STYLE_ATTRIBUTE_UNKNOWN_SECTION = u"attribute_unknown"
+    STYLE_ATTRIBUTE_UNKNOWN_DEFAULT = StcStyle.parse (u"fore:#FF0000")
+
+    STYLE_NUMBER_SECTION = u"number"
+    STYLE_NUMBER_DEFAULT = StcStyle.parse (u"fore:#000000")
+
+    STYLE_STRING_SECTION = u"string"
+    STYLE_STRING_DEFAULT = StcStyle.parse (u"fore:#0000FF")
+
+    STYLE_COMMENT_SECTION = u"comment"
+    STYLE_COMMENT_DEFAULT = StcStyle.parse (u"fore:#12B535")
+
+
+    def __init__ (self, config):
+        self.config = config
+
+        self.tag = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_TAG_SECTION, 
+                HtmlEditorStylesConfig.STYLE_TAG_DEFAULT)
+
+        self.tagUnknown = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_TAG_UNKNOWN_SECTION, 
+                HtmlEditorStylesConfig.STYLE_TAG_UNKNOWN_DEFAULT)
+
+        self.attribute = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_ATTRIBUTE_SECTION, 
+                HtmlEditorStylesConfig.STYLE_ATTRIBUTE_DEFAULT)
+
+        self.attributeUnknown = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_ATTRIBUTE_UNKNOWN_SECTION, 
+                HtmlEditorStylesConfig.STYLE_ATTRIBUTE_UNKNOWN_DEFAULT)
+
+        self.number = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_NUMBER_SECTION, 
+                HtmlEditorStylesConfig.STYLE_NUMBER_DEFAULT)
+
+        self.string = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_STRING_SECTION, 
+                HtmlEditorStylesConfig.STYLE_STRING_DEFAULT)
+
+        self.comment = StcStyleOption (self.config, 
+                HtmlEditorStylesConfig.HTML_STYLES_SECTION, 
+                HtmlEditorStylesConfig.STYLE_COMMENT_SECTION, 
+                HtmlEditorStylesConfig.STYLE_COMMENT_DEFAULT)
 
 
 class HtmlRenderConfig (object):

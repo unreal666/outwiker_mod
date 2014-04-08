@@ -7,6 +7,8 @@ import wx.stc
 
 from outwiker.gui.texteditor import TextEditor
 from .wikicolorizer import WikiColorizer, EVT_APPLY_STYLE
+from outwiker.core.application import Application
+from .wikiconfig import WikiConfig
 
 
 class WikiEditor (TextEditor):
@@ -75,6 +77,8 @@ class WikiEditor (TextEditor):
 
         self.STYLE_LINK_BOLD_ID = self.STYLE_BOLD_ID | self.STYLE_LINK_ID
 
+        config = WikiConfig (Application.config)
+
 
         # Заполняем словарь стилей
         self._styles[self.STYLE_BOLD_ID] = "bold"
@@ -84,7 +88,7 @@ class WikiEditor (TextEditor):
         self._styles[self.STYLE_BOLD_ITALIC_ID] = "bold,italic"
         self._styles[self.STYLE_BOLD_UNDERLINE_ID] = "bold,underline"
         self._styles[self.STYLE_ITALIC_UNDERLINE_ID] = "italic,underline"
-        self._styles[self.STYLE_LINK_ID] = "fore:#0000FF,underline"
+        self._styles[self.STYLE_LINK_ID] = config.link.value.tostr()
         self._styles[self.STYLE_LINK_BOLD_ITALIC_UNDERLINE_ID] = self._styles[self.STYLE_LINK_ID] + ",bold,italic,underline"
         self._styles[self.STYLE_LINK_ITALIC_UNDERLINE_ID] = self._styles[self.STYLE_LINK_ID] + ",italic,underline"
         self._styles[self.STYLE_LINK_BOLD_UNDERLINE_ID] = self._styles[self.STYLE_LINK_ID] + ",bold,underline"
@@ -92,33 +96,32 @@ class WikiEditor (TextEditor):
         self._styles[self.STYLE_LINK_BOLD_ITALIC_ID] = self._styles[self.STYLE_LINK_ID] + ",bold,italic"
         self._styles[self.STYLE_LINK_ITALIC_ID] = self._styles[self.STYLE_LINK_ID] + ",italic"
         self._styles[self.STYLE_LINK_BOLD_ID] = self._styles[self.STYLE_LINK_ID] + ",bold"
-        self._styles[self.STYLE_HEADING_ID] = "bold"
-        self._styles[self.STYLE_COMMAND_ID] = "fore:#6A686B"
+        self._styles[self.STYLE_HEADING_ID] = config.heading.value.tostr()
+        self._styles[self.STYLE_COMMAND_ID] = config.command.value.tostr()
 
 
     def setDefaultSettings (self):
         super (WikiEditor, self).setDefaultSettings()
+        self.__createStyles()
 
         self.textCtrl.SetLexer (wx.stc.STC_LEX_CONTAINER)
         self.textCtrl.SetModEventMask(wx.stc.STC_MOD_INSERTTEXT | wx.stc.STC_MOD_DELETETEXT)
         self.textCtrl.SetStyleBits (7)
 
         for (styleid, style) in self._styles.items():
-            self.__setStyleDefault (styleid)
             self.textCtrl.StyleSetSpec (styleid, style)
+            self.textCtrl.StyleSetSize (styleid, self.config.fontSize.value)
+            self.textCtrl.StyleSetFaceName (styleid, self.config.fontName.value)
+            self.textCtrl.StyleSetBackground (styleid, self.config.backColor.value)
 
         self.__setStyleHeading()
 
 
     def __setStyleHeading (self):
+        self.textCtrl.StyleSetSpec (self.STYLE_HEADING_ID, self._styles[self.STYLE_HEADING_ID])
         self.textCtrl.StyleSetSize (self.STYLE_HEADING_ID, self.config.fontSize.value + 2)
         self.textCtrl.StyleSetFaceName (self.STYLE_HEADING_ID, self.config.fontName.value)
-        self.textCtrl.StyleSetSpec (self.STYLE_HEADING_ID, self._styles[self.STYLE_HEADING_ID])
-
-
-    def __setStyleDefault (self, styleId):
-        self.textCtrl.StyleSetSize (styleId, self.config.fontSize.value)
-        self.textCtrl.StyleSetFaceName (styleId, self.config.fontName.value)
+        self.textCtrl.StyleSetBackground (self.STYLE_HEADING_ID, self.config.backColor.value)
 
 
     def __onChange (self, event):
