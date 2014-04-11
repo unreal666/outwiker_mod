@@ -93,19 +93,19 @@ class HtmlImprover (object):
         inner_list_tags = r"li|d[td]"
         closing_tags = inner_list_tags + "|" + inner_table_tags + r"|h\d"
 
-        # Удаление тега <P> перед некоторыми блочными элементами
-        remove_p_before = r"<p>((?:<br>)?)(?=<(?:" + block_tags + r")[ >])"
-        result = re.sub(remove_p_before, r"\1", result, flags=re.I)
+        # Удаление тега <p> перед некоторыми блочными элементами
+        remove_p_before = r"<p>(?=(?:<br>)?)(?=<(?:" + block_tags + r")[ >])"
+        result = re.sub(remove_p_before, r"", result, flags=re.I)
 
-        # Удаление тега <P> перед некоторыми блочными элементами
+        # Удаление тега </p> после некоторых блочных элементов
         remove_p_after = r"(</(?:" + block_tags + r")>|<hr ?/?>)</p>"
         result = re.sub(remove_p_after, r"\1", result, flags=re.I)
 
-        # Удаление тега <BR> перед некоторыми блочными элементами
+        # Удаление тега <br> перед некоторыми блочными элементами
         remove_br_before = r"<br\s*/?>[\s\n]*(?=<(?:" + opening_tags + r")[ >/])"
         result = re.sub(remove_br_before, "", result, flags=re.I)
 
-        # Удаление тега <BR> после некоторых блочных элементов
+        # Удаление тега <br> после некоторых блочных элементов
         remove_br_after = r"(<(?:" + opening_tags + r")[ />]|</(?:" + closing_tags + r")>)[\s\n]*<br\s*/?>"
         result = re.sub(remove_br_after, r"\1", result, flags=re.I)
 
