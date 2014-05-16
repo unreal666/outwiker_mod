@@ -39,7 +39,9 @@ class History (object):
         """
         Произошел переход на новую страницу
         """
-        if self._currentPage == None:
+        if (self._currentPage == None and
+                len (self._back) == 0 and
+                len (self._forward) == 0 ):
             # В первый раз открыли какую-то страницу
             self._currentPage = newCurrentPage
             return
@@ -61,6 +63,9 @@ class History (object):
         self._forward.append (self._currentPage)
         self._currentPage = self._back.pop()
 
+        if self._currentPage != None and self._currentPage.isRemoved:
+            self._currentPage = None
+
         return self._currentPage
 
 
@@ -71,4 +76,12 @@ class History (object):
         self._back.append (self._currentPage)
         self._currentPage = self._forward.pop()
 
+        if self._currentPage != None and self._currentPage.isRemoved:
+            self._currentPage = None
+
+        return self._currentPage
+
+
+    @property
+    def currentPage (self):
         return self._currentPage

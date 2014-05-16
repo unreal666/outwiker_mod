@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
 import os.path
@@ -113,6 +112,20 @@ class TabsController (object):
         """
         self.__saveTabs()
         self.__unbindEvents()
+
+
+    def historyBack (self):
+        """
+        Перейти на предыдущую страницу на данной вкладке
+        """
+        self._tabsCtrl.HistoryBack()
+
+
+    def historyForward (self):
+        """
+        Перейти на предыдущую страницу на данной вкладке
+        """
+        self._tabsCtrl.HistoryForward()
 
 
     def __bindGuiEvents (self):
