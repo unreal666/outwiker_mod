@@ -106,7 +106,7 @@ class HtmlImprover (object):
         result = re.sub(remove_br_before, "", result, flags=re.I)
 
         # Удаление тега <br> после некоторых блочных элементов
-        remove_br_after = r"(<(?:" + opening_tags + r")[ />]|</(?:" + closing_tags + r")>)[\s\n]*<br\s*/?>"
+        remove_br_after = r"(<(?:" + opening_tags + r")( [^>]+)? ?/?>|</(?:" + closing_tags + r")>)[\s\n]*<br\s*/?>"
         result = re.sub(remove_br_after, r"\1", result, flags=re.I)
 
         # Удаление некоторого разного мусора/бесполезного кода
