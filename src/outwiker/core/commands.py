@@ -44,7 +44,7 @@ def testreadonly (func):
         try:
             func (*args, **kwargs)
         except outwiker.core.exceptions.ReadonlyException:
-            MessageBox (_(u"Wiki is opened as read-only"), 
+            MessageBox (_(u"Page is opened as read-only"), 
                     _(u"Error"), 
                     wx.ICON_ERROR | wx.OK)
 
@@ -133,9 +133,16 @@ def openWikiWithDialog (parent, readonly=False):
 
 
 def openWiki (path, readonly=False):
-    wikiroot = None
+    if not os.path.exists (path):
+        __canNotLoadWikiMessage (path)
+        return
+    
+    # Если передан путь до файла настроек (а не до папки с вики), 
+    # то оставим только папку
+    if not os.path.isdir (path):
+        path = os.path.split (fname)[0]
 
-    Application.onStartTreeUpdate(None)
+    wikiroot = None
 
     def threadFunc (path, readonly):
         try:
@@ -157,8 +164,6 @@ def openWiki (path, readonly=False):
         __rootFormatErrorHandle (path, readonly)
     else:
         Application.wikiroot = result
-
-    Application.onEndTreeUpdate(wikiroot)
 
     return Application.wikiroot
 

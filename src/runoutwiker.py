@@ -18,8 +18,8 @@ except wxversion.VersionError:
 import wx
 
 from outwiker.core.application import Application
-from outwiker.core.system import getOS, getPluginsDirList, getConfigPath
-from outwiker.core.starter import Starter
+from outwiker.core.system import getOS, getPluginsDirList, getConfigPath, getExeFile
+from outwiker.core.starter import Starter, StarterExit
 from outwiker.core.commands import registerActions
 from outwiker.gui.actioncontroller import ActionController
 
@@ -35,15 +35,20 @@ class OutWiker(wx.App):
         self._fullConfigPath = getConfigPath ()
         Application.init(self._fullConfigPath)
 
+        try:
+            starter = Starter()
+            starter.processConsole()
+        except StarterExit:
+            return True
+
         # Если программа запускается в виде exe-шника, то перенаправить вывод ошибок в лог
-        exepath = unicode (sys.argv[0], getOS().filesEncoding)
-        if exepath.endswith (u".exe"):
+        if getExeFile().endswith (u".exe"):
             # Закоментировать следующую строку, если не надо выводить strout/strerr в лог-файл
             self.RedirectStdio (self.getLogFileName (self._fullConfigPath))
             pass
 
         from outwiker.gui.mainwindow import MainWindow
-        
+
         wx.InitAllImageHandlers()
         self.mainWnd = MainWindow(None, -1, "")
         self.SetTopWindow (self.mainWnd)
@@ -59,9 +64,8 @@ class OutWiker(wx.App):
         self.bindActivateApp()
         self.Bind (wx.EVT_QUERY_END_SESSION, self._onEndSession)
 
-        starter = Starter()
-        starter.process()
-        
+        starter.processGUI()
+
         return True
 
 
