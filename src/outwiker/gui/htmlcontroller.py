@@ -34,7 +34,7 @@ class UriIdentifier (object):
         href_clear = self._prepareHref (href)
 
         anchor = self._findAnchor (href_clear)
-        (page, anchor) = self._findWikiPage (href_clear, anchor)
+        (page, anchor) = self._findWikiPage (href_clear, anchor) or (None, anchor)
         filename = self._findFile (href_clear)
 
         return (None, page, filename, anchor)
