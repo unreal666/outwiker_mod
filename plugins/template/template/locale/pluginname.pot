@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-04-10 10:08+0400\n"
+"POT-Creation-Date: 2014-06-25 21:56+0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,18 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: statistics.py:35
-msgid "Plugin to display statistics"
+#: actions.py:22
+msgid "Menu Item Title"
+msgstr ""
+
+#: actions.py:27
+msgid "Description"
+msgstr ""
+
+#: plugin.py:42
+msgid "Plugin description"
+msgstr ""
+
+#: plugin.py:52
+msgid "http://jenyay.net"
 msgstr ""

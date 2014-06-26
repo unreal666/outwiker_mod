@@ -75,7 +75,6 @@ if __name__ == '__main__':
     from test.parsertests.wikicommandinclude import WikiIncludeCommandTest
     from test.parsertests.wikicommandchildlist import WikiChildListCommandTest
     from test.parsertests.wikicommandattachlist import WikiAttachListCommandTest
-    from test.parsertests.wikicommandcounter import WikiCounterCommandTest
 
     from test.wxthumbmaker import WxThumbmakerTest
     from test.pagethumbmaker import PageThumbmakerTest
@@ -102,8 +101,9 @@ if __name__ == '__main__':
     from test.hotkeyconfig import HotKeyConfigTest
     from test.history import HistoryTest
     from test.commandline import CommandLineTest
+    from test.pageuiddepot import PageUidDepotTest
 
-    #from test.guitests.tray import TrayNormalTest#, TrayIconizedTest
+    # from test.guitests.tray import TrayNormalTest#, TrayIconizedTest
     from test.guitests.mainwnd import MainWndTest
     from test.guitests.bookmarks import BookmarksGuiTest
     from test.guitests.attach import AttachPanelTest
@@ -144,6 +144,12 @@ if __name__ == '__main__':
     from test.plugins.pagestatistics import PageStatisticsTest
     from test.plugins.treestatistics import TreeStatisticsTest
     from test.plugins.updatenotifier import UpdateNotifierTest
+    from test.plugins.counter import CounterTest
+    from test.plugins.counterdialog import CounterDialogTest
+    from test.plugins.htmlheads import HtmlHeadsTest
+    from test.plugins.changepageuid import ChangePageUidTest
+    from test.plugins.template import TemplateTest
+    from test.plugins.testpage import TestPageTest
 
     from test.plugins.source.source import SourcePluginTest
     from test.plugins.source.sourceencoding import SourceEncodingPluginTest
@@ -160,7 +166,7 @@ if __name__ == '__main__':
     else:
         from test.guitests.uriidentifiers import UriIdentifierWebKitTest
 
-    #f = open('tests.log', "w")
-    #runner = unittest.TextTestRunner(f)
-    #unittest.main(testRunner=runner)
+    # f = open('tests.log', "w")
+    # runner = unittest.TextTestRunner(f)
+    # unittest.main(testRunner=runner)
     unittest.main()

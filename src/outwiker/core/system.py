@@ -8,6 +8,7 @@ import os
 import os.path
 import sys
 import locale
+import codecs
 
 import wx
 
@@ -43,7 +44,7 @@ class Windows (object):
         Запустить программу по умолчанию для path
         """
         os.startfile (path.replace ("/", "\\"))
-    
+
 
     @property
     def filesEncoding (self):
@@ -92,7 +93,8 @@ class Unix (object):
 
         import pygtk
         pygtk.require('2.0')
-        import gtk, gtk.gdk
+        import gtk
+        import gtk.gdk
 
 
     def startFile (self, path):
@@ -101,20 +103,20 @@ class Unix (object):
         """
         runcmd = "xdg-open '%s'" % path
         wx.Execute (runcmd)
-    
+
 
     @property
     def filesEncoding (self):
         return "utf-8"
 
-    
+
     @property
     def inputEncoding (self):
         encoding = locale.getpreferredencoding()
 
         if not encoding:
             encoding = "utf8"
-    
+
         return encoding
 
 
@@ -139,7 +141,7 @@ class Unix (object):
                 result = ""
                 for fname in self._fnames:
                     result += u"file:%s\r\n" % (fname)
-                
+
                 # Преобразуем в строку
                 return result.strip().encode("utf8")
 
@@ -225,19 +227,21 @@ def getExeFile ():
 def getPluginsDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
     """
     Возвращает список директорий, откуда должны грузиться плагины
-    """ 
+    """
     return getSpecialDirList (PLUGINS_DIR, configDirName, configFileName)
 
 
-def getStylesDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
+def getStylesDirList (configDirName=DEFAULT_CONFIG_DIR,
+                      configFileName=DEFAULT_CONFIG_NAME):
     """
-    Возвращает список директорий, откуда должны грузиться стили
-    """ 
+    Возвращает список директорий, откуда должны грузиться плагины
+    """
     return getSpecialDirList (STYLES_DIR, configDirName, configFileName)
 
-def getSpecialDirList (dirname, 
-        configDirName=DEFAULT_CONFIG_DIR,
-        configFileName=DEFAULT_CONFIG_NAME):
+
+def getSpecialDirList (dirname,
+                       configDirName=DEFAULT_CONFIG_DIR,
+                       configFileName=DEFAULT_CONFIG_NAME):
     """
     Возвращает список "специальных" директорий (директорий для плагинов, стилей и т.п., расположение которых зависит от расположения файла настроек)
     """
@@ -253,3 +257,12 @@ def getSpecialDirList (dirname,
         dirlist.append (specialDir)
 
     return dirlist
+
+
+def readTextFile (fname):
+    """
+    Читать файл в кодировке UTF-8.
+    Возвращает unicode-строку
+    """
+    with codecs.open (fname, "r", "utf-8") as fp:
+        return fp.read()

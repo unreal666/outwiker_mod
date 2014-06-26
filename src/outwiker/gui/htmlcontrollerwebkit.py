@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os.path
 from .htmlcontroller import UriIdentifier
+
 
 class UriIdentifierWebKit (UriIdentifier):
     """
@@ -47,26 +46,36 @@ class UriIdentifierWebKit (UriIdentifier):
         """
         fileprotocol = u"file://"
         if href.startswith (fileprotocol):
-            return href[len (fileprotocol): ]
+            return href[len (fileprotocol):]
 
         return href
 
 
-    def _findWikiPage (self, href, anchor=None):
+    def _findWikiPage (self, href):
         """
-        Попытка найти страницу вики, если ссылка, на которую щелкнули, не интернетная (http, ftp, mailto)
+        Попытка найти страницу вики, если ссылка, на которую щелкнули не интернетная (http, ftp, mailto)
         """
         if self._currentPage is None:
             return None
 
+        if href.startswith (self._currentPage.path):
+            href = href[len (self._currentPage.path) + 1:]
+
+        if len (href) == 0:
+            return None
+
         newSelectedPage = None
 
-        if href.startswith (self._currentPage.path):
-            href = href[len (self._currentPage.path) + 1: ]
+        if href[0] == "/":
+            if href.startswith (self._currentPage.root.path):
+                href = href[len (self._currentPage.root.path):]
+
+            if len (href) > 1 and href.endswith ("/"):
+                href = href[:-1]
 
         if href[0] == "/":
             # Поиск страниц осуществляем только с корня
-            newSelectedPage = self._currentPage.root[href[1:] ]
+            newSelectedPage = self._currentPage.root[href[1:]]
         else:
             # Сначала попробуем найти вложенные страницы с таким href
             newSelectedPage = self._currentPage[href]
@@ -75,4 +84,4 @@ class UriIdentifierWebKit (UriIdentifier):
                 # Если страница не найдена, попробуем поискать, начиная с корня
                 newSelectedPage = self._currentPage.root[href]
 
-        return (newSelectedPage, anchor)
+        return newSelectedPage

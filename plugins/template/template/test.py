@@ -1,8 +1,6 @@
-#!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
 import unittest
-import os.path
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -14,8 +12,6 @@ from test.utils import removeWiki
 class PluginNameTest (unittest.TestCase):
     """Тесты плагина PluginName"""
     def setUp (self):
-        self.__pluginname = u"PluginName"
-
         self.__createWiki()
 
         dirlist = [u"../plugins/pluginname"]
@@ -36,8 +32,9 @@ class PluginNameTest (unittest.TestCase):
 
         self.rootwiki = WikiDocument.create (self.path)
 
-        WikiPageFactory.create (self.rootwiki, u"Страница 1", [])
+        WikiPageFactory().create (self.rootwiki, u"Страница 1", [])
         self.testPage = self.rootwiki[u"Страница 1"]
 
+
     def testPluginLoad (self):
-        self.assertEqual ( len (self.loader), 1)
+        self.assertEqual (len (self.loader), 1)

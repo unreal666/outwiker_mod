@@ -7,7 +7,7 @@ import os.path
 from fabric.api import local, lcd
 
 # Поддерживаемые дистрибутивы Ubuntu
-distribs = ["trusty", "saucy", "quantal", "precise"]
+distribs = ["trusty", "saucy", "precise"]
 
 
 def _getVersion():
@@ -40,7 +40,7 @@ def _debclean():
     """
     Очистка папки build/<distversion>
     """
-    local ('rm -rf build/{}'.format (_getDebSourceDirName() ) )
+    local ('rm -rf build/{}'.format (_getDebSourceDirName()))
 
 
 def _source():
@@ -48,11 +48,11 @@ def _source():
     Создать папку с исходниками для сборки deb-пакета
     """
     _debclean()
-    
-    dirname = os.path.join ("build", _getDebSourceDirName() )
+
+    dirname = os.path.join ("build", _getDebSourceDirName())
     os.mkdir (dirname)
 
-    local ("rsync -avz --exclude=.bzr --exclude=distrib --exclude=build --exclude=*.pyc --exclude=*.dll --exclude=*.exe * --exclude=src/.ropeproject --exclude=src/test --exclude=src/setup_win.py --exclude=src/setup_tests.py --exclude=src/profile.py --exclude=src/tests.py --exclude=src/Microsoft.VC90.CRT.manifest --exclude=src/profiles --exclude=src/tools --exclude=doc --exclude=plugins --exclude=profiles --exclude=test --exclude=_update_version_bzr.py --exclude=outwiker_setup.iss --exclude=updateversion --exclude=updateversion.py {dirname}/".format (dirname=dirname) )
+    local ("rsync -avz --exclude=.bzr --exclude=distrib --exclude=build --exclude=*.pyc --exclude=*.dll --exclude=*.exe * --exclude=src/.ropeproject --exclude=src/test --exclude=src/setup_win.py --exclude=src/setup_tests.py --exclude=src/profile.py --exclude=src/tests.py --exclude=src/Microsoft.VC90.CRT.manifest --exclude=src/profiles --exclude=src/tools --exclude=doc --exclude=plugins --exclude=profiles --exclude=test --exclude=_update_version_bzr.py --exclude=outwiker_setup.iss --exclude=updateversion --exclude=updateversion.py {dirname}/".format (dirname=dirname))
 
 
 def _orig (distname):
@@ -65,33 +65,33 @@ def _orig (distname):
     origname = _getOrigName(distname)
 
     with lcd ("build"):
-        local ("tar -cvf {} {}".format (origname, _getDebSourceDirName() ) )
+        local ("tar -cvf {} {}".format (origname, _getDebSourceDirName()))
 
-    local ("gzip -f build/{}".format (origname) )
+    local ("gzip -f build/{}".format (origname))
 
 
-def debsourceinclude():
+def debsource():
     """
     Создать файлы для закачки в репозиторий, включающие в себя исходники
     """
     _debuild ("debuild -S -sa --source-option=--include-binaries --source-option=--auto-commit",
-            distribs)
+              distribs)
 
 
 def deb():
     """
     Создать deb-пакет
     """
-    _debuild ("debuild --source-option=--include-binaries --source-option=--auto-commit", 
-            distribs)
+    _debuild ("debuild --source-option=--include-binaries --source-option=--auto-commit",
+              distribs)
 
 
 def debsingle():
     """
     Создать deb-пакет только для первого дистрибутива в списке
     """
-    _debuild ("debuild --source-option=--include-binaries --source-option=--auto-commit", 
-            [distribs[0]])
+    _debuild ("debuild --source-option=--include-binaries --source-option=--auto-commit",
+              [distribs[0]])
 
 
 def _debuild (command, distriblist):
@@ -104,7 +104,7 @@ def _debuild (command, distriblist):
 
         _orig(distname)
 
-        with lcd ("build/{}/debian".format (_getDebSourceDirName() ) ):
+        with lcd ("build/{}/debian".format (_getDebSourceDirName())):
             local (command)
 
         # Вернем старый дистрибутив
@@ -118,8 +118,8 @@ def ppaunstable ():
     version = _getVersion()
 
     for distname in distribs:
-        with lcd ("build".format (_getDebSourceDirName() ) ):
-            local ("dput ppa:outwiker-team/unstable outwiker_{}+{}~{}_source.changes".format (version[0], version[1], distname) )
+        with lcd ("build".format (_getDebSourceDirName())):
+            local ("dput ppa:outwiker-team/unstable outwiker_{}+{}~{}_source.changes".format (version[0], version[1], distname))
 
 
 def plugins():
@@ -127,16 +127,19 @@ def plugins():
     Создание архивов с плагинами
     """
     plugins = ["source",
-            "style",
-            "export2html",
-            "spoiler",
-            "livejournal",
-            "lightbox",
-            "thumbgallery",
-            "externaltools",
-            "statistics",
-            "updatenotifier",
-            ]
+               "style",
+               "export2html",
+               "spoiler",
+               "livejournal",
+               "lightbox",
+               "thumbgallery",
+               "externaltools",
+               "statistics",
+               "updatenotifier",
+               "counter",
+               "htmlheads",
+               "changepageuid",
+               ]
 
     local ("rm -f build/plugins/outwiker-plugins-all.zip")
 
@@ -144,7 +147,7 @@ def plugins():
         local ("rm -f build/plugins/{}.zip".format (plugin))
 
         with lcd ("plugins/{}".format (plugin)):
-            local ("7z a -r -aoa -xr!*.pyc ../../build/plugins/{}.zip ./*; 7z a -r -aoa -xr!*.pyc ../../build/plugins/outwiker-plugins-all.zip ./*".format (plugin) )
+            local ("7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../build/plugins/{}.zip ./*; 7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../build/plugins/outwiker-plugins-all.zip ./*".format (plugin))
 
 
 def win():
@@ -193,7 +196,7 @@ def nextversion():
     with open (fname, "w") as fp_out:
         fp_out.write (result)
 
-    local ('dch -v "{}+{}~{}"'.format (lines[0].strip(), lines[1].strip(), distribs[0] ) )
+    local ('dch -v "{}+{}~{}"'.format (lines[0].strip(), lines[1].strip(), distribs[0]))
 
 
 def debinstall():
@@ -205,7 +208,7 @@ def debinstall():
     version = _getVersion()
 
     with lcd ("build"):
-        local ("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format (version[0], version[1], distribs[0] ) )
+        local ("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format (version[0], version[1], distribs[0]))
 
 
 def locale():
@@ -216,6 +219,14 @@ def locale():
         local (r"xgettext -o locale/outwiker.pot outwiker/gui/*.py outwiker/gui/*/*.py outwiker/pages/*/*.py outwiker/pages/*/*/*.py outwiker/core/*.py outwiker/actions/*.py")
 
 
+def localeplugin (pluginname):
+    """
+    Создать или обновить локализацию для плагина pluginname
+    """
+    with lcd (os.path.join ("plugins", pluginname, pluginname)):
+        local (r"xgettext -o locale/{}.pot *.py".format (pluginname))
+
+
 def run ():
     """
     Запустить OutWiker
@@ -224,7 +235,7 @@ def run ():
         local ("python runoutwiker.py")
 
 
-def tests (params=""):
+def test (params=""):
     """
     Запустить юнит-тесты
     """
@@ -234,8 +245,8 @@ def tests (params=""):
 
 def _makechangelog (distrib_src, distrib_new):
     """
-    Подправить changelog под текущий дистрибутив Ubuntu. 
-    
+    Подправить changelog под текущий дистрибутив Ubuntu.
+
     Считаем, что у нас в исходном состоянии changelog всегда создан под distrib_src, а мы в первой строке его название заменим на distrib_new.
     """
     fname = "debian/changelog"

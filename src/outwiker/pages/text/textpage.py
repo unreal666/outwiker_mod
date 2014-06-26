@@ -1,10 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 Необходимые классы для создания страниц с текстом
 """
-
-import os.path
 
 from outwiker.core.tree import WikiPage
 from outwiker.pages.text.textpanel import TextPanel
@@ -17,7 +14,7 @@ class TextWikiPage (WikiPage):
     """
     def __init__(self, path, title, parent, readonly = False):
         WikiPage.__init__ (self, path, title, parent, readonly)
-    
+
 
     @staticmethod
     def getTypeString ():
@@ -25,40 +22,27 @@ class TextWikiPage (WikiPage):
 
 
 class TextPageFactory (PageFactory):
-    @staticmethod
-    def getPageType():
+    """
+    Фабрика для создания текстовой страницы и ее представления
+    """
+    def getPageType(self):
         return TextWikiPage
 
-    @staticmethod
-    def getTypeString ():
-        return TextPageFactory.getPageType().getTypeString()
 
-    # Название страницы, показываемое пользователю
-    title = _(u"Text Page")
-
-    def __init__ (self):
-        pass
-
-
-    @staticmethod
-    def create (parent, title, tags):
+    @property
+    def title (self):
         """
-        Создать страницу. Вызывать этот метод вместо конструктора
+        Название страницы, показываемое пользователю
         """
-        return PageFactory.createPage (TextPageFactory.getPageType(), parent, title, tags)
+        return _(u"Text Page")
 
 
-    @staticmethod
-    def getPageView (parent):
+    def getPageView (self, parent):
         """
-        Вернуть контрол, котоырй будет отображать и редактировать страницу
+        Вернуть контрол, который будет отображать и редактировать страницу
         """
-        panel = TextPanel (parent)
-
-        return panel
+        return TextPanel (parent)
 
 
-    @staticmethod
-    def getPrefPanels (parent):
+    def getPrefPanels (self, parent):
         return []
-

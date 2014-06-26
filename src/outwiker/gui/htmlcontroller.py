@@ -4,12 +4,14 @@
 from abc import ABCMeta, abstractmethod
 import os.path
 
+from outwiker.core.application import Application
+
 
 class UriIdentifier (object):
     """
     Базовый класс для обработчиков ссылок HTML-движков
     """
-    
+
     __metaclass__ = ABCMeta
 
     def __init__ (self, currentpage, basepath):
@@ -25,19 +27,45 @@ class UriIdentifier (object):
         """
         Определить тип ссылки и вернуть кортеж (url, page, filename, anchor)
         """
-        #print href
-        #print self._basepath
-
         if self._isUrl (href):
             return (href, None, None, None)
 
+        page = self._getPageByProtocol (href)
+
+        if page is not None:
+            return (None, page, None, None)
+
         href_clear = self._prepareHref (href)
 
-        anchor = self._findAnchor (href_clear)
-        (page, anchor) = self._findWikiPage (href_clear, anchor) or (None, anchor)
+        page = self._findWikiPage (href_clear)
         filename = self._findFile (href_clear)
+        anchor = self._findAnchor (href_clear)
 
         return (None, page, filename, anchor)
+
+
+    def _getPageByProtocol (self, href):
+        """
+        Возвращает страницу, если href - протокол вида page://, и None в противном случае
+        """
+        protocol = u"page://"
+        page = None
+
+        if href.startswith (protocol):
+            uid = href[len (protocol):]
+
+            try:
+                uid = unicode (uid.decode ("idna"))
+            except UnicodeError:
+                # Под IE ссылки не преобразуются в кодировку IDNA
+                pass
+
+            if uid.endswith ("/"):
+                uid = uid[:-1]
+
+            page = Application.pageUidDepot[uid]
+
+        return page
 
 
     @abstractmethod
@@ -49,7 +77,7 @@ class UriIdentifier (object):
 
 
     @abstractmethod
-    def _findWikiPage (self, subpath, anchor=None):
+    def _findWikiPage (self, subpath):
         """
         Попытка найти страницу вики
         """
@@ -89,8 +117,7 @@ class UriIdentifier (object):
         """
         Является ли href ссылкой на интернет?
         """
-        return href.lower().startswith ("http:") or \
-                href.lower().startswith ("https:") or \
-                href.lower().startswith ("ftp:") or \
-                href.lower().startswith ("mailto:")
-
+        return (href.lower().startswith ("http:") or
+                href.lower().startswith ("https:") or
+                href.lower().startswith ("ftp:") or
+                href.lower().startswith ("mailto:"))

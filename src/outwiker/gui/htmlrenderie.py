@@ -54,11 +54,11 @@ class HtmlRenderIE (HtmlRender):
         if len (status) != 0:
             (url, page, filename, anchor) = self.__identifyUri (status)
 
-            if page is not None:
-                outwiker.core.commands.setStatusText (u"".join([page.subpath, anchor or u""]), self._status_item)
-            elif filename is not None:
+            if page != None:
+                outwiker.core.commands.setStatusText (page.subpath, self._status_item)
+            elif filename != None:
                 outwiker.core.commands.setStatusText (filename, self._status_item)
-            elif anchor is not None:
+            elif anchor != None:
                 outwiker.core.commands.setStatusText (anchor, self._status_item)
             else:
                 outwiker.core.commands.setStatusText (status, self._status_item)
@@ -70,9 +70,9 @@ class HtmlRenderIE (HtmlRender):
         document = self.render.document
         selection = document.selection
 
-        if selection is not None:
+        if selection != None:
             selrange = selection.createRange()
-            if selrange is not None:
+            if selrange != None:
                 outwiker.core.commands.copyTextToClipboard (selrange.text)
                 event.Skip()
 
@@ -84,7 +84,7 @@ class HtmlRenderIE (HtmlRender):
         self.SetSizer(self.box)
         self.Layout()
 
-    
+
     def LoadPage (self, fname):
         self.canOpenUrl = True
         self.render.Navigate (fname)
@@ -112,7 +112,7 @@ class HtmlRenderIE (HtmlRender):
         return href
 
 
-    def BeforeNavigate2 (self, this, pDisp, URL, Flags, 
+    def BeforeNavigate2 (self, this, pDisp, URL, Flags,
             TargetFrameName, PostData, Headers, Cancel):
         href = URL[0]
         curr_href = self.__cleanUpUrl (self.render.locationurl)
@@ -134,7 +134,7 @@ class HtmlRenderIE (HtmlRender):
         Cancel[0] = True
 
         (url, page, filename, anchor) = self.__identifyUri (href)
-        if page is not None:
+        if page != None:
             Application.mainWindow.tabsController.openInTab (page, True)
 
 
@@ -144,10 +144,10 @@ class HtmlRenderIE (HtmlRender):
         """
         href_clear = self.__cleanUpUrl (href)
 
-        identifier = UriIdentifierIE (self._currentPage, 
+        identifier = UriIdentifierIE (self._currentPage,
             self.__cleanUpUrl (self.render.locationurl) )
 
-        return identifier.identify (href_clear)
+        return identifier.identify (href)
 
 
     def __onLinkClicked (self, href):
@@ -157,26 +157,21 @@ class HtmlRenderIE (HtmlRender):
         (url, page, filename, anchor) = self.__identifyUri (href)
         ctrlstate = wx.GetKeyState(wx.WXK_CONTROL)
 
-        if url is not None:
+        if url != None:
             self.openUrl (url)
 
-        elif page is not None:
-            if ctrlstate:
-                Application.mainWindow.tabsController.openInTab (page, True)
-            else:
-                self._currentPage.root.selectedPage = page
+        elif page != None and ctrlstate:
+            Application.mainWindow.tabsController.openInTab (page, True)
 
-            # pageType = page.getTypeString()
-            if anchor is not None:
-                href = u"".join([u"file:///", os.path.join (page.path, u"__content.html").replace(u"\\", "/"), anchor])
-                self.LoadPage (href)
+        elif page != None:
+            self._currentPage.root.selectedPage = page
 
-        elif filename is not None:
+        elif filename != None:
             try:
                 outwiker.core.system.getOS().startFile (filename)
             except OSError:
                 text = _(u"Can't execute file '%s'") % filename
                 outwiker.core.commands.MessageBox (text, _(u"Error"), wx.ICON_ERROR | wx.OK)
 
-        elif anchor is not None:
+        elif anchor != None:
             self.LoadPage (href)
