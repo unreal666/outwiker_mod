@@ -266,3 +266,11 @@ def readTextFile (fname):
     """
     with codecs.open (fname, "r", "utf-8") as fp:
         return fp.read()
+
+
+def writeTextFile (fname, text):
+    """
+    Записать текст в кодировке utf-8
+    """
+    with codecs.open (fname, "w", "utf-8") as fp:
+        return fp.write (text)

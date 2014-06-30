@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from abc import abstractmethod
@@ -7,6 +6,7 @@ from abc import ABCMeta
 import wx
 
 import outwiker.core
+
 
 class HtmlRender (wx.Panel):
     """
