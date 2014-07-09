@@ -84,7 +84,7 @@ class HtmlPageView (BaseHtmlPanel):
         self.Bind (EVT_PAGE_TAB_CHANGED, handler=self.onTabChanged)
 
 
-    def GetTextEditor(self):
+    def getTextEditor(self):
         return HtmlTextEditor
 
 
@@ -574,7 +574,7 @@ class HtmlPageView (BaseHtmlPanel):
 
         if page.readonly and os.path.exists (path):
             # Если страница открыта только для чтения и html-файл уже существует, то покажем его
-            return path
+            return readTextFile (path)
 
         style = Style()
         stylepath = style.getPageStyle (page)
@@ -596,9 +596,6 @@ class HtmlPageView (BaseHtmlPanel):
         userhead = u"<title>{}</title>".format (page.title)
         result = tpl.substitute (content = text,
                                  userhead = userhead)
-
-        # with open (path, "wb") as fp:
-        #     fp.write (result.encode ("utf-8"))
 
         return result
 
