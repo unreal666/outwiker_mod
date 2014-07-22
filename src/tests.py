@@ -76,7 +76,8 @@ if __name__ == '__main__':
     from test.parsertests.wikicommandchildlist import WikiChildListCommandTest
     from test.parsertests.wikicommandattachlist import WikiAttachListCommandTest
 
-    from test.wxthumbmaker import WxThumbmakerTest
+    from test.thumbmakerwx import ThumbmakerWxTest
+    from test.thumbmakerpil import ThumbmakerPilTest
     from test.pagethumbmaker import PageThumbmakerTest
     from test.thumbnails import ThumbnailsTest
     from test.htmlimprover import HtmlImproverTest
@@ -151,6 +152,7 @@ if __name__ == '__main__':
     from test.plugins.changepageuid import ChangePageUidTest
     from test.plugins.template import TemplateTest
     from test.plugins.testpage import TestPageTest
+    from test.plugins.sessions import SessionsTest
 
     from test.plugins.source.source import SourcePluginTest
     from test.plugins.source.sourceencoding import SourceEncodingPluginTest

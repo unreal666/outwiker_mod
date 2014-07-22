@@ -568,7 +568,6 @@ class HtmlPageView (BaseHtmlPanel):
         self._application.actionController.appendMenuItem (HTML_ESCAPE_STR_ID, menu)
 
 
-
     def generateHtml (self, page):
         path = self.getHtmlPath ()
 
@@ -588,15 +587,18 @@ class HtmlPageView (BaseHtmlPanel):
 
             tpl = HtmlTemplate (readTextFile (style.getDefaultStyle()))
 
+        content = self._runPreprocessing (page.content)
+
         if page.autoLineWrap:
-            text = HtmlImprover.run (page.content)
+            text = HtmlImprover.run (content)
         else:
-            text = page.content
+            text = content
 
         userhead = u"<title>{}</title>".format (page.title)
         result = tpl.substitute (content = text,
                                  userhead = userhead)
 
+        result = self._runPostprocessing (result)
         return result
 
 

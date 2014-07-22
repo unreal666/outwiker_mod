@@ -37,6 +37,9 @@ class BaseHtmlPanel(BaseTextPanel):
         # его каждый раз
         self._oldHtmlResult = u""
 
+        # Страница, для которой уже есть сгенерированный HTML
+        self._oldPage = None
+
         # Где хранить параметы текущей страницы страницы (код, просмотр и т.д.)
         self.tabSectionName = u"Misc"
         self.tabParamName = u"PageIndex"
@@ -278,6 +281,26 @@ class BaseHtmlPanel(BaseTextPanel):
         self._updateResult()
 
 
+    def _runPostprocessing (self, html):
+        """
+        Запускает постпроцессинг для сгенерированного HTML
+        """
+        # Дадим возможность изменить результат в построцессинге
+        result = [html]
+        Application.onPostprocessing (self._currentpage, result)
+        return result[0]
+
+
+    def _runPreprocessing (self, content):
+        """
+        Запускает препроцессинг
+        """
+        # Дадим возможность изменить результат в построцессинге
+        result = [content]
+        Application.onPreprocessing (self._currentpage, result)
+        return result[0]
+
+
     def _updateResult (self):
         """
         Подготовить и показать HTML текущей страницы
@@ -291,7 +314,9 @@ class BaseHtmlPanel(BaseTextPanel):
 
         try:
             html = self.generateHtml (self._currentpage)
-            if self._oldHtmlResult != html:
+
+            if (self._oldPage != self._currentpage or
+                    self._oldHtmlResult != html):
                 path = self.getHtmlPath()
 
                 if not self._currentpage.readonly:
@@ -299,6 +324,7 @@ class BaseHtmlPanel(BaseTextPanel):
 
                 self.htmlWindow.LoadPage (path)
                 self._oldHtmlResult = html
+                self._oldPage = self._currentpage
         except IOError as e:
             # TODO: Проверить под Windows
             MessageBox (_(u"Can't save file\n\n{}").format (unicode (e.filename)),
