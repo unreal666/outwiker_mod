@@ -95,6 +95,62 @@ class ParserAlignTest (unittest.TestCase):
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
 
 
+    def testCommand1 (self):
+        text = u"бла-бла-бла \n% right %(:command:)"
+        result = u'бла-бла-бла \n<div align="right">(:command:)</div>'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand2 (self):
+        text = u"бла-бла-бла \n% right %(:command:)\nАбырвалг"
+        result = u'бла-бла-бла \n<div align="right">(:command:)\nАбырвалг</div>'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand3 (self):
+        text = u"бла-бла-бла \n% right %Абырвалг (:command:)\nАбырвалг"
+        result = u'бла-бла-бла \n<div align="right">Абырвалг (:command:)\nАбырвалг</div>'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand4 (self):
+        text = u"бла-бла-бла \n% right %(:command:) Абырвалг"
+        result = u'бла-бла-бла \n<div align="right">(:command:) Абырвалг</div>'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand5 (self):
+        text = u"бла-бла-бла \n% right %(:command:) Абырвалг\n\n111"
+        result = u'бла-бла-бла \n<div align="right">(:command:) Абырвалг</div>\n\n111'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand6 (self):
+        text = u"бла-бла-бла \n% right %(:command:)qqq\n\nwww\n(:commandend:) Абырвалг\n\n111"
+        result = u'бла-бла-бла \n<div align="right">(:command:)qqq\n\nwww\n(:commandend:) Абырвалг</div>\n\n111'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand7 (self):
+        text = u"бла-бла-бла \n% right %1111 (:command:)qqq\n\nwww\n(:commandend:) Абырвалг\n\n111"
+        result = u'бла-бла-бла \n<div align="right">1111 (:command:)qqq\n\nwww\n(:commandend:) Абырвалг</div>\n\n111'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
+    def testCommand8 (self):
+        text = u"бла-бла-бла \n%right%1111 (:command:)111\n\n222(:commandend:) Абырвалг (:command2:)333\n\n\n444(:command2end:)\n\n777"
+        result = u'бла-бла-бла \n<div align="right">1111 (:command:)111\n\n222(:commandend:) Абырвалг (:command2:)333\n\n\n444(:command2end:)</div>\n\n777'
+
+        self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
+
+
     def testLeft1 (self):
         text = u"%left%бла-бла-бла \n'''кхм''' бла-бла-бла\n\nбла-бла-бла"
         result = u'<div align="left">бла-бла-бла \n<b>кхм</b> бла-бла-бла</div>\n\nбла-бла-бла'
