@@ -153,6 +153,11 @@ if __name__ == '__main__':
     from test.plugins.template import TemplateTest
     from test.plugins.testpage import TestPageTest
     from test.plugins.sessions import SessionsTest
+    from test.plugins.diagrammer.diagrammer import DiagrammerTest
+    from test.plugins.diagrammer.insertnode import InsertNodeTest
+    from test.plugins.diagrammer.insertdiagram import InsertDiagramTest
+    from test.plugins.diagrammer.insertedge import InsertEdgeTest
+    from test.plugins.diagrammer.insertgroup import InsertGroupTest
 
     from test.plugins.source.source import SourcePluginTest
     from test.plugins.source.sourceencoding import SourceEncodingPluginTest

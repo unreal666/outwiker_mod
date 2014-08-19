@@ -126,21 +126,23 @@ def plugins():
     """
     Создание архивов с плагинами
     """
-    plugins = ["source",
-               "style",
-               "export2html",
-               "spoiler",
-               "livejournal",
-               "lightbox",
-               "thumbgallery",
-               "externaltools",
-               "statistics",
-               "updatenotifier",
-               "counter",
-               "htmlheads",
-               "changepageuid",
-               "sessions",
-               ]
+    plugins = [
+        "changepageuid",
+        "counter",
+        "diagrammer",
+        "export2html",
+        "externaltools",
+        "htmlheads",
+        "lightbox",
+        "livejournal",
+        "sessions",
+        "source",
+        "spoiler",
+        "statistics",
+        "style",
+        "thumbgallery",
+        "updatenotifier",
+    ]
 
     local ("rm -f build/plugins/outwiker-plugins-all.zip")
 
@@ -217,7 +219,7 @@ def locale():
     Обновить файлы локализации (outwiker.pot)
     """
     with lcd ("src"):
-        local (r"xgettext -o locale/outwiker.pot outwiker/gui/*.py outwiker/gui/*/*.py outwiker/pages/*/*.py outwiker/pages/*/*/*.py outwiker/core/*.py outwiker/actions/*.py")
+        local (r'find . -iname "*.py" | xargs xgettext -o locale/outwiker.pot')
 
 
 def localeplugin (pluginname):
@@ -225,7 +227,7 @@ def localeplugin (pluginname):
     Создать или обновить локализацию для плагина pluginname
     """
     with lcd (os.path.join ("plugins", pluginname, pluginname)):
-        local (r"xgettext -o locale/{}.pot *.py".format (pluginname))
+        local (r'find . -iname "*.py" | xargs xgettext -o locale/{}.pot'.format (pluginname))
 
 
 def run ():
