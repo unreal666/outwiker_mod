@@ -4,7 +4,7 @@ import os
 
 import wx
 
-from outwiker.core.commands import MessageBox
+from outwiker.core.commands import MessageBox, insertCurrentDate
 from outwiker.core.application import Application
 from outwiker.core.htmlimprover import HtmlImprover
 from outwiker.core.htmltemplate import HtmlTemplate
@@ -66,6 +66,7 @@ class HtmlPageView (BaseHtmlPanel):
             TABLE_CELL_STR_ID,
             QUOTE_STR_ID,
             IMAGE_STR_ID,
+            CURRENT_DATE,
         ]
 
         # Список действий, которые нужно удалять с панелей и из меню.
@@ -558,6 +559,16 @@ class HtmlPageView (BaseHtmlPanel):
         self._application.actionController.appendToolbarButton (LINE_BREAK_STR_ID,
                                                                 toolbar,
                                                                 os.path.join (self.imagesDir, "linebreak.png"),
+                                                                fullUpdate=False)
+
+        # Текущая дата
+        self._application.actionController.getAction (CURRENT_DATE).setFunc (lambda param: insertCurrentDate (self.mainWindow,
+                                                                                                              self.codeEditor))
+
+        self._application.actionController.appendMenuItem (CURRENT_DATE, menu)
+        self._application.actionController.appendToolbarButton (CURRENT_DATE,
+                                                                toolbar,
+                                                                os.path.join (self.imagesDir, "date.png"),
                                                                 fullUpdate=False)
 
 

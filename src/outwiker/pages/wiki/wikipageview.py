@@ -11,6 +11,7 @@ from .htmlgenerator import HtmlGenerator
 from .htmlcache import HtmlCache
 
 from outwiker.actions.polyactionsid import *
+from outwiker.core.commands import insertCurrentDate
 
 from actions.fontsizebig import WikiFontSizeBigAction
 from actions.fontsizesmall import WikiFontSizeSmallAction
@@ -21,6 +22,7 @@ from actions.equation import WikiEquationAction
 from actions.attachlist import WikiAttachListAction
 from actions.childlist import WikiChildListAction
 from actions.include import WikiIncludeAction
+from actions.dates import WikiDateCreationAction, WikiDateEditionAction
 
 from .basewikipageview import BaseWikiPageView
 
@@ -99,6 +101,7 @@ class WikiPageView (BaseWikiPageView):
             LIST_NUMBERS_STR_ID,
             LINE_BREAK_STR_ID,
             HTML_ESCAPE_STR_ID,
+            CURRENT_DATE,
         ]
 
 
@@ -112,6 +115,8 @@ class WikiPageView (BaseWikiPageView):
             WikiAttachListAction,
             WikiChildListAction,
             WikiIncludeAction,
+            WikiDateCreationAction,
+            WikiDateEditionAction
         ]
 
 
@@ -152,6 +157,12 @@ class WikiPageView (BaseWikiPageView):
 
         # Команда (:include:)
         self._application.actionController.appendMenuItem (WikiIncludeAction.stringId, self.commandsMenu)
+
+        # Команда (:crdate:))
+        self._application.actionController.appendMenuItem (WikiDateCreationAction.stringId, self.commandsMenu)
+
+        # Команда (:eddate:))
+        self._application.actionController.appendMenuItem (WikiDateEditionAction.stringId, self.commandsMenu)
 
 
     def __addFontTools (self):
@@ -459,6 +470,16 @@ class WikiPageView (BaseWikiPageView):
         self._application.actionController.appendToolbarButton (WikiEquationAction.stringId,
                                                                 toolbar,
                                                                 os.path.join (self.imagesDir, "equation.png"),
+                                                                fullUpdate=False)
+
+        # Текущая дата
+        self._application.actionController.getAction (CURRENT_DATE).setFunc (lambda param: insertCurrentDate (self.mainWindow,
+                                                                                                              self.codeEditor))
+
+        self._application.actionController.appendMenuItem (CURRENT_DATE, menu)
+        self._application.actionController.appendToolbarButton (CURRENT_DATE,
+                                                                toolbar,
+                                                                os.path.join (self.imagesDir, "date.png"),
                                                                 fullUpdate=False)
 
 
