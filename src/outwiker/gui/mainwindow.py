@@ -57,6 +57,7 @@ from outwiker.actions.about import AboutAction
 from outwiker.actions.openattachfolder import OpenAttachFolderAction
 from outwiker.actions.history import HistoryBackAction, HistoryForwardAction
 from outwiker.actions.applystyle import SetStyleToBranchAction
+from outwiker.actions.openpluginsfolder import OpenPluginsFolderAction
 
 
 class MainWindow(wx.Frame):
@@ -372,6 +373,10 @@ class MainWindow(wx.Frame):
             AboutAction.stringId,
             menu)
 
+        actionController.appendMenuItem (
+            OpenPluginsFolderAction.stringId,
+            menu)
+
 
     def __addActionsGui (self):
         """
@@ -539,6 +544,11 @@ class MainWindow(wx.Frame):
         self.taskBarIcon.Destroy()
         self.controller.destroy()
         self.auiManager.Destroy()
+
+        self.SetMenuBar (None)
+        self.mainMenu.Destroy()
+
+        self.DestroyChildren()
 
         super (MainWindow, self).Destroy()
 

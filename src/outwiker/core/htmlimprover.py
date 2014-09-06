@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import re
 # import timeit
+
 
 class HtmlImprover (object):
     """
@@ -57,7 +57,7 @@ class HtmlImprover (object):
         index = 0
 
         for n in range (len (parts)):
-            textitem = text[index: index + len (parts[n]) ]
+            textitem = text[index: index + len (parts[n])]
             if n % 2 == 0:
                 textitem = HtmlImprover.__improveTags (textitem)
                 index += len (parts[n]) + len (starttag)

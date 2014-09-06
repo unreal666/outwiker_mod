@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+
 
 class BlockToken (object):
     """
@@ -16,4 +16,5 @@ class BlockToken (object):
         """
         def conversionParseAction(s,l,t):
             return u"".join ([opening, self.parser.parseTextLevelItemMarkup (t[0]), closing])
+
         return conversionParseAction

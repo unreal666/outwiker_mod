@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import wx
@@ -16,6 +15,10 @@ class TextPanel (BaseTextPanel):
         BaseTextPanel.__init__ (self, parent, *args, **kwds)
 
         self.__createGui()
+
+
+    def Clear (self):
+        super (TextPanel, self).Clear()
 
 
     def SetCursorPosition (self, position):
