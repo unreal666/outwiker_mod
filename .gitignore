@@ -55,4 +55,5 @@ src/plugins/*
 .ropeproject
 src/.idea
 doc/doxygen/html
+doc/coverage
 tests_win
