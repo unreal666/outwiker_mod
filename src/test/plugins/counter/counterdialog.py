@@ -9,6 +9,7 @@ from outwiker.pages.wiki.wikipage import WikiPageFactory
 
 from test.guitests.basemainwnd import BaseMainWndTest
 from test.utils import removeWiki
+from outwiker.gui.tester import Tester
 
 
 class CounterDialogTest (BaseMainWndTest):
@@ -27,9 +28,10 @@ class CounterDialogTest (BaseMainWndTest):
         self._loader.load (dirlist)
 
         self._dlg = self._loader["Counter"].InsertDialog (Application.mainWindow)
-        self._dlg.SetModalResult (wx.ID_OK)
+        Tester.dialogTester.clear()
+        Tester.dialogTester.appendOk()
 
-        self.testPage = self.rootwiki[u"Страница 1"]
+        self.testPage = self.wikiroot[u"Страница 1"]
 
 
     def tearDown(self):
@@ -46,9 +48,9 @@ class CounterDialogTest (BaseMainWndTest):
         self.path = u"../test/testwiki"
         removeWiki (self.path)
 
-        self.rootwiki = WikiDocument.create (self.path)
+        self.wikiroot = WikiDocument.create (self.path)
 
-        WikiPageFactory().create (self.rootwiki, u"Страница 1", [])
+        WikiPageFactory().create (self.wikiroot, u"Страница 1", [])
 
 
     def testDefault (self):

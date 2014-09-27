@@ -1,10 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 from basemainwnd import BaseMainWndTest
-from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
 from outwiker.pages.text.textpage import TextPageFactory
-from test.utils import removeWiki
 
 
 class TextEditorTest (BaseMainWndTest):
@@ -14,22 +12,12 @@ class TextEditorTest (BaseMainWndTest):
     def setUp (self):
         BaseMainWndTest.setUp (self)
 
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
-
-        self.wikiroot = WikiDocument.create (self.path)
         TextPageFactory().create (self.wikiroot, u"Страница", [])
 
         self.testpage = self.wikiroot[u"Страница"]
 
         Application.wikiroot = self.wikiroot
         Application.selectedPage = self.testpage
-
-
-    def tearDown (self):
-        BaseMainWndTest.tearDown (self)
-        Application.wikiroot = None
-        removeWiki (self.path)
 
 
     def _getEditor (self):
@@ -171,6 +159,36 @@ class TextEditorTest (BaseMainWndTest):
         self._getEditor().SetSelection (0, len (text))
         self._getEditor().turnText (u"Лево", u"Право")
         self.assertEqual (self._getEditor().GetText(), u"ЛевоПроверка абырвалгПраво")
+
+
+    def testTurnTextSelection_01 (self):
+        text = u"Проверка абырвалг"
+
+        self._getEditor().SetText (text)
+        self._getEditor().SetSelection (9, 17)
+
+        self.assertEqual (self._getEditor().GetSelectedText (), u"абырвалг")
+
+        self._getEditor().turnText (u"Лево ", u" Право")
+
+        self.assertEqual (self._getEditor().GetSelectedText (), u"абырвалг")
+
+        self.assertEqual (self._getEditor().GetText(), u"Проверка Лево абырвалг Право")
+
+
+    def testTurnTextSelection_02 (self):
+        text = u"Проверка  абырвалг"
+
+        self._getEditor().SetText (text)
+        self._getEditor().SetSelection (9, 9)
+
+        self.assertEqual (self._getEditor().GetSelectedText (), u"")
+
+        self._getEditor().turnText (u"Лево ", u" Право")
+
+        self.assertEqual (self._getEditor().GetSelectedText (), u"")
+
+        self.assertEqual (self._getEditor().GetText(), u"Проверка Лево  Право абырвалг")
 
 
     def testGetCurrentPositionEmpty (self):

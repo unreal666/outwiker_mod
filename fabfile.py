@@ -124,7 +124,7 @@ def ppaunstable ():
 
 def plugins():
     """
-    Создание архивов с плагинами
+    Создание архивов с плагинами (требуется 7z)
     """
     plugins = [
         "changepageuid",
@@ -145,13 +145,37 @@ def plugins():
         "updatenotifier",
     ]
 
-    local ("rm -f build/plugins/outwiker-plugins-all.zip")
+    _removeFile (u"build/plugins/outwiker-plugins-all.zip")
 
     for plugin in plugins:
-        local ("rm -f build/plugins/{}.zip".format (plugin))
+        _removeFile (u"build/plugins/{}.zip".format (plugin))
 
         with lcd ("plugins/{}".format (plugin)):
-            local ("7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../build/plugins/{}.zip ./*; 7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../build/plugins/outwiker-plugins-all.zip ./*".format (plugin))
+            local ("7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../build/plugins/{}.zip ./*".format (plugin))
+            local ("7z a -r -aoa -xr!*.pyc -xr!.ropeproject -w../ ../../build/plugins/outwiker-plugins-all.zip ./*".format (plugin))
+
+
+def source ():
+    """
+    Сделать архивы с исходниками (требуется git и 7z)
+    """
+    version = _getVersion()
+
+    sourcesdir = os.path.join ("build", "sources")
+
+    if not os.path.exists (sourcesdir):
+        os.mkdir (sourcesdir)
+
+    fullfname = u"outwiker-src-full.zip"
+    srcfname = u"outwiker-src-min.zip"
+
+    _removeFile (fullfname)
+    _removeFile (srcfname)
+
+    local ('git archive --prefix=outwiker-{}.{}/ -o "{}/{}" HEAD'.format (version[0], version[1], sourcesdir, fullfname))
+
+    with lcd ("src"):
+        local ("7z a -r -aoa -xr!*.pyc -xr!.ropeproject -xr!tests.py -xr!profile.py -xr!setup_tests.py -xr!setup_win.py -xr!test -xr!profiles ../{}/{} ./*".format (sourcesdir, srcfname))
 
 
 def win():
@@ -177,7 +201,7 @@ def win():
 
 def wintests():
     """
-    Сборка тестов в exe-шники
+    Сборка тестов в exe-шник
     """
     with lcd ("src"):
         local ("python setup_tests.py build")
@@ -217,7 +241,7 @@ def debinstall():
 
 def locale():
     """
-    Обновить файлы локализации (outwiker.pot)
+    Обновить файл локализации (outwiker.pot)
     """
     with lcd ("src"):
         local (r'find . -iname "*.py" | xargs xgettext -o locale/outwiker.pot')
@@ -249,7 +273,7 @@ def test (params=""):
 
 def testcoverage (params=""):
     """
-    Запустить юнит-тесты и измерить их покрытие
+    Запустить юнит-тесты и измерить их покрытие (требуется coverage)
     """
     with lcd ("src"):
         local (u"coverage run tests.py " + params)
@@ -272,3 +296,11 @@ def _makechangelog (distrib_src, distrib_new):
 
     with open (fname, "w") as fp:
         fp.write (u"".join (lines))
+
+
+def _removeFile (fname):
+    """
+    Удаляет файл, если он существует. Функция исключения не обрабатывает.
+    """
+    if os.path.exists (fname):
+        os.remove (fname)

@@ -24,12 +24,18 @@ from outwiker.gui.hotkey import HotKey
 from outwiker.gui.polyaction import PolyAction
 from outwiker.gui.dateformatdialog import DateFormatDialog
 from outwiker.gui.guiconfig import GeneralGuiConfig
+from outwiker.gui.tester import Tester
+from outwiker.gui.testeddialog import TestedFileDialog
 
 
 def MessageBox (*args, **kwargs):
     """
     Замена стандартного MessageBox. Перед показом диалога отключает приложение от события EVT_ACTIVATE_APP.
     """
+    func = Tester.dialogTester.pop()
+    if func is not None:
+        return func (None)
+
     wx.GetApp().unbindActivateApp()
     result = wx.MessageBox (*args, **kwargs)
     wx.GetApp().bindActivateApp()
@@ -117,16 +123,13 @@ def openWikiWithDialog (parent, readonly=False):
     """
     wikiroot = None
 
-    dialog = wx.FileDialog (parent,
-                            wildcard = "__page.opt|__page.opt",
-                            style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-
-    if dialog.ShowModal() == wx.ID_OK:
-        fullpath = dialog.GetPath()
-        path = os.path.dirname(fullpath)
-        wikiroot = openWiki (path, readonly)
-
-    dialog.Destroy()
+    with TestedFileDialog (parent,
+                           wildcard = "__page.opt|__page.opt",
+                           style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dialog:
+        if dialog.ShowModal() == wx.ID_OK:
+            fullpath = dialog.GetPath()
+            path = os.path.dirname(fullpath)
+            wikiroot = openWiki (path, readonly)
 
     return wikiroot
 
@@ -218,7 +221,7 @@ def createNewWiki (parentwnd):
     Создать новую вики
     parentwnd - окно-владелец диалога выбора файла
     """
-    dlg = wx.FileDialog (parentwnd, style = wx.FD_SAVE)
+    dlg = TestedFileDialog (parentwnd, style = wx.FD_SAVE)
 
     newPageTitle = _(u"First Wiki Page")
     newPageContent = _(u"""!! First Wiki Page
@@ -239,7 +242,7 @@ def createNewWiki (parentwnd):
             Application.wikiroot.selectedPage = firstPage
         except (IOError, OSError) as e:
             # TODO: проверить под Windows
-            MessageBox (_(u"Can't create wiki\n") + unicode (str (e), "utf8"),
+            MessageBox (_(u"Can't create wiki\n") + unicode (e.filename.encode (getOS().filesEncoding), "utf8"),
                         _(u"Error"), wx.OK | wx.ICON_ERROR)
 
     dlg.Destroy()
@@ -398,8 +401,8 @@ def renamePage (page, newtitle):
                     _(u"Error"),
                     wx.ICON_ERROR | wx.OK)
 
-    except OSError as e:
-        MessageBox (_(u"Can't rename page\n%s") % unicode (e),
+    except OSError:
+        MessageBox (_(u'Can\'t rename page "{}" to "{}"').format (page.title, newtitle),
                     _(u"Error"),
                     wx.ICON_ERROR | wx.OK)
 

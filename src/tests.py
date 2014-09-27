@@ -35,6 +35,17 @@ if __name__ == '__main__':
 
     import unittest
 
+    from test.actions.wikidate import WikiDateActionTest
+    from test.actions.wikiactions import WikiActionsTest
+    from test.actions.sortpages import SortPagesTest
+    from test.actions.actiontabs import ActionTabsTest
+    from test.actions.htmlactions import HtmlActionsTest
+    from test.actions.insertdate import InsertDateTest
+    from test.actions.polyaction import PolyActionTest
+    from test.actions.globalsearch import GlobalSearchActionTest
+    from test.actions.description import DescriptionActionTest
+    from test.actions.applystyle import ApplyStyleActionTest
+
     from test.treeloading import WikiPagesTest, SubWikiTest, TextPageAttachmentTest
     from test.treeloading_readonly import ReadonlyLoadTest, ReadonlyChangeTest
     from test.treecreation import TextPageCreationTest
@@ -115,24 +126,25 @@ if __name__ == '__main__':
     from test.guitests.pagepanel import PagePanelTest
     from test.guitests.tagspanel import TagsPanelTest
     from test.guitests.tabs import TabsTest
-    from test.guitests.actiontabs import ActionTabsTest
     from test.guitests.linkdialogcontrollertest import LinkDialogControllerTest
     from test.guitests.thumbdialogcontrollertest import ThumbDialogControllerTest
     from test.guitests.wikipageview import WikiPageViewTest
     from test.guitests.htmlpageview import HtmlPageViewTest
     from test.guitests.textpageview import TextPageViewTest
     from test.guitests.actioncontroller import ActionControllerTest
-    from test.guitests.polyaction import PolyActionTest
     from test.guitests.mainpanes import MainPanesTest
     from test.guitests.fullscreen import FullScreenTest
-    from test.guitests.wikiactions import WikiActionsTest
-    from test.guitests.htmlactions import HtmlActionsTest
     from test.guitests.texteditor import TextEditorTest
     from test.guitests.fileicons import FileIconsTestUnix
     from test.guitests.stcstyleparser import StcStyleParserTest
     from test.guitests.childlistdialog import ChildListDialogTest
     from test.guitests.attachlistdialog import AttachListDialogTest
     from test.guitests.includedialog import IncludeDialogTest
+    from test.guitests.removepage import RemovePageGuiTest
+    from test.guitests.renamepage import RenamePageGuiTest
+    from test.guitests.movepage import MovePageGuiTest
+    from test.guitests.openwiki import OpenWikiGuiTest
+    from test.guitests.newwiki import NewWikiGuiTest
 
     if os.name == "nt":
         from test.guitests.fileicons import FileIconsTestWindows
@@ -193,7 +205,14 @@ if __name__ == '__main__':
     else:
         from test.guitests.uriidentifiers import UriIdentifierWebKitTest
 
-    # f = open('tests.log', "w")
-    # runner = unittest.TextTestRunner(f)
-    # unittest.main(testRunner=runner)
+    # import cProfile
+    # import pstats
+    # profile_fname = "../profiles/tests.profile"
+    #
+    # cProfile.run('unittest.main()', profile_fname)
+    # stats = pstats.Stats(profile_fname)
+    # stats.strip_dirs().sort_stats('cumtime').print_stats(100)
+    # stats.strip_dirs().sort_stats('calls').print_stats(100)
+    # stats.strip_dirs().sort_stats('time').print_stats(100)
+
     unittest.main()

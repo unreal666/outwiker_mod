@@ -27,10 +27,10 @@ class WikiIncludeCommandTest (unittest.TestCase):
         self.path = u"../test/testwiki"
         removeWiki (self.path)
 
-        self.rootwiki = WikiDocument.create (self.path)
+        self.wikiroot = WikiDocument.create (self.path)
 
-        WikiPageFactory().create (self.rootwiki, u"Страница 2", [])
-        self.testPage = self.rootwiki[u"Страница 2"]
+        WikiPageFactory().create (self.wikiroot, u"Страница 2", [])
+        self.testPage = self.wikiroot[u"Страница 2"]
 
         files = [u"text_utf8.txt", u"text_utf8.txt2", u"image.gif",
                  u"текст_utf8.txt", u"text_1251.txt", u"html.txt",
@@ -203,6 +203,15 @@ class WikiIncludeCommandTest (unittest.TestCase):
         text = u"""бла-бла-бла(:include Attach:image.gif encoding=base64 :)"""
 
         result_right = u"""бла-бла-бла""" + u"<b>Encoding error in file image.gif</b>"
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result, result_right, result)
+
+
+    def testIncludeCommandInvalid4 (self):
+        text = u"""бла-бла-бла (:include text_utf8.txt :) абырвалг"""
+
+        result_right = u"""бла-бла-бла  абырвалг"""
 
         result = self.parser.toHtml (text)
         self.assertEqual (result, result_right, result)

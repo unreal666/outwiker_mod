@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import wx
-
 from outwiker.core.application import Application
 from outwiker.core.tree import WikiDocument
 from outwiker.core.pluginsloader import PluginsLoader
@@ -9,6 +7,7 @@ from outwiker.pages.wiki.wikipage import WikiPageFactory
 
 from test.guitests.basemainwnd import BaseMainWndTest
 from test.utils import removeWiki
+from outwiker.gui.tester import Tester
 
 
 class ChangePageUidTest (BaseMainWndTest):
@@ -25,9 +24,9 @@ class ChangePageUidTest (BaseMainWndTest):
         self._loader.load (dirlist)
 
         self._dlg = self._loader["ChangePageUID"].ChangeUidDialog (Application.mainWindow)
-        self._dlg.SetModalResult (wx.ID_OK)
+        Tester.dialogTester.clear()
 
-        self.testPage = self.rootwiki[u"Страница 1"]
+        self.testPage = self.wikiroot[u"Страница 1"]
 
 
     def tearDown(self):
@@ -45,10 +44,10 @@ class ChangePageUidTest (BaseMainWndTest):
         self.path = u"../test/testwiki"
         removeWiki (self.path)
 
-        self.rootwiki = WikiDocument.create (self.path)
+        self.wikiroot = WikiDocument.create (self.path)
 
-        WikiPageFactory().create (self.rootwiki, u"Страница 1", [])
-        WikiPageFactory().create (self.rootwiki, u"Страница 2", [])
+        WikiPageFactory().create (self.wikiroot, u"Страница 1", [])
+        WikiPageFactory().create (self.wikiroot, u"Страница 2", [])
 
 
     def testPluginLoad (self):
@@ -77,7 +76,7 @@ class ChangePageUidTest (BaseMainWndTest):
 
     def testUid_02 (self):
         controller = self._createDialogController()
-        uid = Application.pageUidDepot.createUid (self.rootwiki[u"Страница 2"])
+        uid = Application.pageUidDepot.createUid (self.wikiroot[u"Страница 2"])
 
         # Такой идентификатор уже есть
         self.assertNotEqual (len (controller.validate (uid)), 0)
