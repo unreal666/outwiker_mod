@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
 
 import os.path
+from tempfile import mkdtemp
 
 from basemainwnd import BaseMainWndTest
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.core.application import Application
-from test.utils import removeWiki
+from test.utils import removeDir
 from outwiker.core.attachment import Attachment
 
 
@@ -140,7 +141,7 @@ class AttachPanelTest (BaseMainWndTest):
         self.assertEqual (self.wnd.attachPanel.panel.attachList.GetItemCount(), len (self.fullFilesPath))
 
         # Создадим другую независимую вики
-        newpath = u"../test/testwiki2"
+        newpath = mkdtemp (prefix=u'Абыр Абырвалг')
         newwikiroot = WikiDocument.create (newpath)
 
         TextPageFactory().create (newwikiroot, u"Новая страница 1", [])
@@ -159,4 +160,4 @@ class AttachPanelTest (BaseMainWndTest):
 
         Application.wikiroot.selectedPage = None
         Application.wikiroot = None
-        removeWiki (newpath)
+        removeDir (newpath)

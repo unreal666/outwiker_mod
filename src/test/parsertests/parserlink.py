@@ -3,8 +3,9 @@
 import os
 import cgi
 import unittest
+from tempfile import mkdtemp
 
-from test.utils import removeWiki
+from test.utils import removeDir
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.attachment import Attachment
@@ -34,8 +35,7 @@ class ParserLinkTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -57,7 +57,7 @@ class ParserLinkTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def testUrl1 (self):

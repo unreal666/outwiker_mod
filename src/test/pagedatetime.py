@@ -3,6 +3,7 @@
 import unittest
 import datetime
 import time
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.config import PageConfig
@@ -10,14 +11,13 @@ from outwiker.core.style import Style
 from outwiker.core.attachment import Attachment
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.pages.html.htmlpage import HtmlPageFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class PageDateTimeTest (unittest.TestCase):
     def setUp (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         # Максимальная погрешность при расчете времени
         self._maxDelta = datetime.timedelta (seconds=5)
@@ -26,7 +26,7 @@ class PageDateTimeTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def testDeleteDate (self):

@@ -2,6 +2,7 @@
 
 import unittest
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -9,7 +10,7 @@ from outwiker.core.application import Application
 from outwiker.core.attachment import Attachment
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.pages.wiki.parserfactory import ParserFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class ThumbListPluginTest (unittest.TestCase):
@@ -31,8 +32,7 @@ class ThumbListPluginTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -41,7 +41,7 @@ class ThumbListPluginTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
         self.loader.clear()
 
 

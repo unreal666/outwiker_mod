@@ -2,6 +2,7 @@
 
 import unittest
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -11,7 +12,7 @@ from outwiker.core.attachment import Attachment
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.pages.wiki.parserfactory import ParserFactory
 from outwiker.pages.wiki.htmlgenerator import HtmlGenerator
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class SourceStyleTest (unittest.TestCase):
@@ -51,8 +52,7 @@ def hello (count):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -63,7 +63,7 @@ def hello (count):
     def tearDown(self):
         self.config.tabWidth.value = 4
         Application.config.remove_section (self.config.section)
-        removeWiki (self.path)
+        removeDir (self.path)
         self.loader.clear()
 
 

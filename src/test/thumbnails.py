@@ -3,9 +3,10 @@
 import unittest
 import os
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.pages.wiki.thumbnails import Thumbnails
-from test.utils import removeWiki
+from test.utils import removeDir
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.wiki.parser.wikiparser import Parser
 from outwiker.pages.wiki.wikipage import WikiPageFactory
@@ -32,8 +33,7 @@ class ThumbnailsTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
         WikiPageFactory().create (self.wikiroot, u"Страница 2", [])
@@ -41,7 +41,7 @@ class ThumbnailsTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
     def testThumbnails1 (self):
         thumb = Thumbnails (self.parser.page)

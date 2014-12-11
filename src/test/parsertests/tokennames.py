@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.pages.wiki.parser.tokenfonts import FontsFactory
 from outwiker.pages.wiki.parser.tokennoformat import NoFormatFactory
@@ -23,7 +24,7 @@ from outwiker.pages.wiki.parser.tokentex import TexFactory
 from outwiker.pages.wiki.parser.tokencommand import CommandFactory
 from outwiker.pages.wiki.parser.tokentext import TextFactory
 
-from test.utils import removeWiki
+from test.utils import removeDir
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.attachment import Attachment
@@ -48,12 +49,17 @@ class TokenNamesTest (unittest.TestCase):
     """
     Тесты токенов википарсера на правильность имен
     """
+    def setUp (self):
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
+
+
+    def tearDown (self):
+        removeDir (self.path)
+
+
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
         self.filesPath = u"../test/samplefiles/"
-
-        removeWiki (self.path)
 
         self.wikiroot = WikiDocument.create (self.path)
         WikiPageFactory().create (self.wikiroot, u"Страница 2", [])
@@ -403,7 +409,6 @@ class TokenNamesTest (unittest.TestCase):
         validname = u"attach"
 
         self._checkToken (testtoken, text, validname)
-        removeWiki (self.path)
 
 
     def testImageAttachment (self):
@@ -413,4 +418,3 @@ class TokenNamesTest (unittest.TestCase):
         validname = u"attach"
 
         self._checkToken (testtoken, text, validname)
-        removeWiki (self.path)

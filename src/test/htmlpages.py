@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
-
 from outwiker.pages.html.htmlpage import HtmlPageFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class HtmlPagesTest(unittest.TestCase):
@@ -14,8 +14,7 @@ class HtmlPagesTest(unittest.TestCase):
     """
     def setUp(self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.__eventcount = 0
         self.__eventSender = None
@@ -31,7 +30,7 @@ class HtmlPagesTest(unittest.TestCase):
 
     def tearDown(self):
         self.wikiroot.onPageUpdate -= self.__onPageUpdate
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def __onPageUpdate (self, sender, **kwargs):

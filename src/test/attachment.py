@@ -2,9 +2,10 @@
 
 import unittest
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.attachment import Attachment
-from utils import removeWiki
+from utils import removeDir
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.core.application import Application
@@ -18,8 +19,7 @@ class AttachmentTest (unittest.TestCase):
         self.pageUpdateSender = None
 
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -35,7 +35,7 @@ class AttachmentTest (unittest.TestCase):
 
 
     def tearDown (self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def onPageUpdate (self, sender, **kwargs):

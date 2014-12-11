@@ -53,7 +53,8 @@ htmlcov
 src/tests.log
 src/plugins/*
 .ropeproject
-src/.idea
 doc/doxygen/html
 doc/coverage
 tests_win
+*.sublime-*
+src/.idea

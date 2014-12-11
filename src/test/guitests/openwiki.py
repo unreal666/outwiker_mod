@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import os.path
+from tempfile import mkdtemp
 
 import wx
 
@@ -10,7 +11,7 @@ from outwiker.core.tree import WikiDocument
 from outwiker.core.commands import openWikiWithDialog
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.gui.tester import Tester
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class OpenWikiGuiTest (BaseMainWndTest):
@@ -20,8 +21,7 @@ class OpenWikiGuiTest (BaseMainWndTest):
     def setUp (self):
         BaseMainWndTest.setUp (self)
 
-        self.path2 = u"../test/testwiki2"
-        removeWiki (self.path2)
+        self.path2 = mkdtemp (prefix=u'Абырвалг абырвалг')
 
         factory = TextPageFactory()
         factory.create (self.wikiroot, u"Страница 1", [])
@@ -33,7 +33,7 @@ class OpenWikiGuiTest (BaseMainWndTest):
 
     def tearDown (self):
         BaseMainWndTest.tearDown (self)
-        removeWiki (self.path2)
+        removeDir (self.path2)
 
 
     def _selectFile (self, dialog):

@@ -2,12 +2,13 @@
 
 import os.path
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.core.attachment import Attachment
 from outwiker.core.application import Application
-from test.utils import removeWiki
+from test.utils import removeDir
 from outwiker.core.commands import generateLink
 
 from outwiker.gui.htmlcontrollerie import UriIdentifierIE
@@ -20,8 +21,7 @@ class UriIdentifierTest (unittest.TestCase):
     """
     def setUp(self):
         # Здесь будет создаваться вики
-        self.path = os.path.realpath (u"../test/testwiki")
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -52,7 +52,7 @@ class UriIdentifierTest (unittest.TestCase):
 
     def tearDown(self):
         Application.wikiroot = None
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
 

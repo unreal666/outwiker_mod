@@ -2,10 +2,11 @@
 
 import unittest
 from datetime import datetime
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.wiki.wikipage import WikiPageFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 from outwiker.core.application import Application
 from outwiker.pages.wiki.parser.commanddates import CommandDateCreation, CommandDateEdition
 from outwiker.pages.wiki.parserfactory import ParserFactory
@@ -32,8 +33,7 @@ class WikiCommandDatesTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -42,7 +42,7 @@ class WikiCommandDatesTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
         self._config.dateTimeFormat.value = self._srcDateFormat
 
 

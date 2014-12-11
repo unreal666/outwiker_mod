@@ -2,6 +2,7 @@
 
 import unittest
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -9,7 +10,7 @@ from outwiker.core.application import Application
 from outwiker.core.attachment import Attachment
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 
-from test.utils import removeWiki
+from test.utils import removeDir
 from .sourcefakedialog import FakeInsertDialog
 
 
@@ -38,8 +39,7 @@ class SourceAttachmentPluginTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 
@@ -48,7 +48,7 @@ class SourceAttachmentPluginTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
         Application.config.remove_section (self.config.section)
         self.loader.clear()
 

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -8,15 +9,14 @@ from outwiker.core.application import Application
 from outwiker.pages.text.textpage import TextPageFactory
 
 from test.guitests.basemainwnd import BaseMainWndTest
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class SessionsTest (BaseMainWndTest):
     """Тесты плагина Sessions"""
     def setUp (self):
         super (SessionsTest, self).setUp ()
-        self.path = u"../test/testwiki"
-        self.path2 = u"../test/testwiki2"
+        self.path2 = mkdtemp (prefix=u'Абырвалг абырвалг')
 
         self.__createWiki()
 
@@ -33,16 +33,10 @@ class SessionsTest (BaseMainWndTest):
         Application.wikiroot = None
         Application.config.remove_section (self.loader[u"Sessions"].SessionStorage.SECTION_NAME)
         self.loader.clear()
-        removeWiki (self.path)
-        removeWiki (self.path2)
+        removeDir (self.path2)
 
 
     def __createWiki (self):
-        # Здесь будет создаваться вики
-        removeWiki (self.path)
-
-        self.wikiroot = WikiDocument.create (self.path)
-
         TextPageFactory().create (self.wikiroot, u"Страница 1", [])
         TextPageFactory().create (self.wikiroot, u"Страница 2", [])
         TextPageFactory().create (self.wikiroot[u"Страница 1"], u"Страница 3", [])
@@ -51,8 +45,6 @@ class SessionsTest (BaseMainWndTest):
 
     def __createWiki2 (self):
         # Здесь будет создаваться вики
-        removeWiki (self.path2)
-
         wiki2 = WikiDocument.create (self.path2)
         TextPageFactory().create (wiki2, u"Page 1", [])
         TextPageFactory().create (wiki2, u"Page 2", [])

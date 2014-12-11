@@ -2,6 +2,7 @@
 
 import os.path
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.exceptions import ReadonlyException
@@ -14,7 +15,7 @@ from outwiker.pages.wiki.wikipage import WikiWikiPage
 from outwiker.pages.html.htmlpage import HtmlWikiPage
 from outwiker.pages.search.searchpage import SearchWikiPage
 
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class ReadonlyLoadTest (unittest.TestCase):
@@ -157,8 +158,7 @@ class ReadonlyChangeTest (unittest.TestCase):
     """
     def setUp (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self._exampleStyleDir = u"../styles/example_jblog"
         self._exampleStyleDir2 = u"../styles/example_jnet"
@@ -185,7 +185,7 @@ class ReadonlyChangeTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def __changeTitle (self, page, newtitle):

@@ -2,6 +2,7 @@
 
 import unittest
 import os.path
+from tempfile import mkdtemp
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.tree import WikiDocument
@@ -11,7 +12,7 @@ from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.pages.html.htmlpage import HtmlPageFactory
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.pages.search.searchpage import SearchPageFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class PageStatisticsTest (unittest.TestCase):
@@ -32,14 +33,13 @@ class PageStatisticsTest (unittest.TestCase):
 
 
     def tearDown (self):
-        removeWiki (self.path)
+        removeDir (self.path)
         self.loader.clear()
 
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
 

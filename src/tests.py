@@ -101,7 +101,6 @@ if __name__ == '__main__':
     from test.htmlpages import HtmlPagesTest
     from test.wikilinkcreator import WikiLinkCreatorTest
 
-    from test.utils import removeWiki
     from test.event import EventTest, EventsTest
     from test.config import ConfigTest, ConfigOptionsTest, TrayConfigTest, EditorConfigTest
     from test.recent import RecentWikiTest
@@ -118,6 +117,8 @@ if __name__ == '__main__':
     from test.commandline import CommandLineTest
     from test.pageuiddepot import PageUidDepotTest
     from test.loader import PluginsLoaderTest
+    from test.iconscollection import IconsCollectionTest
+    from test.iconmaker import IconMakerTest
 
     # from test.guitests.tray import TrayNormalTest#, TrayIconizedTest
     from test.guitests.mainwnd import MainWndTest

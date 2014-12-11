@@ -3,6 +3,7 @@
 import os
 import os.path
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
@@ -12,7 +13,7 @@ from outwiker.pages.wiki.parserfactory import ParserFactory
 from outwiker.pages.wiki.thumbnails import Thumbnails
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class WikiAttachListCommandTest (unittest.TestCase):
@@ -38,15 +39,14 @@ class WikiAttachListCommandTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
         WikiPageFactory().create (self.wikiroot, u"Страница 1", [])
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def _compareResult (self, titles, names, result):

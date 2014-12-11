@@ -6,16 +6,15 @@ from outwiker.core.application import Application
 from outwiker.core.factoryselector import FactorySelector
 from outwiker.pages.text.textpage import TextPageFactory
 
-from test.utils import removeWiki
 from test.guitests.basemainwnd import BaseMainWndTest
 
 
 class TestPageTest (BaseMainWndTest):
     """Тесты плагина TestPage"""
+
     def setUp (self):
         super (TestPageTest, self).setUp ()
 
-        self.path = u"../test/testwiki"
         self.dirlist = [u"../plugins/testpage"]
 
         self.loader = PluginsLoader(Application)
@@ -25,7 +24,6 @@ class TestPageTest (BaseMainWndTest):
     def tearDown (self):
         BaseMainWndTest.tearDown (self)
         Application.wikiroot = None
-        removeWiki (self.path)
         self.loader.clear()
 
 

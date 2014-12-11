@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 
 import unittest
+from tempfile import mkdtemp
 
-from test.utils import removeWiki
+from test.utils import removeDir
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
@@ -25,8 +26,7 @@ class ParserMiscTest (unittest.TestCase):
 
     def __createWiki (self):
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wikiroot = WikiDocument.create (self.path)
         WikiPageFactory().create (self.wikiroot, u"Страница 2", [])
@@ -34,7 +34,7 @@ class ParserMiscTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
 
 
     def testHorLine (self):

@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-
 """
 Тесты на перемещение заметок по дереву
 """
 
 import os.path
 import unittest
+from tempfile import mkdtemp
 
 from outwiker.core.exceptions import DublicateTitle, TreeException
 from outwiker.core.application import Application
@@ -13,7 +13,7 @@ from outwiker.core.tree import WikiDocument
 from outwiker.core.attachment import Attachment
 
 from outwiker.pages.text.textpage import TextPageFactory
-from test.utils import removeWiki
+from test.utils import removeDir
 
 
 class MoveTest (unittest.TestCase):
@@ -26,8 +26,7 @@ class MoveTest (unittest.TestCase):
         self.treeUpdateSender = None
 
         # Здесь будет создаваться вики
-        self.path = u"../test/testwiki"
-        removeWiki (self.path)
+        self.path = mkdtemp (prefix=u'Абырвалг абыр')
 
         self.wiki = WikiDocument.create (self.path)
 
@@ -44,7 +43,7 @@ class MoveTest (unittest.TestCase):
 
 
     def tearDown(self):
-        removeWiki (self.path)
+        removeDir (self.path)
         Application.wikiroot = None
 
 
