@@ -34,9 +34,6 @@ DEFAULT_OLD_CONFIG_DIR = u".outwiker"
 # http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 DEFAULT_CONFIG_DIR = u"outwiker"
 
-# Имя маркерного файлы для определения расположения "приоритетной" папки IMAGES_DIR
-IMAGE_MARKER_NAME = u"outwiker.ico"
-
 
 class System (object):
     def migrateConfig (self,
@@ -52,6 +49,7 @@ class System (object):
 
         if op.exists(oldConfDir) and not op.exists(confDir):
             shutil.move(oldConfDir, confDir)
+
 
 
 class Windows (System):
@@ -267,25 +265,11 @@ def getConfigPath (dirname=DEFAULT_CONFIG_DIR, fname=DEFAULT_CONFIG_NAME):
 
 
 def getImagesDir ():
-    """
-    Возвращает "приоритетную" директорию, откуда должны грузиться изображения
-    """ 
-    imagesDirList = getImagesDirList()
-    image_marker_file = os.path.join (imagesDirList[-1], IMAGE_MARKER_NAME)
-
-    return imagesDirList[-1] if (os.path.exists (image_marker_file) and
-                                 os.path.isfile (image_marker_file)) else imagesDirList[0]
+    return op.join (getCurrentDir(), IMAGES_DIR)
 
 
 def getTemplatesDir ():
     return op.join (getCurrentDir(), STYLES_DIR)
-
-
-def getImagesDirList (configDirName=DEFAULT_CONFIG_DIR, configFileName=DEFAULT_CONFIG_NAME):
-    """
-    Возвращает список директорий, откуда должны грузиться изображения
-    """ 
-    return getSpecialDirList (IMAGES_DIR, configDirName, configFileName)
 
 
 def getExeFile ():
