@@ -178,7 +178,7 @@ if __name__ == '__main__':
     from test.plugins.statistics.treestatistics import TreeStatisticsTest
 
     from test.plugins.updatenotifier.loading import UpdateNotifierLoadingTest
-    from test.plugins.updatenotifier.updatenotifier import UpdateNotifierTest
+    from test.plugins.updatenotifier.updatenotifier_test import UpdateNotifierTest
 
     from test.plugins.counter.counter_test import CounterTest
     from test.plugins.counter.counterdialog import CounterDialogTest
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     from test.plugins.changepageuid.loading import ChangePageUIDLoadingTest
 
     from test.plugins.sessions.loading import SessionsLoadingTest
-    from test.plugins.sessions.sessions import SessionsTest
+    from test.plugins.sessions.sessions_test import SessionsTest
 
     from test.plugins.diagrammer.diagrammer_test import DiagrammerTest
     from test.plugins.diagrammer.insertnode import InsertNodeTest
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     from test.plugins.tableofcontents.toc_wikimaker import TOC_WikiMakerTest
     from test.plugins.tableofcontents.loading import TOCLoadingTest
 
-    from test.plugins.source.source import SourcePluginTest
+    from test.plugins.source.source_test import SourcePluginTest
     from test.plugins.source.sourceencoding import SourceEncodingPluginTest
     from test.plugins.source.sourcefile import SourceFilePluginTest
     from test.plugins.source.sourcegui import SourceGuiPluginTest

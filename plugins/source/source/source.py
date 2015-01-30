@@ -11,9 +11,8 @@ from outwiker.core.version import Version, StatusSet
 from .sourceconfig import SourceConfig
 from .controller import Controller
 from .i18n import set_
-from .insertdialogcontroller import InsertDialogController
 
-__version__ = u"1.11.5"
+__version__ = u"1.12"
 
 
 # Для работы этого плагина требуется OutWiker 1.7
@@ -171,12 +170,3 @@ if __name__ == "__main__":
             Уничтожение (выгрузка) плагина. Здесь плагин должен отписаться от всех событий
             """
             self.__controller.destroy()
-
-
-        @property
-        def insertDialogControllerClass (self):
-            """
-            Возвращает класс (не экземпляр класса) InsertDialogController.
-            Используется для тестирования
-            """
-            return InsertDialogController
