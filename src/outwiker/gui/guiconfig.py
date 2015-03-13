@@ -23,7 +23,7 @@ class GeneralGuiConfig (object):
     RECENT_WIKI_COUNT_DEFAULT = 5
 
     RECENT_AUTOOPEN_PARAM = u"AutoOpen"
-    RECENT_AUTOOPEN_DEFAULT = False
+    RECENT_AUTOOPEN_DEFAULT = True
 
     DATETIME_FORMAT_PARAM = u"DateTimeFormat"
     DATETIME_FORMAT_DEFAULT = u"%c"
@@ -320,6 +320,10 @@ class HtmlRenderConfig (object):
     USER_STYLE_PARAM = u"UserStyle"
     USER_STYLE_DEFAULT = u""
 
+    HTML_IMPROVER_PARAM = u"HtmlImprover"
+    HTML_IMPROVER_DEFAULT = "brimprover"
+
+
     def __init__ (self, config):
         self.config = config
 
@@ -347,6 +351,11 @@ class HtmlRenderConfig (object):
                                        HtmlRenderConfig.HTML_SECTION,
                                        HtmlRenderConfig.USER_STYLE_PARAM,
                                        HtmlRenderConfig.USER_STYLE_DEFAULT)
+
+        self.HTMLImprover = StringOption (self.config,
+                                          HtmlRenderConfig.HTML_SECTION,
+                                          HtmlRenderConfig.HTML_IMPROVER_PARAM,
+                                          HtmlRenderConfig.HTML_IMPROVER_DEFAULT)
 
 
 class TextPrintConfig (object):

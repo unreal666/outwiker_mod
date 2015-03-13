@@ -1,128 +1,238 @@
 # -*- coding: UTF-8 -*-
 
+from abc import ABCMeta, abstractmethod
 import re
-# import timeit
+from StringIO import StringIO
 
 
 class HtmlImprover (object):
     """
-    Класс, который делает HTML более читаемым (где надо, расставляет переводы строк)
+    Class make HTML code more readable and append line breaks.
     """
-    @staticmethod
-    def run (text):
-        """
-        Сделать HTML более читаемым
-        """
-        stoptag = '{{{__NOHTMLIMPROVE__}}}'   # Стоп-тег, при присутствии которого HTML-код "улучшаться"" не будет.
-        if stoptag not in text:
-            # start_time = timeit.default_timer()
-            text = HtmlImprover.__improveText (text)
-            # print( 'Выполнено: ' + str(timeit.default_timer() - start_time))
-        else:
-            text = text.replace (stoptag, '')
-
-        return text
+    __metaclass__ = ABCMeta
 
 
-    @staticmethod
-    def __improveText (text):
+    def __init__ (self):
+        specialTags = [u'pre', u'script']
+
+        flags = re.I | re.S | re.M
+
+        # List of tuples of the regexp for opening and closing tags
+        self._tagsRegexp = [(re.compile (u'\n?<\s*{}.*?>'.format (name), flags),
+                             re.compile (u'</\s*{}\s*>\n?'.format (name), flags))
+                            for name in specialTags]
+
+
+    def run (self, text):
         result = text.replace ("\r\n", "\n")
-        result = HtmlImprover.__replaceEndlines (result)
+        result = self._replaceEndlines (result)
 
-        return result
+        return result.strip()
 
 
-    @staticmethod
-    def __replaceEndlines (text):
-        """
-        Заменить переводы строк, но не трогать текст внутри <pre>...</pre>
-        """
-        text_lower = text.lower()
+    def _replaceEndlines (self, text):
+        # Current search position
+        start = 0
 
-        starttag = "<pre"
-        endtag = "</pre>"
+        # Current index of the special tag (if we inside it)
+        currenttag = None
 
-        # Разобьем строку по <pre>
-        part1 = text_lower.split (starttag)
-
-        # Подстроки разобьем по </pre>
-        parts2 = [item.split (endtag) for item in part1]
-
-        # Склеим части в один массив
-        parts = reduce (lambda x, y: x + y, parts2, [])
-
-        # В четных элементах массива заменим переводы строк, а нечетные оставим как есть
-        # Строки берем из исходного текста с учетом пропущенных в массиве тегов <pre> и </pre>
-        result = u""
-        index = 0
-
-        for n in range (len (parts)):
-            textitem = text[index: index + len (parts[n])]
-            if n % 2 == 0:
-                textitem = HtmlImprover.__improveTags (textitem)
-                index += len (parts[n]) + len (starttag)
+        buf = StringIO()
+        while start != -1:
+            nexttagstart, nexttagend, currenttag = self._findNextTag (text, start)
+            if nexttagstart != -1:
+                buf.write (self._appendLineBreaks (text[start: nexttagstart]))
+                buf.write (u'\n')
             else:
-                textitem = "\n<pre" + textitem + "</pre>\n"
-                index += len (parts[n]) + len (endtag)
+                buf.write (self._appendLineBreaks (text[start:]))
 
-            result += textitem
+            if nexttagstart != -1:
+                assert currenttag is not None
+                assert nexttagend != -1
+                closingend = self._findClosingTag (text, nexttagend, currenttag)
 
+                if closingend != -1:
+                    buf.write (text[nexttagstart: closingend].strip())
+                    buf.write (u'\n')
+                else:
+                    buf.write (text[nexttagstart:].strip())
+
+                start = closingend
+            else:
+                start = nexttagstart
+
+        result = buf.getvalue()
         return result
 
 
-    @staticmethod
-    def __improveTags (text):
+    def _findClosingTag (self, text, pos, tagindex):
         """
-        Улучшения переводов строк до и после некоторых тегов
+        Find closing tag by index tagindex from self._tagsRegexp
+        Return the end tag position or -1 if closing tag not found
+        """
+        assert tagindex is not None
+        assert tagindex >= 0
+
+        match = self._tagsRegexp[tagindex][1].search (text, pos)
+
+        return None if match is None else match.end()
+
+
+    def _findNextTag (self, text, pos):
+        """
+        Find next opening special tag.
+        Return tuple: (start tag position, end tag position, tag index)
+        """
+        start = -1
+        end = -1
+        index = None
+
+        for n, tag in enumerate (self._tagsRegexp):
+            match = tag[0].search (text, pos)
+            if match is None:
+                continue
+
+            currentpos = match.start()
+            if start == -1 or start > currentpos:
+                start = currentpos
+                end = match.end()
+                index = n
+
+        return (start, end, index)
+
+
+    @abstractmethod
+    def _appendLineBreaks (self, text):
+        """
+        Replace line breaks to <br> tags
+        """
+
+
+
+class BrHtmlImprover (HtmlImprover):
+    """
+    Class replace \\n to <br>
+    """
+    def _appendLineBreaks (self, text):
+        """
+        Replace line breaks to <br/> tags
         """
         result = text
-        result = re.sub(r'(\n+)\n\n', lambda m: '<p>&nbsp;</p>' * len(m.group(1)), result)
-        result = result.replace ("\n\n", "<p>")
-        result = result.replace ("\n", "<br>")
+        result = result.replace ("\n", "<br/>")
 
-        # Компенсация восстановления переносов строк после списков
-        ro0 = r"(?<=</[uo]l>)<p><br>(?=<[uo]l>)"
-        result = re.sub(ro0, "\n\n", result, flags=re.I)
+        opentags = r"[uod]l|hr|h\d|tr|td"
+        closetags = r"li|d[td]|t[rdh]|caption|thead|tfoot|tbody|colgroup|col|h\d"
 
-        # Сохраним исходный регистр тега <p>.
-        # result = re.sub ("<(p)>", r"</\1>\n<\1>", result, flags=re.I)
-
-        block_tags = r"[uod]l|h\d|pre|table|div|blockquote|hr"
-        opening_tags = r"[uod]l|hr|h\d|table"
-        inner_table_tags = r"t[rdh]|caption|thead|tfoot|tbody|colgroup|col"
-        inner_list_tags = r"li|d[td]"
-        closing_tags = inner_list_tags + "|" + inner_table_tags + r"|h\d"
-
-        # Удаление тега <p> перед некоторыми блочными элементами
-        remove_p_before = r"<p>(?=(?:<br>)?)(?=<(?:" + block_tags + r")[ >])"
-        result = re.sub(remove_p_before, r"", result, flags=re.I)
-
-        # Удаление тега </p> после некоторых блочных элементов
-        remove_p_after = r"(</(?:" + block_tags + r")>|<hr ?/?>)</p>"
-        result = re.sub(remove_p_after, r"\1", result, flags=re.I)
-
-        # Удаление тега <br> перед некоторыми блочными элементами
-        remove_br_before = r"<br\s*/?>[\s\n]*(?=<(?:" + opening_tags + r")[ >/])"
+        # Remove <br> tag before some block elements
+        remove_br_before = r"<br\s*/?>[\s\n]*(?=<(?:" + opentags + r")[ >])"
         result = re.sub(remove_br_before, "", result, flags=re.I)
 
-        # Удаление тега <br> после некоторых блочных элементов
-        remove_br_after = r"(<(?:" + opening_tags + r")( [^>]+)? ?/?>|</(?:" + closing_tags + r")>)[\s\n]*<br\s*/?>"
+        # Remove <br> tag after some block elements
+        remove_br_after = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + r")>)[\s\n]*<br\s*/?>"
         result = re.sub(remove_br_after, r"\1", result, flags=re.I)
 
-        # Удаление некоторого разного мусора/бесполезного кода
-        remove_other_trash = r"<p>(?=</)"
-        result = re.sub(remove_other_trash, "", result, flags=re.I)
+        # Append line breaks before some elements (to improve readability)
+        append_eol_before = r"\n*(<li>|<h\d>|</?[uo]l>|<hr\s*/?>|<p>|</?table.*?>|</?tr.*?>|<td.*?>)"
+        result = re.sub(append_eol_before, "\n\\1", result, flags=re.I)
 
-        # Добавление переноса строки перед некоторыми элементами
-        append_eol_before = r"\n*(?=<(?:h\d|/?[uod]l|/?table|p|div|blockquote)[\s>]|<hr\s*/?>)"
-        result = re.sub(append_eol_before, "\n", result, flags=re.I)
-
-        # Добавление переноса строки + табуляции перед некоторыми элементами
-        append_eol_tab_before = r"\n*(?=<(?:" + inner_list_tags + "|" + inner_table_tags + ")[\s>])"
-        result = re.sub(append_eol_tab_before, "\n\t", result, flags=re.I)
-
-        # Добавление переноса строки после некоторых элементов
-        append_eol_after = r"(<[hb]r\s*/?>|</\s*(?:h\d|[uod]l|table|p|div|blockquote)>)\n*"
+        # Append line breaks after some elements (to improve readability)
+        append_eol_after = r"(<hr\s*/?>|<br\s*/?>|</\s*h\d>|</\s*p>|</\s*ul>)\n*"
         result = re.sub(append_eol_after, "\\1\n", result, flags=re.I)
 
         return result
+
+
+class ParagraphHtmlImprover (HtmlImprover):
+    """
+    Class cover paragraphes by <p> tags
+    """
+    def _appendLineBreaks (self, text):
+        result = self._coverParagraphs (text)
+        result = self._addLineBreaks (result)
+        result = self._improveRedability (result)
+
+        return result
+
+
+    def _improveRedability (self, text):
+        result = text
+
+        opentags = r"[uod]l|hr|h\d|tr|td|blockquote"
+        closetags = r"li|d[td]|t[rdh]|caption|thead|tfoot|tbody|colgroup|col|h\d|blockquote"
+
+        # Remove <br> tag before some block elements
+        remove_br_before = r"<br\s*/?>\s*(?=<(?:" + opentags + "|table" + r")[ >])"
+        result = re.sub(remove_br_before, "", result, flags=re.I | re.M)
+
+        # Remove <br> tag after some block elements
+        remove_br_after = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + "|table" r")>)\s*<br\s*/?>"
+        result = re.sub(remove_br_after, r"\1", result, flags=re.I | re.M)
+
+        # Remove <p> tag before some block elements
+        remove_p_before = r"<p>\s*(?=<(?:" + opentags + r")[ >])"
+        result = re.sub(remove_p_before, "", result, flags=re.I | re.M)
+
+        # Remove </p> tag after some block elements
+        remove_p_after = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + r")>)\s*</p>"
+        result = re.sub(remove_p_after, r"\1", result, flags=re.I | re.M)
+
+        # Append </p> before some elements
+        append_p_before = r"(?<!</p>)(<(?:h\d|blockquote).*?>)"
+        result = re.sub(append_p_before, "</p>\\1", result, flags=re.I | re.M | re.S)
+
+        # Append <p> after some closing elements
+        append_p_after = r"(</(?:h\d|blockquote)>)(?!\s*<p>)"
+        result = re.sub(append_p_after, "\\1<p>", result, flags=re.I | re.M | re.S)
+
+        # Append <p> inside after some elements
+        append_p_after_inside = r"(<(?:blockquote)>)"
+        result = re.sub(append_p_after_inside, "\\1<p>", result, flags=re.I | re.M)
+
+        # Append </p> inside before some closing elements
+        append_p_before_inside = r"(</(?:blockquote)>)"
+        result = re.sub(append_p_before_inside, "</p>\\1", result, flags=re.I | re.M)
+
+        # Remove empty paragraphs
+        empty_par = r"<p></p>"
+        result = re.sub (empty_par, "", result, flags=re.I | re.M)
+
+        # Remove <br> on the paragraph end
+        final_linebreaks = r"<br\s*/?>\s*(</p>)"
+        result = re.sub (final_linebreaks, "\\1", result, flags=re.I | re.M)
+
+        # Append line breaks before some elements (to improve readability)
+        append_eol_before = r"\n*(<li>|<h\d>|</?[uo]l>|<hr\s*/?>|<p>|<script>|</?table.*?>|</?tr.*?>|<td.*?>)"
+        result = re.sub(append_eol_before, "\n\\1", result, flags=re.I | re.M)
+
+        # Append line breaks after some elements (to improve readability)
+        append_eol_after = r"(<hr\s*/?>|<br\s*/?>|</\s*h\d>|</\s*p>|</\s*script>|</\s*ul>|</\s*table>)\n*"
+        result = re.sub(append_eol_after, "\\1\n", result, flags=re.I | re.M)
+
+        # Remove </p> at the begin
+        remove_p_start = r"^</p>"
+        result = re.sub(remove_p_start, "", result, flags=re.I)
+
+        # Remove <p> at the end
+        remove_p_end = r"<p>$"
+        result = re.sub(remove_p_end, "", result, flags=re.I)
+
+        return result
+
+
+    def _addLineBreaks (self, text):
+        return text.replace (u"\n", "<br/>")
+
+
+    def _coverParagraphs (self, text):
+        parRegExp = re.compile ("(.*?(?:\s*\n\s*){2,})|$",
+                                re.I | re.M | re.S | re.U)
+        paragraphs = parRegExp.split (text)
+
+        buf = StringIO()
+        for par in paragraphs:
+            if len (par.strip()) != 0:
+                buf.write ("<p>")
+                buf.write (par.strip())
+                buf.write ("</p>")
+
+        return buf.getvalue()
