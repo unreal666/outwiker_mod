@@ -40,3 +40,7 @@ def isImage (fname):
             return True
 
     return False
+
+
+def returnNone(s, l, t):
+    return None

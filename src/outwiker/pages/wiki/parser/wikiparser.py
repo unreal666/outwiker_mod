@@ -2,26 +2,26 @@
 
 import traceback
 
-from tokenfonts import FontsFactory
-from tokennoformat import NoFormatFactory
-from tokenpreformat import PreFormatFactory
-from tokenthumbnail import ThumbnailFactory
-from tokenheading import HeadingFactory
-from tokenadhoc import AdHocFactory
-from tokenhorline import HorLineFactory
-from tokenlink import LinkFactory
-from tokenalign import AlignFactory
-from tokentable import TableFactory
-from tokenurl import UrlFactory
-from tokenurlimage import UrlImageFactory
-from tokenattach import AttachFactory, AttachImagesFactory
-from tokenlist import ListFactory
-from tokenlinebreak import LineBreakFactory
-from tokenlinejoin import LineJoinFactory
-from tokentex import TexFactory
-from tokencommand import CommandFactory
-from tokentext import TextFactory
-from tokenquote import QuoteFactory
+from .tokenfonts import FontsFactory
+from .tokennoformat import NoFormatFactory
+from .tokenpreformat import PreFormatFactory
+from .tokenthumbnail import ThumbnailFactory
+from .tokenheading import HeadingFactory
+from .tokenadhoc import AdHocFactory
+from .tokenhorline import HorLineFactory
+from .tokenlink import LinkFactory
+from .tokenalign import AlignFactory
+from .tokentable import TableFactory
+from .tokenurl import UrlFactory
+from .tokenurlimage import UrlImageFactory
+from .tokenattach import AttachFactory, AttachImagesFactory
+from .tokenlist import ListFactory
+from .tokenlinebreak import LineBreakFactory
+from .tokenlinejoin import LineJoinFactory
+from .tokentex import TexFactory
+from .tokencommand import CommandFactory
+from .tokentext import TextFactory
+from .tokenquote import QuoteFactory
 
 from ..thumbnails import Thumbnails
 
@@ -40,36 +40,36 @@ class Parser (object):
         # Ключ - имя команды, значение - экземпляр класса команды
         self.commands = {}
 
-        self.italicized = FontsFactory.makeItalic (self)
-        self.bolded = FontsFactory.makeBold (self)
-        self.boldItalicized = FontsFactory.makeBoldItalic (self)
-        self.underlined = FontsFactory.makeUnderline (self)
-        self.strike = FontsFactory.makeStrike (self)
-        self.subscript = FontsFactory.makeSubscript (self)
-        self.superscript = FontsFactory.makeSuperscript (self)
-        self.quote = QuoteFactory.make (self)
-        self.code = FontsFactory.makeCode (self)
-        self.small = FontsFactory.makeSmall(self)
-        self.big = FontsFactory.makeBig(self)
-        self.headings = HeadingFactory.make(self)
-        self.thumb = ThumbnailFactory.make(self)
-        self.noformat = NoFormatFactory.make(self)
-        self.preformat = PreFormatFactory.make (self)
-        self.horline = HorLineFactory.make(self)
-        self.link = LinkFactory.make (self)
-        self.align = AlignFactory.make(self)
-        self.table = TableFactory.make(self)
-        self.url = UrlFactory.make (self)
-        self.urlImage = UrlImageFactory.make (self)
-        self.attaches = AttachFactory.make (self)
-        self.attachImages = AttachImagesFactory.make (self)
-        self.adhoctokens = AdHocFactory.make(self)
-        self.lists = ListFactory.make (self)
-        self.lineBreak = LineBreakFactory.make (self)
-        self.lineJoin = LineJoinFactory.make (self)
-        self.tex = TexFactory.make (self)
-        self.command = CommandFactory.make (self)
-        self.text = TextFactory.make(self)
+        if not hasattr(self, 'italicized'): self.italicized = FontsFactory.makeItalic (self)
+        if not hasattr(self, 'bolded'): self.bolded = FontsFactory.makeBold (self)
+        if not hasattr(self, 'boldItalicized'): self.boldItalicized = FontsFactory.makeBoldItalic (self)
+        if not hasattr(self, 'underlined'): self.underlined = FontsFactory.makeUnderline (self)
+        if not hasattr(self, 'strike'): self.strike = FontsFactory.makeStrike (self)
+        if not hasattr(self, 'subscript'): self.subscript = FontsFactory.makeSubscript (self)
+        if not hasattr(self, 'superscript'): self.superscript = FontsFactory.makeSuperscript (self)
+        if not hasattr(self, 'quote'): self.quote = QuoteFactory.make (self)
+        if not hasattr(self, 'code'): self.code = FontsFactory.makeCode (self)
+        if not hasattr(self, 'small'): self.small = FontsFactory.makeSmall(self)
+        if not hasattr(self, 'big'): self.big = FontsFactory.makeBig(self)
+        if not hasattr(self, 'headings'): self.headings = HeadingFactory.make(self)
+        if not hasattr(self, 'thumb'): self.thumb = ThumbnailFactory.make(self)
+        if not hasattr(self, 'noformat'): self.noformat = NoFormatFactory.make(self)
+        if not hasattr(self, 'preformat'): self.preformat = PreFormatFactory.make (self)
+        if not hasattr(self, 'horline'): self.horline = HorLineFactory.make(self)
+        if not hasattr(self, 'link'): self.link = LinkFactory.make (self)
+        if not hasattr(self, 'align'): self.align = AlignFactory.make(self)
+        if not hasattr(self, 'table'): self.table = TableFactory.make(self)
+        if not hasattr(self, 'url'): self.url = UrlFactory.make (self)
+        if not hasattr(self, 'urlImage'): self.urlImage = UrlImageFactory.make (self)
+        if not hasattr(self, 'attaches'): self.attaches = AttachFactory.make (self)
+        if not hasattr(self, 'attachImages'): self.attachImages = AttachImagesFactory.make (self)
+        if not hasattr(self, 'adhoctokens'): self.adhoctokens = AdHocFactory.make(self)
+        if not hasattr(self, 'lists'): self.lists = ListFactory.make (self)
+        if not hasattr(self, 'lineBreak'): self.lineBreak = LineBreakFactory.make (self)
+        if not hasattr(self, 'lineJoin'): self.lineJoin = LineJoinFactory.make (self)
+        if not hasattr(self, 'tex'): self.tex = TexFactory.make (self)
+        if not hasattr(self, 'command'): self.command = CommandFactory.make (self)
+        if not hasattr(self, 'text'): self.text = TextFactory.make(self)
 
         self.listItemMarkup = (self.attaches |
                                self.urlImage |

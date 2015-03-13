@@ -2,9 +2,10 @@
 
 import re
 
-from outwiker.libs.pyparsing import QuotedString, Regex
+from outwiker.libs.pyparsing import QuotedString, Regex, OneOrMore, Suppress, Combine, ZeroOrMore, NotAny, CharsNotIn
 
-from tokenblock import BlockToken
+from .tokenblock import BlockToken
+from .utils import returnNone
 
 
 class FontsFactory (object):
@@ -184,15 +185,23 @@ class ItalicToken (BlockToken):
     """
     italicStart = "''"
     italicEnd = "''"
+    anyExcept = Combine( ZeroOrMore( NotAny (italicStart) + CharsNotIn('', exact=1) ) )
 
     def __init__ (self, parser):
         BlockToken.__init__ (self, parser)
 
 
     def getToken (self):
-        return QuotedString (ItalicToken.italicStart,
-                             endQuoteChar = ItalicToken.italicEnd,
-                             multiline = True).setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
+        if hasattr(self.parser, 'bolded'):
+            bolded = self.parser.bolded
+        elif hasattr(self.parser, 'isFakeParser'):
+            bolded = self.parser.bolded = FontsFactory.makeBold (None).setParseAction(returnNone)
+        else:
+            bolded = self.parser.bolded = FontsFactory.makeBold (self.parser)
+
+        return (Suppress(ItalicToken.italicStart) + ( OneOrMore( ItalicToken.anyExcept + bolded) +
+                                                      ItalicToken.anyExcept | ItalicToken.anyExcept ) +
+                Suppress(ItalicToken.italicEnd)).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
 
 
 class BoldToken (BlockToken):
