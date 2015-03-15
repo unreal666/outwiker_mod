@@ -565,8 +565,8 @@ class WikiPageView (BaseWikiPageView):
     def _turnDefinitionList (self):
         editor = self._application.mainWindow.pagePanel.pageView.codeEditor
 
-        lefttext = u"{{>\n$$ "
-        righttext = u"\n$$$$ \n<}}"
+        lefttext = u"{{>\n^^ "
+        righttext = u"\n$$ \n<}}"
         selectedText = editor.GetSelectedText()
 
         if len (selectedText) is 0:
