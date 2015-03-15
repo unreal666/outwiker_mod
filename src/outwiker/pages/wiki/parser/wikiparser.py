@@ -22,6 +22,7 @@ from .tokentex import TexFactory
 from .tokencommand import CommandFactory
 from .tokentext import TextFactory
 from .tokenquote import QuoteFactory
+from .tokendefinitionlist import DefinitionListFactory
 
 from ..thumbnails import Thumbnails
 
@@ -65,6 +66,7 @@ class Parser (object):
         if not hasattr(self, 'attachImages'): self.attachImages = AttachImagesFactory.make (self)
         if not hasattr(self, 'adhoctokens'): self.adhoctokens = AdHocFactory.make(self)
         if not hasattr(self, 'lists'): self.lists = ListFactory.make (self)
+        if not hasattr(self, 'definitionList'): self.definitionList = DefinitionListFactory.make (self)
         if not hasattr(self, 'lineBreak'): self.lineBreak = LineBreakFactory.make (self)
         if not hasattr(self, 'lineJoin'): self.lineJoin = LineJoinFactory.make (self)
         if not hasattr(self, 'tex'): self.tex = TexFactory.make (self)
@@ -92,6 +94,7 @@ class Parser (object):
                                self.subscript |
                                self.superscript |
                                self.quote |
+                               self.definitionList |
                                self.attaches |
                                self.tex |
                                self.command
@@ -122,6 +125,7 @@ class Parser (object):
                            self.strike |
                            self.horline |
                            self.align |
+                           self.definitionList |
                            self.lists |
                            self.table |
                            self.headings |

@@ -65,6 +65,9 @@ LIST_BULLETS_STR_ID = "ListBullets"
 # Нумерованный список
 LIST_NUMBERS_STR_ID = "ListNumbers"
 
+# Список определений
+LIST_DEFINITIONS_STR_ID = "ListDefinitions"
+
 # Перевод строки
 LINE_BREAK_STR_ID = "LineBreak"
 

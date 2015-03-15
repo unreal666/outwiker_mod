@@ -104,6 +104,7 @@ class WikiPageView (BaseWikiPageView):
             LINK_STR_ID,
             LIST_BULLETS_STR_ID,
             LIST_NUMBERS_STR_ID,
+            LIST_DEFINITIONS_STR_ID,
             LINE_BREAK_STR_ID,
             HTML_ESCAPE_STR_ID,
             CURRENT_DATE,
@@ -384,6 +385,16 @@ class WikiPageView (BaseWikiPageView):
                                                                 fullUpdate=False)
 
 
+        # Список определений
+        self._application.actionController.getAction (LIST_DEFINITIONS_STR_ID).setFunc (lambda param: self._turnDefinitionList ())
+
+        self._application.actionController.appendMenuItem (LIST_DEFINITIONS_STR_ID, menu)
+        self._application.actionController.appendToolbarButton (LIST_DEFINITIONS_STR_ID,
+                                                                toolbar,
+                                                                os.path.join (self.imagesDir, "text_list_definition.png"),
+                                                                fullUpdate=False)
+
+
     def __addFormatTools (self):
         menu = self._formatMenu
         toolbar = self.mainWindow.toolbars[self._getName()]
@@ -549,3 +560,21 @@ class WikiPageView (BaseWikiPageView):
 
         position = firstLine + len (result)
         editor.SetSelection (firstLine + 1, position)
+
+
+    def _turnDefinitionList (self):
+        editor = self._application.mainWindow.pagePanel.pageView.codeEditor
+
+        lefttext = u"{{>\n$$ "
+        righttext = u"\n$$$$ \n<}}"
+        selectedText = editor.GetSelectedText()
+
+        if len (selectedText) is 0:
+            selectedText = u"term"
+
+        newtext = lefttext + selectedText + righttext
+        editor.replaceText (newtext)
+
+        currPos = editor.GetSelectionEnd()
+        newpos = currPos - 4
+        editor.SetSelection (newpos, newpos)

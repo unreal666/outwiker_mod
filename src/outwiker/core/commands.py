@@ -980,6 +980,12 @@ def _registerPolyActions (application):
                                            HotKey ("J", ctrl=True))
 
     application.actionController.register (PolyAction (application,
+                                                       LIST_DEFINITIONS_STR_ID,
+                                                       _(u"Definition list"),
+                                                       _(u"Insert a definition list")),
+                                           None)
+
+    application.actionController.register (PolyAction (application,
                                                        LINE_BREAK_STR_ID,
                                                        _(u"Line break"),
                                                        _(u"Insert a line break")),

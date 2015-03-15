@@ -60,6 +60,7 @@ class HtmlPageView (BaseHtmlPanel):
             LINK_STR_ID,
             LIST_BULLETS_STR_ID,
             LIST_NUMBERS_STR_ID,
+            LIST_DEFINITIONS_STR_ID,
             LINE_BREAK_STR_ID,
             HTML_ESCAPE_STR_ID,
             TABLE_STR_ID,
@@ -427,6 +428,16 @@ class HtmlPageView (BaseHtmlPanel):
                                                                 fullUpdate=False)
 
 
+        # Список определений
+        self._application.actionController.getAction (LIST_DEFINITIONS_STR_ID).setFunc (lambda param: self._turnDefinitionList())
+
+        self._application.actionController.appendMenuItem (LIST_DEFINITIONS_STR_ID, menu)
+        self._application.actionController.appendToolbarButton (LIST_DEFINITIONS_STR_ID,
+                                                                toolbar,
+                                                                os.path.join (self.imagesDir, "text_list_definition.png"),
+                                                                fullUpdate=False)
+
+
 
     def __addHTools (self):
         """
@@ -619,3 +630,21 @@ class HtmlPageView (BaseHtmlPanel):
     def removeGui (self):
         super (HtmlPageView, self).removeGui ()
         self.mainWindow.mainMenu.Remove (self.__HTML_MENU_INDEX - 1)
+
+
+    def _turnDefinitionList (self):
+        editor = self._application.mainWindow.pagePanel.pageView.codeEditor
+
+        lefttext = u"<dl>\n<dt> "
+        righttext = u"</dt>\n<dd></dd>\n</dl>"
+        selectedText = editor.GetSelectedText()
+
+        if len (selectedText) is 0:
+            selectedText = u"term"
+
+        newtext = lefttext + selectedText + righttext
+        editor.replaceText (newtext)
+
+        currPos = editor.GetSelectionEnd()
+        newpos = currPos - 10
+        editor.SetSelection (newpos, newpos)
