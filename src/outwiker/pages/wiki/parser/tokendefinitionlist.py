@@ -2,7 +2,7 @@
 
 import re
 
-from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Literal, Suppress
+from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Literal, Suppress, FollowedBy
 
 
 class DefinitionListFactory (object):
@@ -29,7 +29,7 @@ class DefinitionListToken (object):
         description.setParseAction(self.__convertDescription).leaveWhitespace()
 
         definitionList = LineStart() + Regex (r"{{> *(?P<params>.+)?\s*") + \
-                         OneOrMore (term | description) + Suppress("<}}") + Optional (LineEnd())
+                         OneOrMore (term | description) + Suppress("<}}") + Optional (FollowedBy (LineEnd()))
         definitionList.setParseAction(self.__convertDefinitionList)("definitionlist").leaveWhitespace()
 
         return definitionList
