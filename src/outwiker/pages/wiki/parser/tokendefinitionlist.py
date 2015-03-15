@@ -21,11 +21,11 @@ class DefinitionListToken (object):
 
     def getToken (self):
         term = Regex (r"(?P<text>(?:(?:\\\n)|.)*)\s*(?=\n)")
-        term = LineStart() + Regex (r"\$\$(?!\$\$)") + term + LineEnd()
+        term = LineStart() + Regex (r"\^\^") + term + LineEnd()
         term.setParseAction(self.__convertTerm).leaveWhitespace()
 
-        description = Regex (r"(?P<text>(?:(?!(?<!\\)\n<}})(?!(?<!\\)\n\$\$).)*)", re.DOTALL)
-        description = LineStart() + Regex (r"\$\$\$\$") + description + LineEnd()
+        description = Regex (r"(?P<text>(?:(?!(?<!\\)\n(?:<}}|\$\$.|\^\^.)).)*)", re.DOTALL)
+        description = LineStart() + Regex (r"\$\$") + description + LineEnd()
         description.setParseAction(self.__convertDescription).leaveWhitespace()
 
         definitionList = LineStart() + Regex (r"{{> *(?P<params>.+)?\s*") + \
