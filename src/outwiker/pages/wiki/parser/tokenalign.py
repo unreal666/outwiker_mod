@@ -20,19 +20,19 @@ class AlignToken (object):
 
 
     def _alignText (self, s, l, t):
-        return u'<div align="' + t["align"].lower() + '">' + self.parser.parseWikiMarkup (t["text"]) + '</div>' + t["end"]
+        return u'<div style="text-align:' + t["align"].lower() + '">' + self.parser.parseWikiMarkup (t["text"]) + '</div>' + t["end"]
 
 
     def getToken (self):
-        start = Regex ("%\\s*(?P<align>(left)|(right)|(center)|(justify))\\s*%",
+        start = Regex ("%\\s*(?P<align>left|right|center|justify)\\s*%",
                        re.I | re.U)
 
         text = Regex (r'''(?P<text>
-        .*?
-        (\(:\s*(?P<name>\w+).*?:\)
-        (.*?                           # Контент между (:name:) и (:nameend:)
-        \(:\s*(?P=name)end\s*:\))?.*?)*?)
-        (?P<end>(\n\n)|\Z)''',
+            .*?
+            (?:\(:\s*(?P<name>\w+).*?:\)
+             (?:.*?                           # Контент между (:name:) и (:nameend:)
+              \(:\s*(?P=name)end\s*:\))?.*?)*?)
+           (?P<end>\n\n|\Z)''',
                       re.M | re.S | re.I | re.U | re.X)
 
         alignText = start + text
