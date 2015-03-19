@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from outwiker.libs.pyparsing import Regex, OneOrMore
+from outwiker.libs.pyparsing import Regex, OneOrMore, Suppress
 from outwiker.pages.wiki.parser.utils import noConvert
 import re
 
@@ -124,11 +124,11 @@ class ListToken (object):
         for param in self.allListsParams:
             regex += param.symbol
 
-        regex += r"]+) *(?P<item>(?:\\\n|.)*?)$\n{0,2}"
+        regex += r"]+) *(?P<item>(?:\\\n|.)*?)$"
 
         item = Regex (regex, re.MULTILINE).setParseAction (noConvert).leaveWhitespace()
 
-        fullList = OneOrMore (item).setParseAction (self.__convertList)("list")
+        fullList = OneOrMore (item + Regex (r"(?P<end>\n{0,2})")).leaveWhitespace().setParseAction (self.__convertList)("list")
 
         return fullList
 
@@ -137,14 +137,7 @@ class ListToken (object):
         """
         Преобразовать список элементов списка в HTML-список (возможно, вложенный)
         """
-        if tokens[-1][-2:] == "\n\n":
-            self.unitEnd = "\n\n"
-        elif tokens[-1][-1] == "\n":
-           self.unitEnd = "\n"
-        else:
-            self.unitEnd = ""
-
-        return self.__generateListForItems (tokens) + self.unitEnd
+        return self.__generateListForItems (tokens[::2]) + tokens["end"]
 
 
     def __getListLevel (self, item, params):
