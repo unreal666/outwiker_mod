@@ -36,7 +36,7 @@ class DefinitionListToken (object):
 
 
     def __convertTerm (self, s, l, t):
-        return u'<dt>%s</dt>' % (self.parser.parseTextLevelItemMarkup (t["text"].strip()))
+        return u'<dt>%s</dt>' % (self.parser.parseTextLevelMarkup (t["text"].strip()))
 
 
     def __convertDescription (self, s, l, t):
