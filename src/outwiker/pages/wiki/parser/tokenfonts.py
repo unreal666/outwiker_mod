@@ -100,10 +100,6 @@ class CodeToken (TextBlockToken):
     codeStart = "@@"
     codeEnd = "@@"
 
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
-
     def getToken (self):
         return QuotedString (CodeToken.codeStart,
                              endQuoteChar = CodeToken.codeEnd,
@@ -116,10 +112,6 @@ class SuperscriptToken (TextBlockToken):
     """
     superscriptStart = "'^"
     superscriptEnd = "^'"
-
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
 
     def getToken (self):
         return QuotedString (SuperscriptToken.superscriptStart,
@@ -134,10 +126,6 @@ class SubscriptToken (TextBlockToken):
     subscriptStart = "'_"
     subscriptEnd = "_'"
 
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
-
     def getToken (self):
         return QuotedString (SubscriptToken.subscriptStart,
                              endQuoteChar = SubscriptToken.subscriptEnd,
@@ -151,10 +139,6 @@ class UnderlineToken (TextBlockToken):
     underlineStart = "{+"
     underlineEnd = "+}"
 
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
-
     def getToken (self):
         return QuotedString (UnderlineToken.underlineStart,
                              endQuoteChar = UnderlineToken.underlineEnd,
@@ -167,10 +151,6 @@ class StrikeToken (TextBlockToken):
     """
     strikeStart = "{-"
     strikeEnd = "-}"
-
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
 
     def getToken (self):
         return QuotedString (StrikeToken.strikeStart,
@@ -187,19 +167,14 @@ class ItalicToken (TextBlockToken):
     italicEnd = "''"
     anyExcept = Combine( ZeroOrMore( NotAny (italicStart) + CharsNotIn('', exact=1) ) )
 
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
-
     def getToken (self):
-        if hasattr(self.parser, 'bolded'):
-            bolded = self.parser.bolded
-        elif hasattr(self.parser, 'isFakeParser'):
-            bolded = self.parser.bolded = FontsFactory.makeBold (None).setParseAction(returnNone)
-        else:
-            bolded = self.parser.bolded = FontsFactory.makeBold (self.parser)
+        if not hasattr(self.parser, 'bolded'):
+            if hasattr(self.parser, 'isFakeParser'):
+                self.parser.bolded = FontsFactory.makeBold (None).setParseAction(returnNone)
+            else:
+                self.parser.bolded = FontsFactory.makeBold (self.parser)
 
-        return (Suppress(ItalicToken.italicStart) + ( OneOrMore( ItalicToken.anyExcept + bolded) +
+        return (Suppress(ItalicToken.italicStart) + ( OneOrMore( ItalicToken.anyExcept + self.parser.bolded) +
                                                       ItalicToken.anyExcept | ItalicToken.anyExcept ) +
                 Suppress(ItalicToken.italicEnd)).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
 
@@ -210,10 +185,6 @@ class BoldToken (TextBlockToken):
     """
     boldStart = "'''"
     boldEnd = "'''"
-
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
 
     def getToken (self):
         return QuotedString (BoldToken.boldStart,
@@ -228,49 +199,42 @@ class BoldItalicToken (TextBlockToken):
     boldItalicStart = "''''"
     boldItalicEnd = "''''"
 
-    def __init__ (self, parser):
-        TextBlockToken.__init__ (self, parser)
-
-
     def getToken (self):
         return QuotedString (BoldItalicToken.boldItalicStart,
                              endQuoteChar = BoldItalicToken.boldItalicEnd,
                              multiline = True).setParseAction(self.convertToHTML("<b><i>", "</i></b>"))("bold_italic")
 
 
-class SmallFontToken (object):
+class SmallFontToken (TextBlockToken):
     """
     Токен для мелкого шрифта
     """
-    def __init__ (self, parser):
-        self.parser = parser
-
-
     def getToken (self):
-        return Regex (r"\[(?P<count>-{1,4})(?P<text>.*?)\1\]", re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("small")
+        return Regex (r"\[(?P<count>-{1,4})(?P<text>.*?)\1\]",
+                      re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("small")
 
 
     def __parse (self, s, l, t):
         # Расчет масштаба в зависимости от количества минусов
         size = 100 - len (t["count"]) * 20
 
-        return u'<span style="font-size:{size}%">{text}</span>'.format (size=size, text=self.parser.parseTextLevelItemMarkup (t["text"]))
+        return u'<span style="font-size:{size}%">{text}</span>'.format (size=size, text=self.parser.parseTextLevelMarkup (t["text"]))
 
 
-class BigFontToken (object):
+class BigFontToken (TextBlockToken):
     """
     Токен для крупного шрифта
     """
-    def __init__ (self, parser):
-        self.parser = parser
-
-
     def getToken (self):
-        return Regex (r"\[(?P<count>\+{1,5})(?P<text>.*?)\1\]", re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("big")
+        return Regex (r"\[(?P<count>\+{1,5})(?P<text>.*?)\1\]",
+                      re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("big")
 
 
     def __parse (self, s, l, t):
         # Расчет масштаба в зависимости от количества минусов
         size = 100 + len (t["count"]) * 20
 
-        return u'<span style="font-size:{size}%">{text}</span>'.format (size=size, text=self.parser.parseTextLevelItemMarkup (t["text"]))
+        return u'<span style="font-size:{size}%">{text}</span>'.format (
+            size=size,
+            text=self.parser.parseTextLevelMarkup (t["text"])
+        )

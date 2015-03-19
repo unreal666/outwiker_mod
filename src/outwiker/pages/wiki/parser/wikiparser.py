@@ -179,31 +179,32 @@ class Parser (object):
                               self.tex |
                               self.command
                               )
+
         # Нотация для форматированного текста
-        self.textLevelItemMarkup = (self.attaches |
-                                    self.urlImage |
-                                    self.url |
-                                    self.text |
-                                    self.lineBreak |
-                                    self.lineJoin |
-                                    self.link |
-                                    self.adhoctokens |
-                                    self.subscript |
-                                    self.superscript |
-                                    self.boldItalicized |
-                                    self.bolded |
-                                    self.italicized |
-                                    self.code |
-                                    self.small |
-                                    self.big |
-                                    self.noformat |
-                                    self.thumb |
-                                    self.underlined |
-                                    self.strike |
-                                    self.horline |
-                                    self.tex |
-                                    self.command
-                                    )
+        self.textLevelMarkup = (self.attaches |
+                                self.urlImage |
+                                self.url |
+                                self.text |
+                                self.lineBreak |
+                                self.lineJoin |
+                                self.link |
+                                self.adhoctokens |
+                                self.subscript |
+                                self.superscript |
+                                self.boldItalicized |
+                                self.bolded |
+                                self.italicized |
+                                self.code |
+                                self.small |
+                                self.big |
+                                self.noformat |
+                                self.thumb |
+                                self.underlined |
+                                self.strike |
+                                self.horline |
+                                self.tex |
+                                self.command
+                                )
 
 
     @property
@@ -259,10 +260,10 @@ class Parser (object):
             return self.error_template.format (error = traceback.format_exc())
 
 
-    def parseTextLevelItemMarkup (self, text):
+    def parseTextLevelMarkup (self, text):
         try:
-            return self.textLevelItemMarkup.transformString (text)
-        except Exception, e:
+            return self.textLevelMarkup.transformString (text)
+        except Exception:
             return self.error_template.format (error = traceback.format_exc())
 
 
