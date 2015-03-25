@@ -20,7 +20,11 @@ class AlignToken (object):
 
 
     def _alignText (self, s, l, t):
-        return u'<div align="' + t["align"].lower() + '">' + self.parser.parseWikiMarkup (t["text"]) + '</div>' + t["end"]
+        return u'<div align="{align}">{text}</div>{end}'.format (
+            align = t["align"].lower(),
+            text = self.parser.parseWikiMarkup (t["text"]),
+            end = t["end"]
+        )
 
 
     def getToken (self):
