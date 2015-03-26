@@ -29,17 +29,25 @@ class ThumbnailToken (object):
 
 
     def getToken (self):
-        result = Regex (r"""% *?(?:(?:thumb +)?(?:width *?= *?(?P<width>\d+)|height *?= *?(?P<height>\d+)|maxsize *?= *?(?P<maxsize>\d+)) *?(?:px)?|thumb *?) *?% *?Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png)) *?%%""", re.IGNORECASE)
+        result = Regex (r"""% *?(?:(?:thumb +)?(?:width *?= *?(?P<width>\d+)|height *?= *?(?P<height>\d+)|maxsize *?= *?(?P<maxsize>\d+)) *?(?:px)?|thumb *?) *?(?: +?(?P<mode>soft) *?)?% *?Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png)) *?%%""", re.IGNORECASE)
         result = result.setParseAction (self.__convertThumb)("thumbnail")
         return result
 
 
     def __convertThumb (self, s, l, t):
+        if t["mode"] == u"soft":
+            template = u'<a href="%s/%s"><img src="%s/%s" %s="%s" /></a>'
+
+        fname = t["fname"]
+
         if t["width"] is not None:
             try:
                 size = int (t["width"])
             except ValueError:
                 return _(u"<b>Width error</b>")
+
+            if t["mode"] == u"soft":
+                return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"width", size)
 
             func = self.thumbmaker.createThumbByWidth
 
@@ -48,6 +56,9 @@ class ThumbnailToken (object):
                 size = int (t["height"])
             except ValueError:
                 return u"<b>Height error</b>"
+
+            if t["mode"] == u"soft":
+                return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"height", size)
 
             func = self.thumbmaker.createThumbByHeight
 
@@ -63,8 +74,6 @@ class ThumbnailToken (object):
             config = WikiConfig (self.parser.config)
             size = config.thumbSizeOptions.value
             func = self.thumbmaker.createThumbByMaxSize
-
-        fname = t["fname"]
 
         try:
             thumb = func (self.parser.page, fname, size)
