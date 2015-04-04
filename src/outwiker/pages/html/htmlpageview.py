@@ -610,9 +610,15 @@ class HtmlPageView (BaseHtmlPanel):
 
             tpl = HtmlTemplate (readTextFile (style.getDefaultStyle()))
 
-        content = self._runPreprocessing (page.content)
+        content = self._changeContentByEvent (self.page,
+                                              page.content,
+                                              Application.onPreprocessing)
 
         if page.autoLineWrap:
+            content = self._changeContentByEvent (self.page,
+                                                  content,
+                                                  Application.onPreHtmlImproving)
+
             config = HtmlRenderConfig (Application.config)
             improverFactory = HtmlImproverFactory (Application)
             text = improverFactory[config.HTMLImprover.value].run (content)
@@ -623,7 +629,9 @@ class HtmlPageView (BaseHtmlPanel):
         result = tpl.substitute (content = text,
                                  userhead = userhead)
 
-        result = self._runPostprocessing (result)
+        result = self._changeContentByEvent (self.page,
+                                             result,
+                                             Application.onPostprocessing)
         return result
 
 
@@ -648,3 +656,9 @@ class HtmlPageView (BaseHtmlPanel):
         currPos = editor.GetSelectionEnd()
         newpos = currPos - 10
         editor.SetSelection (newpos, newpos)
+
+
+    def _changeContentByEvent (self, page, content, event):
+        result = [content]
+        event (page, result)
+        return result[0]
