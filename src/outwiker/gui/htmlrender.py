@@ -6,6 +6,8 @@ from abc import ABCMeta
 import wx
 
 import outwiker.core
+from outwiker.core.application import Application
+from outwiker.core.events import LinkClickParams, HoverLinkParams
 
 
 class HtmlRender (wx.Panel):
@@ -58,3 +60,79 @@ class HtmlRender (wx.Panel):
         except OSError:
             text = _(u"Can't execute file '%s'") % (href)
             outwiker.core.commands.MessageBox (text, "Error", wx.ICON_ERROR | wx.OK)
+
+
+    def _getLinkProtocol (self, link):
+        """
+        Return protocol for link or None if link contains not protocol
+        """
+        if link is None:
+            return None
+
+        endProtocol = u"://"
+        pos = link.find (endProtocol)
+        if pos == -1:
+            return None
+
+        return link[:pos + len (endProtocol)]
+
+
+    def _decodeIDNA (self, link):
+        """
+        Decode link like protocol://xn--80afndtacjikc
+        """
+        if link is None:
+            return None
+
+        protocol = self._getLinkProtocol (link)
+        if protocol is not None:
+            url = link[len (protocol):]
+            try:
+                link = u"{}{}".format (
+                    protocol,
+                    unicode (url.decode ("idna")))
+            except UnicodeError:
+                # Под IE ссылки не преобразуются в кодировку IDNA
+                pass
+
+        return link
+
+
+    def _getClickParams (self,
+                         href,
+                         button,
+                         modifier,
+                         isurl,
+                         ispage,
+                         isfilename,
+                         isanchor):
+        linktype = None
+
+        if isanchor:
+            linktype = u"anchor"
+
+        if isurl:
+            linktype = u"url"
+        elif ispage:
+            linktype = u"page"
+        elif isfilename:
+            linktype = u"filename"
+
+        return LinkClickParams (
+            link = href,
+            button = button,
+            modifier = modifier,
+            linktype = linktype,
+        )
+
+
+    def setStatusText (self, link, text):
+        """
+        Execute onHoverLink event and set status text
+        """
+        link_decoded = self._decodeIDNA (link)
+
+        params = HoverLinkParams (link = link_decoded, text = text)
+        Application.onHoverLink (page=self._currentPage, params = params)
+
+        outwiker.core.commands.setStatusText (params.text, self._status_item)

@@ -5,11 +5,14 @@ import urllib
 import wx
 import wx.lib.iewin
 
-from .htmlrender import HtmlRender
 import outwiker.core.system
 import outwiker.core.commands
 from outwiker.core.application import Application
-from .htmlcontrollerie import UriIdentifierIE
+from outwiker.gui.htmlrender import HtmlRender
+from outwiker.gui.htmlcontrollerie import UriIdentifierIE
+from outwiker.gui.defines import (ID_MOUSE_LEFT,
+                                  ID_KEY_CTRL,
+                                  ID_KEY_SHIFT)
 
 
 class HtmlRenderIE (HtmlRender):
@@ -48,6 +51,8 @@ class HtmlRenderIE (HtmlRender):
 
 
     def StatusTextChange(self, status):
+        statustext = u""
+
         if len (status) != 0:
             (url, page, filename, anchor) = self.__identifyUri (status)
 
@@ -56,15 +61,15 @@ class HtmlRenderIE (HtmlRender):
                 if anchor is not None:
                     text = u"{}/{}".format (text, anchor)
 
-                outwiker.core.commands.setStatusText (text, self._status_item)
+                statustext = text
             elif filename is not None:
-                outwiker.core.commands.setStatusText (filename, self._status_item)
+                statustext = filename
             elif anchor is not None:
-                outwiker.core.commands.setStatusText (anchor, self._status_item)
+                statustext = anchor
             else:
-                outwiker.core.commands.setStatusText (status, self._status_item)
-        else:
-            outwiker.core.commands.setStatusText (status, self._status_item)
+                statustext = status
+
+        self.setStatusText (status, statustext)
 
 
     def __onCopyFromHtml(self, event):
@@ -155,17 +160,43 @@ class HtmlRenderIE (HtmlRender):
         return identifier.identify (href)
 
 
+    def __getKeyCode (self):
+        modifier = 0
+
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            modifier |= ID_KEY_SHIFT
+
+        if wx.GetKeyState(wx.WXK_CONTROL):
+            modifier |= ID_KEY_CTRL
+
+        return modifier
+
+
     def __onLinkClicked (self, href):
         """
         Клик по ссылке
         """
         (url, page, filename, anchor) = self.__identifyUri (href)
-        ctrlstate = wx.GetKeyState(wx.WXK_CONTROL)
+
+        button = ID_MOUSE_LEFT
+        modifier = self.__getKeyCode()
+
+        params = self._getClickParams (self._decodeIDNA (href),
+                                       button,
+                                       modifier,
+                                       url,
+                                       page,
+                                       filename,
+                                       anchor)
+
+        Application.onLinkClick (self._currentPage, params)
+        if params.process:
+            return
 
         if url is not None:
             self.openUrl (url)
 
-        elif page is not None and ctrlstate:
+        elif page is not None and modifier == ID_KEY_CTRL:
             Application.anchor = anchor
             Application.mainWindow.tabsController.openInTab (page, True)
 

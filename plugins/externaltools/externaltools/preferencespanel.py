@@ -9,7 +9,7 @@ from outwiker.core.exceptions import PreferencesException
 
 from .toolslistpanel import ToolsListPanel
 from .i18n import get_
-from .toolsconfig import ToolsConfig
+from .config import ExternalToolsConfig
 
 
 class PreferencesPanel (wx.Panel):
@@ -32,6 +32,12 @@ class PreferencesPanel (wx.Panel):
 
 
     def __makeGui (self):
+        self.warningCheckBox = wx.CheckBox (
+            self,
+            -1,
+            _(u'Show warning before executing applications by (:exec:) command')
+        )
+
         self.toolsLabel = wx.StaticText (self, -1, _(u"Tools List"))
         self.appendToolsButton = wx.Button (self, -1, _(u"Append Tools"))
         self.toolsListPanel = ToolsListPanel (self)
@@ -49,10 +55,11 @@ class PreferencesPanel (wx.Panel):
 
 
     def __layout (self):
-        mainSizer = wx.FlexGridSizer (0, 1)
+        mainSizer = wx.FlexGridSizer (cols=1)
         mainSizer.AddGrowableCol (0)
-        mainSizer.AddGrowableRow (2)
+        mainSizer.AddGrowableRow (3)
 
+        mainSizer.Add (self.warningCheckBox, 1, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=2)
         mainSizer.Add (self.toolsLabel, 1, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=2)
         mainSizer.Add (self.appendToolsButton, 1, flag = wx.EXPAND | wx.ALL, border=2)
         mainSizer.Add (self.toolsListPanel, 1, flag = wx.EXPAND | wx.ALL, border=2)
@@ -75,15 +82,17 @@ class PrefController (object):
 
 
     def loadState (self):
-        toolsConfig = ToolsConfig (self._config)
+        toolsConfig = ExternalToolsConfig (self._config)
+        self._prefPanel.warningCheckBox.SetValue (toolsConfig.execWarning)
         self._prefPanel.toolsListPanel.tools = toolsConfig.tools
         self._prefPanel.Layout()
 
 
     def save (self):
-        toolsConfig = ToolsConfig (self._config)
+        toolsConfig = ExternalToolsConfig (self._config)
         try:
             toolsConfig.tools = self._prefPanel.toolsListPanel.tools
+            toolsConfig.execWarning = self._prefPanel.warningCheckBox.GetValue()
         except ConfigParser.Error:
             MessageBox (_(u"Can't save options"),
                         _(u"Error"),
