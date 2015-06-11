@@ -3,6 +3,7 @@
 import re
 
 from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart
+from .utils import TagAttrsPattern
 
 
 class TableFactory (object):
@@ -21,10 +22,10 @@ class TableToken (object):
 
 
     def getToken (self):
-        tableCell = Regex (r"(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)", re.UNICODE)
-        tableCell.setParseAction(self.__convertTableCell)
+        tableCell = Regex (r"(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)" + TagAttrsPattern.value, re.UNICODE)
+        tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
-        tableRow = LineStart() + "||" + OneOrMore (tableCell) + Optional (LineEnd())
+        tableRow = LineStart() + "||" + Regex (TagAttrsPattern.value, re.UNICODE) + OneOrMore (tableCell) + Optional (LineEnd())
         tableRow.setParseAction(self.__convertTableRow)
 
         table = LineStart() + Regex (r"\|\| *(?P<params>.+)?", re.UNICODE) + LineEnd() + OneOrMore (tableRow)
@@ -36,13 +37,13 @@ class TableToken (object):
     def __convertTableCell (self, s, loc, toks):
         text = toks["text"]
 
-        leftAlign = toks["text"][-1] in " \t"
-
-        # Условие в скобках связано с тем, что первый пробел попадает
-        # или не попадает в токен в зависимости от того, первая ячейка в строке или нет
-        rightAlign = loc > 0 and (s[loc - 1] in " \t" or s[loc] in " \t")
+        leftAlign = text[-1] in u' \t'
+        rightAlign = text[0] in u' \t'
 
         align = u''
+
+        attrs = toks[TagAttrsPattern.name]
+        attrs = u''.join([u' ', attrs]) if attrs else u''
 
         if leftAlign and rightAlign:
             align = u' align="center"'
@@ -51,9 +52,9 @@ class TableToken (object):
         elif rightAlign:
             align = u' align="right"'
 
-        pattern =  u'<th%s>%s</th>' if toks["end"] == u'|||' else u'<td%s>%s</td>'
+        pattern =  u'<th%s%s>%s</th>' if toks["end"] == u'|||' else u'<td%s%s>%s</td>'
 
-        return pattern % (align, self.parser.parseWikiMarkup (text.strip()))
+        return pattern % (align, attrs, self.parser.parseWikiMarkup (text.strip()))
 
 
     def __convertTableRow (self, s, l, t):
@@ -63,20 +64,23 @@ class TableToken (object):
             lastindex = len (t)
             self.unitEnd = ""
 
-        result = u"<tr>"
-        for element in t[1: lastindex]:
+        attrs = t[TagAttrsPattern.name]
+        attrs = u''.join([u' ', attrs]) if attrs else u''
+
+        result = u''.join([u'<tr', attrs, u'>'])
+        for element in t[2: lastindex]:
             result += element
 
-        result += "</tr>"
+        result += u'</tr>'
 
         return result
 
 
     def __convertTable (self, s, l, t):
-        result = u"<table %s>" % t[0][2:].strip()
+        result = u'<table %s>' % t[0][2:].strip()
         for element in t[2:]:
             result += element
 
-        result += "</table>" + self.unitEnd
+        result += u'</table>' + self.unitEnd
 
         return result

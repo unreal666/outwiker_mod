@@ -2,6 +2,10 @@
 
 from outwiker.libs.pyparsing import NoMatch
 
+class TagAttrsPattern (object):
+    value = r"(?:<<(?P<attributes>(?:(?!>>).)+)>>)?"
+    name = "attributes"
+
 
 def noConvert (s, l, t):
     return t[0]
