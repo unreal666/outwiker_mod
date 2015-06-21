@@ -12,7 +12,7 @@ from outwiker.gui.datetimeformatctrl import DateTimeFormatCtrl
 
 class GeneralPanel (wx.ScrolledWindow):
     def __init__(self, *args, **kwds):
-        kwds["style"] = wx.TAB_TRAVERSAL
+        kwds["style"] = wx.TAB_TRAVERSAL | wx.HSCROLL | wx.VSCROLL
         wx.ScrolledWindow.__init__(self, *args, **kwds)
 
         self.trayConfig = TrayConfig (Application.config)
@@ -26,6 +26,15 @@ class GeneralPanel (wx.ScrolledWindow):
         self.MIN_HISTORY_LENGTH = 0
         self.MAX_HISTORY_LENGTH = 30
 
+        self.PAGE_TAB_COMBO_WIDTH = 200
+        self.LANG_COMBO_WIDTH = 200
+
+        self.pageTabChoises = [
+            (_(u'Recent used'), GeneralGuiConfig.PAGE_TAB_RECENT),
+            (_(u'Preview'), GeneralGuiConfig.PAGE_TAB_RESULT),
+            (_(u'Edit'), GeneralGuiConfig.PAGE_TAB_CODE),
+        ]
+
         # Номер элемента при выборе "Авто" в списке языков
         self.__autoIndex = 0
 
@@ -35,6 +44,7 @@ class GeneralPanel (wx.ScrolledWindow):
         self.__createHistoryGui(self.generalConfig)
         self.__createTitleFormatGui()
         self.__createDateTimeFormatGui(self.generalConfig)
+        self.__createOpenPageTabGui()
         self.__createLanguageGui()
 
         self.__set_properties()
@@ -44,6 +54,20 @@ class GeneralPanel (wx.ScrolledWindow):
 
         self.LoadState()
         self.updateCheckState()
+        self.__setScrolling()
+
+
+    def __setScrolling (self):
+        bottomElement = self.langCombo
+        btElementTop = bottomElement.GetPositionTuple()[1]
+        btElementHeight = bottomElement.GetSizeTuple()[1]
+        scrollHeight = btElementHeight
+        scrollCount = (btElementTop + btElementHeight) / scrollHeight + 1
+
+        self.SetScrollbars (0,
+                            scrollHeight,
+                            0,
+                            scrollCount)
 
 
     def __set_properties(self):
@@ -54,9 +78,6 @@ class GeneralPanel (wx.ScrolledWindow):
         self.SetFocus()
         self.SetScrollRate(0, 0)
         self.askBeforeExitCheckBox.SetValue(1)
-
-        LANG_COMBO_WIDTH = 130
-        self.langCombo.SetMinSize((LANG_COMBO_WIDTH, -1))
 
 
     def __createAutosaveGui (self, generalConfig):
@@ -159,13 +180,68 @@ class GeneralPanel (wx.ScrolledWindow):
         Создать элементы интерфейса, связанные с выбором языка
         """
         self.langLabel = wx.StaticText(self, -1, _("Language (restart required)"))
-        self.langCombo = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN | wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.langCombo = wx.ComboBox(self, -1, choices=[], style= wx.CB_DROPDOWN | wx.CB_READONLY)
+
+        self.langCombo.SetMinSize((self.LANG_COMBO_WIDTH, -1))
+
         self.languageSizer = wx.FlexGridSizer(1, 2, 0, 0)
-        self.languageSizer.Add(self.langLabel, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
-        self.languageSizer.Add(self.langCombo, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 2)
+
+        self.languageSizer.Add(self.langLabel,
+                               0,
+                               wx.ALL | wx.ALIGN_CENTER_VERTICAL,
+                               2)
+
+        self.languageSizer.Add(self.langCombo,
+                               0,
+                               wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                               2)
+
         self.languageSizer.AddGrowableRow(0)
         self.languageSizer.AddGrowableCol(0)
         self.languageSizer.AddGrowableCol(1)
+
+
+    def __createOpenPageTabGui (self):
+        """
+        Создать элементы интерфейса для выбора вкладки страницы по умолчанию (Код / просмотр / последний используемый)
+        """
+        pageTabLabel = wx.StaticText(self, -1, _(u'Default opening page mode'))
+        self.pageTabComboBox = wx.ComboBox (self,
+                                            -1,
+                                            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+
+        self.pageTabComboBox.SetMinSize((self.PAGE_TAB_COMBO_WIDTH, -1))
+        self.__fillPageTabComboBox ()
+
+        # Layout GUI elements
+        self.pageTabSizer = wx.FlexGridSizer (cols=2)
+        self.pageTabSizer.AddGrowableCol (0)
+        self.pageTabSizer.AddGrowableCol (1)
+        self.pageTabSizer.AddGrowableRow (0)
+
+        self.pageTabSizer.Add(pageTabLabel,
+                              0,
+                              wx.ALL | wx.ALIGN_CENTER_VERTICAL,
+                              2)
+
+        self.pageTabSizer.Add(self.pageTabComboBox,
+                              0,
+                              wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                              2)
+
+
+    def __fillPageTabComboBox (self):
+        # Fill pageTabComboBox
+        for item in self.pageTabChoises:
+            self.pageTabComboBox.Append (item[0])
+
+        choise = self.generalConfig.pageTab.value
+        selectedItem = 0
+        for n, item in enumerate (self.pageTabChoises):
+            if item[1] == choise:
+                selectedItem = n
+
+        self.pageTabComboBox.SetSelection (selectedItem)
 
 
     def __addStaticLine (self, main_sizer):
@@ -193,6 +269,7 @@ class GeneralPanel (wx.ScrolledWindow):
         main_sizer.Add (self.dateTimeSizer, 1, wx.EXPAND, 0)
 
         self.__addStaticLine(main_sizer)
+        main_sizer.Add(self.pageTabSizer, 1, wx.EXPAND, 0)
         main_sizer.Add(self.languageSizer, 1, wx.EXPAND, 0)
 
         self.SetSizer(main_sizer)
@@ -227,7 +304,7 @@ class GeneralPanel (wx.ScrolledWindow):
 
     def __loadGeneralOptions (self):
         """
-        Опции для сворачивания окна в трей
+        Загрузка общих параметров программы
         """
         # Сворачивать в трей?
         self.minimizeToTray = configelements.BooleanElement (
@@ -314,6 +391,7 @@ class GeneralPanel (wx.ScrolledWindow):
         self.autosaveInterval.save()
         self.dateTimeFormat.save()
         self.__saveLanguage()
+        self.__savePageTab()
 
         if self.titleFormat.isValueChanged() or self.alwaysInTray.isValueChanged():
             self.alwaysInTray.save()
@@ -330,6 +408,13 @@ class GeneralPanel (wx.ScrolledWindow):
             lang = self.langCombo.GetString (index)
 
         self.i18nConfig.languageOption.value = lang
+
+
+    def __savePageTab (self):
+        selectedItem = self.pageTabComboBox.GetSelection()
+        assert selectedItem < len (self.pageTabChoises)
+
+        self.generalConfig.pageTab.value = self.pageTabChoises[selectedItem][1]
 
 
     def onMinimizeToTray(self, event):

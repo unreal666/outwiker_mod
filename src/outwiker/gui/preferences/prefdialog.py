@@ -14,6 +14,8 @@ from hotkeyspanel import HotKeysPanel
 from htmleditorpanel import HtmlEditorPanel
 from wikieditorpanel import WikiEditorPanel
 from iconsetpanel import IconsetPanel
+from tagspanel import TagsPanel
+from attachpanel import AttachPanel
 
 from outwiker.core.exceptions import PreferencesException
 from outwiker.core.factoryselector import FactorySelector
@@ -42,6 +44,8 @@ class PrefDialog(wx.Dialog):
         self.__hotkeysPage = None
         self.__htmlEditorPage = None
         self.__iconsetPage = None
+        self.__tagsPage = None
+        self.__attachPage = None
         self.__createPages()
 
         Application.onPreferencesDialogCreate (self)
@@ -86,7 +90,7 @@ class PrefDialog(wx.Dialog):
         height = 500
 
         self.SetSize((width, height))
-        self.__treeBook.SetMinSize((300, 400))
+        self.__treeBook.SetMinSize((300, -1))
 
         self.__centerWindow()
 
@@ -107,10 +111,10 @@ class PrefDialog(wx.Dialog):
 
 
     def __do_layout(self):
-        main_sizer = wx.FlexGridSizer(rows=2)
+        main_sizer = wx.FlexGridSizer(cols=1)
         main_sizer.AddGrowableRow(0)
         main_sizer.AddGrowableCol(0)
-        main_sizer.Add(self.__treeBook, 1, wx.ALL | wx.EXPAND, 4)
+        main_sizer.Add(self.__treeBook, 0, wx.ALL | wx.EXPAND, 4)
 
         self.__createOkCancelButtons(main_sizer)
 
@@ -125,10 +129,18 @@ class PrefDialog(wx.Dialog):
         self.__generalPage = GeneralPanel (self.__treeBook)
         self.__htmlRenderPage = HtmlRenderPanel (self.__treeBook)
         self.__textPrintPage = TextPrintPanel (self.__treeBook)
+        self.__hotkeysPage = HotKeysPanel (self.__treeBook)
+        self.__tagsPage = TagsPanel (self.__treeBook)
+        self.__attachPage = AttachPanel (self.__treeBook)
 
-        interfacePanelsList = [PreferencePanelInfo (self.__generalPage, _(u"General")),
-                               PreferencePanelInfo (self.__htmlRenderPage, _(u"Preview")),
-                               PreferencePanelInfo (self.__textPrintPage, _(u"Text Printout"))]
+        interfacePanelsList = [
+            PreferencePanelInfo (self.__generalPage, _(u"General")),
+            PreferencePanelInfo (self.__htmlRenderPage, _(u"Preview")),
+            PreferencePanelInfo (self.__tagsPage, _(u"Tags cloud")),
+            PreferencePanelInfo (self.__attachPage, _(u"Attachments")),
+            PreferencePanelInfo (self.__hotkeysPage, _(u"Hotkeys")),
+            PreferencePanelInfo (self.__textPrintPage, _(u"Text Printout")),
+        ]
 
         self.appendPreferenceGroup (_(u"Interface"), interfacePanelsList)
 
@@ -155,11 +167,6 @@ class PrefDialog(wx.Dialog):
         self.__treeBook.AddPage (self.__pluginsPage, _(u"Plugins"))
 
 
-    def __createHotKeysPage (self):
-        self.__hotkeysPage = HotKeysPanel (self.__treeBook)
-        self.__treeBook.AddPage (self.__hotkeysPage, _(u"Hotkeys"))
-
-
     def __createIconsetPage (self):
         self.__iconsetPage = IconsetPanel (self.__treeBook)
         self.__treeBook.AddPage (self.__iconsetPage, _(u"User's iconset"))
@@ -174,7 +181,6 @@ class PrefDialog(wx.Dialog):
         self.__createPagesForPages ()
         self.__createIconsetPage ()
         self.__createPluginsPage ()
-        self.__createHotKeysPage ()
 
         self.__expandAllPages()
         self.__treeBook.SetSelection (0)
@@ -216,13 +222,13 @@ class PrefDialog(wx.Dialog):
         Создать кнопки Ok / Cancel
         """
         buttonsSizer = self.CreateButtonSizer (wx.OK | wx.CANCEL)
-        sizer.AddSpacer(0)
-        sizer.Add (buttonsSizer, 1, wx.ALIGN_RIGHT | wx.ALL, border = 4)
+        sizer.Add (buttonsSizer,
+                   0,
+                   wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM | wx.ALL,
+                   border = 4)
 
         self.Bind (wx.EVT_BUTTON, self.__onOk, id=wx.ID_OK)
         self.Bind (wx.EVT_BUTTON, self.__onCancel, id=wx.ID_CANCEL)
-
-        self.Layout()
 
 
     def __onOk (self, event):
