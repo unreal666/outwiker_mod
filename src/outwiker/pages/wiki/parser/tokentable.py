@@ -26,7 +26,7 @@ class TableToken (object):
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
         tableRow = LineStart() + "||" + Regex (TagAttrsPattern.value, re.UNICODE) + OneOrMore (tableCell) + Optional (LineEnd())
-        tableRow.setParseAction(self.__convertTableRow)
+        tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
         table = LineStart() + Regex (r"\|\| *(?P<params>.+)?", re.UNICODE) + LineEnd() + OneOrMore (tableRow)
         table = table.setParseAction(self.__convertTable)("table")
@@ -52,7 +52,7 @@ class TableToken (object):
         elif rightAlign:
             align = u' align="right"'
 
-        pattern =  u'<th%s%s>%s</th>' if toks["end"] == u'|||' else u'<td%s%s>%s</td>'
+        pattern = u'<th%s%s>%s</th>' if toks["end"] == u'|||' else u'<td%s%s>%s</td>'
 
         return pattern % (align, attrs, self.parser.parseWikiMarkup (text.strip()))
 
