@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-from outwiker.libs.pyparsing import Forward, CharsNotIn, NotAny, ZeroOrMore, OneOrMore, Combine, Literal, Suppress
+from outwiker.libs.pyparsing import Forward, CharsNotIn, NotAny, ZeroOrMore, OneOrMore, Combine, Literal, Suppress, Regex
+from .utils import TagAttrsPattern
 
 
 class QuoteFactory (object):
@@ -23,20 +24,23 @@ class QuoteToken (object):
 
     def getToken (self):
         token = Forward()
-        token << (Suppress(QuoteToken.quoteStart) +
+        token << (Suppress(QuoteToken.quoteStart) + Regex(TagAttrsPattern.value) +
                   (OneOrMore(QuoteToken.anyExcept + token) +
                    QuoteToken.anyExcept | QuoteToken.anyExcept) +
                   Suppress(QuoteToken.quoteEnd)).leaveWhitespace().setParseAction(self.__parse)("quote")
         return token
 
 
-    def __parse (self, s, l, t):
-        text = u''.join(t)
+    def __parse (self, s, loc, toks):
+        text = u''.join(toks[1:len(toks)])
         leftpos = text.find (u'<blockquote>')
         rightpos = text.rfind (u'</blockquote>')
 
+        attrs = toks[TagAttrsPattern.name]
+        attrs = u''.join([u' ', attrs]) if attrs else u''
+
         if leftpos == -1 or rightpos == -1:
-            return u''.join([u'<blockquote>', self.parser.parseWikiMarkup (text), u'</blockquote>'])
+            return u''.join([u'<blockquote', attrs, u'>', self.parser.parseWikiMarkup (text), u'</blockquote>'])
 
         lefttext = text[:leftpos]
         righttext = text[rightpos:]
