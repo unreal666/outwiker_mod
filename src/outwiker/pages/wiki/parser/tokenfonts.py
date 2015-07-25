@@ -97,12 +97,12 @@ class CodeToken (TextBlockToken):
     """
     Токен для кода
     """
-    codeStart = "@@"
-    codeEnd = "@@"
+    start = "@@"
+    end = "@@"
 
     def getToken (self):
-        return QuotedString (CodeToken.codeStart,
-                             endQuoteChar = CodeToken.codeEnd,
+        return QuotedString (CodeToken.start,
+                             endQuoteChar = CodeToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<code>", "</code>"))("code")
 
 
@@ -110,12 +110,12 @@ class SuperscriptToken (TextBlockToken):
     """
     Токен для верхнего индекса
     """
-    superscriptStart = "'^"
-    superscriptEnd = "^'"
+    start = "'^"
+    end = "^'"
 
     def getToken (self):
-        return QuotedString (SuperscriptToken.superscriptStart,
-                             endQuoteChar = SuperscriptToken.superscriptEnd,
+        return QuotedString (SuperscriptToken.start,
+                             endQuoteChar = SuperscriptToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<sup>", "</sup>"))("superscript")
 
 
@@ -123,12 +123,12 @@ class SubscriptToken (TextBlockToken):
     """
     Токен для нижнего индекса
     """
-    subscriptStart = "'_"
-    subscriptEnd = "_'"
+    start = "'_"
+    end = "_'"
 
     def getToken (self):
-        return QuotedString (SubscriptToken.subscriptStart,
-                             endQuoteChar = SubscriptToken.subscriptEnd,
+        return QuotedString (SubscriptToken.start,
+                             endQuoteChar = SubscriptToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<sub>", "</sub>"))("subscript")
 
 
@@ -136,12 +136,12 @@ class UnderlineToken (TextBlockToken):
     """
     Токен для курсива
     """
-    underlineStart = "{+"
-    underlineEnd = "+}"
+    start = "{+"
+    end = "+}"
 
     def getToken (self):
-        return QuotedString (UnderlineToken.underlineStart,
-                             endQuoteChar = UnderlineToken.underlineEnd,
+        return QuotedString (UnderlineToken.start,
+                             endQuoteChar = UnderlineToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<u>", "</u>"))("underline")
 
 
@@ -149,12 +149,12 @@ class StrikeToken (TextBlockToken):
     """
     Токен для курсива
     """
-    strikeStart = "{-"
-    strikeEnd = "-}"
+    start = "{-"
+    end = "-}"
 
     def getToken (self):
-        return QuotedString (StrikeToken.strikeStart,
-                             endQuoteChar = StrikeToken.strikeEnd,
+        return QuotedString (StrikeToken.start,
+                             endQuoteChar = StrikeToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<strike>", "</strike>"))("strike")
 
 
@@ -163,9 +163,9 @@ class ItalicToken (TextBlockToken):
     """
     Токен для курсива
     """
-    italicStart = "''"
-    italicEnd = "''"
-    anyExcept = Combine( ZeroOrMore( NotAny (italicStart) + CharsNotIn('', exact=1) ) )
+    start = "''"
+    end = "''"
+    anyExcept = Combine( ZeroOrMore( NotAny (start) + CharsNotIn('', exact=1) ) )
 
     def getToken (self):
         if not hasattr(self.parser, 'bolded'):
@@ -174,21 +174,22 @@ class ItalicToken (TextBlockToken):
             else:
                 self.parser.bolded = FontsFactory.makeBold (self.parser)
 
-        return (Suppress(ItalicToken.italicStart) + ( OneOrMore( ItalicToken.anyExcept + self.parser.bolded) +
+        return (Suppress(ItalicToken.start) + ( OneOrMore( ItalicToken.anyExcept + self.parser.bolded) +
                                                       ItalicToken.anyExcept | ItalicToken.anyExcept ) +
-                Suppress(ItalicToken.italicEnd)).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
+                Suppress(ItalicToken.end)).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
+
 
 
 class BoldToken (TextBlockToken):
     """
     Токен для полужирного шрифта
     """
-    boldStart = "'''"
-    boldEnd = "'''"
+    start = "'''"
+    end = "'''"
 
     def getToken (self):
-        return QuotedString (BoldToken.boldStart,
-                             endQuoteChar = BoldToken.boldEnd,
+        return QuotedString (BoldToken.start,
+                             endQuoteChar = BoldToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<b>", "</b>"))("bold")
 
 
@@ -196,12 +197,12 @@ class BoldItalicToken (TextBlockToken):
     """
     Токен для полужирного курсивного шрифта
     """
-    boldItalicStart = "''''"
-    boldItalicEnd = "''''"
+    start = "''''"
+    end = "''''"
 
     def getToken (self):
-        return QuotedString (BoldItalicToken.boldItalicStart,
-                             endQuoteChar = BoldItalicToken.boldItalicEnd,
+        return QuotedString (BoldItalicToken.start,
+                             endQuoteChar = BoldItalicToken.end,
                              multiline = True).setParseAction(self.convertToHTML("<b><i>", "</i></b>"))("bold_italic")
 
 

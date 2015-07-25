@@ -1,12 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-import wx
-import wx.lib.newevent
-import wx.stc
-
-import threading
-
-from .parser.tokenfonts import FontsFactory
+from .parser.tokenfonts import FontsFactory, BoldToken, ItalicToken, BoldItalicToken, UnderlineToken
 from .parser.tokenheading import HeadingFactory
 from .parser.tokencommand import CommandFactory
 from .parser.tokenlink import LinkFactory
@@ -16,9 +10,6 @@ from .parser.tokennoformat import NoFormatFactory
 from .parser.tokenpreformat import PreFormatFactory
 from .parser.tokentext import TextFactory
 from .parser.utils import returnNone
-
-
-ApplyStyleEvent, EVT_APPLY_STYLE = wx.lib.newevent.NewEvent()
 
 
 class WikiColorizer (object):
@@ -67,25 +58,10 @@ class WikiColorizer (object):
             self.italicized |
             self.underlined)
 
-        self._thread = None
 
-
-    def start (self, text):
-        if (self._thread is None or
-                not self._thread.isAlive()):
-            self._thread = threading.Thread (None, self._threadFunc, args=(text,))
-            self._thread.start()
-
-
-    def _threadFunc (self, text):
-        stylebytes = self._startColorize (text)
-        event = ApplyStyleEvent (text=text, stylebytes=stylebytes)
-        wx.PostEvent (self._editor, event)
-
-
-    def _startColorize (self, text):
+    def colorize (self, text):
         textlength = self._editor.calcByteLen (text)
-        stylelist = [wx.stc.STC_STYLE_DEFAULT] * textlength
+        stylelist = [0] * textlength
 
         self._colorizeText (text, 0, textlength, self.colorParser, stylelist)
 
@@ -101,10 +77,12 @@ class WikiColorizer (object):
             pos_end = token[2] + start
 
             tokenname = token[0].getName()
-            # print tokenname
 
-            if (tokenname == "text" or
-                    tokenname == "linebreak" or
+            if tokenname == "text":
+                self._editor.runSpellChecking (stylelist, pos_start, pos_end)
+                continue
+
+            if (tokenname == "linebreak" or
                     tokenname == "noformat" or
                     tokenname == "preformat"):
                 continue
@@ -115,46 +93,68 @@ class WikiColorizer (object):
 
             # Применим стиль
             if tokenname == "bold":
-                self._addStyle (stylelist, self._editor.STYLE_BOLD_ID, bytepos_start, bytepos_end)
-                self._colorizeText (text, pos_start + 3, pos_end - 3, self.insideBlockParser, stylelist)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_BOLD_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._colorizeText (text,
+                                    pos_start + len (BoldToken.start),
+                                    pos_end - len (BoldToken.end),
+                                    self.insideBlockParser, stylelist)
 
             elif tokenname == "italic":
-                self._addStyle (stylelist, self._editor.STYLE_ITALIC_ID, bytepos_start, bytepos_end)
-                self._colorizeText (text, pos_start + 2, pos_end - 2, self.insideBlockParser, stylelist)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_ITALIC_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._colorizeText (text,
+                                    pos_start + len (ItalicToken.start),
+                                    pos_end - len (ItalicToken.end),
+                                    self.insideBlockParser, stylelist)
 
             elif tokenname == "bold_italic":
-                self._addStyle (stylelist, self._editor.STYLE_BOLD_ITALIC_ID, bytepos_start, bytepos_end)
-                self._colorizeText (text, pos_start + 4, pos_end - 4, self.insideBlockParser, stylelist)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_BOLD_ITALIC_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._colorizeText (text,
+                                    pos_start + len (BoldItalicToken.start),
+                                    pos_end - len (BoldItalicToken.end),
+                                    self.insideBlockParser, stylelist)
 
             elif tokenname == "underline":
-                self._addStyle (stylelist, self._editor.STYLE_UNDERLINE_ID, bytepos_start, bytepos_end)
-                self._colorizeText (text, pos_start + 2, pos_end - 2, self.insideBlockParser, stylelist)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_UNDERLINE_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._colorizeText (text,
+                                    pos_start + len (UnderlineToken.start),
+                                    pos_end - len (UnderlineToken.end),
+                                    self.insideBlockParser,
+                                    stylelist)
 
             elif tokenname == "heading":
-                self._setStyle (stylelist, self._editor.STYLE_HEADING_ID, bytepos_start, bytepos_end)
+                self._editor.setStyle (stylelist,
+                                       self._editor.STYLE_HEADING_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._editor.runSpellChecking (stylelist, pos_start, pos_end)
 
             elif tokenname == "command":
-                self._setStyle (stylelist, self._editor.STYLE_COMMAND_ID, bytepos_start, bytepos_end)
+                self._editor.setStyle (stylelist,
+                                       self._editor.STYLE_COMMAND_ID,
+                                       bytepos_start,
+                                       bytepos_end)
 
             elif tokenname == "link":
-                self._addStyle (stylelist, self._editor.STYLE_LINK_ID, bytepos_start, bytepos_end)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_LINK_ID,
+                                       bytepos_start,
+                                       bytepos_end)
+                self._editor.runSpellChecking (stylelist, pos_start, pos_end)
 
             elif tokenname == "url":
-                self._addStyle (stylelist, self._editor.STYLE_LINK_ID, bytepos_start, bytepos_end)
-
-
-    def _addStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
-        """
-        Добавляет стиль с идентификатором styleid к массиву stylelist
-        """
-        style_src = stylelist[bytepos_start: bytepos_end]
-        style_new = [styleid if style == wx.stc.STC_STYLE_DEFAULT else style | styleid for style in style_src]
-
-        stylelist[bytepos_start: bytepos_end] = style_new
-
-
-    def _setStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
-        """
-        Добавляет стиль с идентификатором styleid к массиву stylelist
-        """
-        stylelist[bytepos_start: bytepos_end] = [styleid] * (bytepos_end - bytepos_start)
+                self._editor.addStyle (stylelist,
+                                       self._editor.STYLE_LINK_ID,
+                                       bytepos_start,
+                                       bytepos_end)

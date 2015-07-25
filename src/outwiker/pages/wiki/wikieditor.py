@@ -1,48 +1,33 @@
 # -*- coding: UTF-8 -*-
 
-from datetime import datetime, timedelta
-
 import wx.stc
 
-from outwiker.gui.texteditor import TextEditor
-from .wikicolorizer import WikiColorizer, EVT_APPLY_STYLE
 from outwiker.core.application import Application
+from outwiker.gui.texteditor import TextEditor
+from .wikicolorizer import WikiColorizer
 from .wikiconfig import WikiConfig
 
 
 class WikiEditor (TextEditor):
     def __init__ (self, parent):
         self.__createStyles()
+        self._stylebytes = None
+
         super (WikiEditor, self).__init__ (parent)
 
         self._colorizer = WikiColorizer (self)
-
-        self.textCtrl.Bind (wx.EVT_IDLE, self.__onStyleNeeded)
-        # self.textCtrl.Bind (wx.stc.EVT_STC_STYLENEEDED, self.__onStyleNeeded)
-        self.textCtrl.Bind (wx.stc.EVT_STC_CHANGE, self.__onChange)
-        self.Bind (EVT_APPLY_STYLE, self.__onApplyStyle)
-
-        # Уже были установлены стили текста (раскраска)
-        self.__styleSet = False
-        # Начинаем раскраску кода не менее чем через это время с момента его изменения
-        self.__DELAY = timedelta (milliseconds=300)
-
-        # Время последней модификации текста страницы.
-        # Используется для замера времени после модификации, чтобы не парсить текст
-        # после каждой введенной буквы
-        self.__lastEdit = datetime.now() - self.__DELAY * 2
 
 
     def __createStyles (self):
         self._styles = {}
 
         # Константы для стилей
-        self.STYLE_BOLD_ID = 1
-        self.STYLE_ITALIC_ID = 2
-        self.STYLE_UNDERLINE_ID = 4
-        self.STYLE_LINK_ID = 8
-        self.STYLE_HEADING_ID = 126
-        self.STYLE_COMMAND_ID = 125
+        self.STYLE_BOLD_ID = 1 << 0
+        self.STYLE_ITALIC_ID = 1 << 1
+        self.STYLE_UNDERLINE_ID = 1 << 2
+        self.STYLE_LINK_ID = 1 << 3
+        self.STYLE_HEADING_ID = 1 << 4
+        self.STYLE_COMMAND_ID = (1 << 4) + 1
 
         # Комбинации стилей
         self.STYLE_BOLD_ITALIC_UNDERLINE_ID = (self.STYLE_BOLD_ID |
@@ -71,9 +56,7 @@ class WikiEditor (TextEditor):
                                           self.STYLE_LINK_ID)
 
         self.STYLE_LINK_ITALIC_ID = self.STYLE_ITALIC_ID | self.STYLE_LINK_ID
-
         self.STYLE_LINK_UNDERLINE_ID = self.STYLE_UNDERLINE_ID | self.STYLE_LINK_ID
-
         self.STYLE_LINK_BOLD_ID = self.STYLE_BOLD_ID | self.STYLE_LINK_ID
 
         config = WikiConfig (Application.config)
@@ -105,7 +88,6 @@ class WikiEditor (TextEditor):
 
         self.textCtrl.SetLexer (wx.stc.STC_LEX_CONTAINER)
         self.textCtrl.SetModEventMask(wx.stc.STC_MOD_INSERTTEXT | wx.stc.STC_MOD_DELETETEXT)
-        self.textCtrl.SetStyleBits (7)
 
         for (styleid, style) in self._styles.items():
             self.textCtrl.StyleSetSpec (styleid, style)
@@ -123,35 +105,17 @@ class WikiEditor (TextEditor):
         self.textCtrl.StyleSetBackground (self.STYLE_HEADING_ID, self.config.backColor.value)
 
 
-    def __onChange (self, event):
-        self.__styleSet = False
-        self.__lastEdit = datetime.now()
-        event.Skip()
+    def getStyleBytes (self, text):
+        """
+        Функция должна возвращать список байт, описывающих раскраску (стили) для текста text
+        Этот метод выполняется в отдельном потоке
+        """
+        self._stylebytes = self._colorizer.colorize (text)
+        return self._stylebytes
 
 
-    def __getTextForParse (self):
-        # Табуляция в редакторе считается за несколько символов
-        return self.textCtrl.GetText().replace ("\t", " ")
-
-
-    def __onStyleNeeded (self, event):
-        if (self.__styleSet or
-                datetime.now() - self.__lastEdit < self.__DELAY):
-            return
-
-        text = self.__getTextForParse()
-        self._colorizer.start (text)
-
-
-    def __onApplyStyle (self, event):
-        if event.text == self.__getTextForParse():
-            self.__applyStyles (event.stylebytes)
-
-
-    def __applyStyles (self, stylebytes):
-        self.textCtrl.StartStyling (0, 0xff)
-        self.textCtrl.SetStyleBytes (len (stylebytes), stylebytes)
-        self.__styleSet = True
+    def getIndcatorsStyleBytes (self, text):
+        return self._stylebytes
 
 
     def turnList (self, itemStart):

@@ -3,17 +3,24 @@
 import codecs
 import cgi
 import math
+import re
+from datetime import datetime, timedelta
+import threading
 
 import wx
+import wx.lib.newevent
 from wx.stc import StyledTextCtrl
 
 import outwiker.core.system
 from outwiker.core.application import Application
-from .guiconfig import EditorConfig
 from outwiker.core.textprinter import TextPrinter
-from searchreplacecontroller import SearchReplaceController
-from searchreplacepanel import SearchReplacePanel
-from .mainid import MainId
+from outwiker.core.spellchecker import SpellChecker
+from outwiker.gui.guiconfig import EditorConfig
+from outwiker.gui.searchreplacecontroller import SearchReplaceController
+from outwiker.gui.searchreplacepanel import SearchReplacePanel
+from outwiker.gui.mainid import MainId
+
+ApplyStyleEvent, EVT_APPLY_STYLE = wx.lib.newevent.NewEvent()
 
 
 class TextEditor(wx.Panel):
@@ -22,6 +29,29 @@ class TextEditor(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
+
+        self._config = EditorConfig (Application.config)
+
+        self._enableSpellChecking = True
+        self._spellChecker = None
+        self._wordRegex = re.compile ('[\w-]+', re.U)
+        self._digitRegex = re.compile ('\d', re.U)
+
+        self.SPELL_ERROR_INDICATOR = 0
+        self.SPELL_ERROR_INDICATOR_MASK = wx.stc.STC_INDIC0_MASK
+
+        # Уже были установлены стили текста (раскраска)
+        self._styleSet = False
+        # Начинаем раскраску кода не менее чем через это время с момента его изменения
+        self._DELAY = timedelta (milliseconds=300)
+
+        # Время последней модификации текста страницы.
+        # Используется для замера времени после модификации, чтобы не парсить текст
+        # после каждой введенной буквы
+        self._lastEdit = datetime.now() - self._DELAY * 2
+
+        self._colorizingThread = None
+
         self.textCtrl = StyledTextCtrl(self, -1)
 
         # Создание панели поиска и ее контроллера
@@ -33,8 +63,7 @@ class TextEditor(wx.Panel):
 
         self.__createCoders()
 
-        self.config = EditorConfig (Application.config)
-        self.__showlinenumbers = self.config.lineNumbers.value
+        self.__showlinenumbers = self._config.lineNumbers.value
 
         self.setDefaultSettings()
 
@@ -46,12 +75,34 @@ class TextEditor(wx.Panel):
         self.textCtrl.Bind (wx.EVT_CHAR, self.__OnChar_ImeWorkaround)
         self.textCtrl.Bind (wx.EVT_KEY_DOWN, self.__onKeyDown)
 
+        # self.textCtrl.Bind (wx.stc.EVT_STC_STYLENEEDED, self._onStyleNeeded)
+        self.textCtrl.Bind (wx.EVT_IDLE, self._onStyleNeeded)
+        self.Bind (EVT_APPLY_STYLE, self._onApplyStyle)
+
         # При перехвате этого сообщения в других классах, нужно вызывать event.Skip(),
         # чтобы это сообщение дошло досюда
         self.textCtrl.Bind (wx.stc.EVT_STC_CHANGE, self.__onChange)
 
 
+    @property
+    def config (self):
+        return self._config
+
+
+    @property
+    def enableSpellChecking (self):
+        return self._enableSpellChecking
+
+
+    @enableSpellChecking.setter
+    def enableSpellChecking (self, value):
+        self._enableSpellChecking = value
+        self._styleSet = False
+
+
     def __onChange (self, event):
+        self._styleSet = False
+        self._lastEdit = datetime.now()
         self.__setMarginWidth (self.textCtrl)
 
 
@@ -106,16 +157,18 @@ class TextEditor(wx.Panel):
 
     def setDefaultSettings (self):
         """
-        Установить шрифт по умолчанию в контрол StyledTextCtrl
+        Установить стили и настройки по умолчанию в контрол StyledTextCtrl
         """
-        size = self.config.fontSize.value
-        faceName = self.config.fontName.value
-        isBold = self.config.fontIsBold.value
-        isItalic = self.config.fontIsItalic.value
-        fontColor = self.config.fontColor.value
-        backColor = self.config.backColor.value
+        self._spellChecker = self.getSpellChecker()
 
-        self.__showlinenumbers = self.config.lineNumbers.value
+        size = self._config.fontSize.value
+        faceName = self._config.fontName.value
+        isBold = self._config.fontIsBold.value
+        isItalic = self._config.fontIsItalic.value
+        fontColor = self._config.fontColor.value
+        backColor = self._config.backColor.value
+
+        self.__showlinenumbers = self._config.lineNumbers.value
         self.textCtrl.SetEndAtLastLine (False)
 
         self.textCtrl.StyleSetSize (wx.stc.STC_STYLE_DEFAULT, size)
@@ -127,13 +180,6 @@ class TextEditor(wx.Panel):
 
         self.textCtrl.StyleClearAll()
 
-        self.textCtrl.StyleSetSize (0, size)
-        self.textCtrl.StyleSetFaceName (0, faceName)
-        self.textCtrl.StyleSetBold (0, isBold)
-        self.textCtrl.StyleSetItalic (0, isItalic)
-        self.textCtrl.StyleSetForeground (0, fontColor)
-        self.textCtrl.StyleSetBackground (0, backColor)
-
         self.textCtrl.SetCaretForeground (fontColor)
         self.textCtrl.SetCaretLineBack (backColor)
 
@@ -144,9 +190,9 @@ class TextEditor(wx.Panel):
         self.textCtrl.SetWrapVisualFlags (wx.stc.STC_WRAPVISUALFLAG_END)
 
         self.__setMarginWidth (self.textCtrl)
-        self.textCtrl.SetTabWidth (self.config.tabWidth.value)
+        self.textCtrl.SetTabWidth (self._config.tabWidth.value)
 
-        if self.config.homeEndKeys.value == EditorConfig.HOME_END_OF_LINE:
+        if self._config.homeEndKeys.value == EditorConfig.HOME_END_OF_LINE:
             # Клавиши Home / End переносят курсор на начало / конец строки
             self.textCtrl.CmdKeyAssign (wx.stc.STC_KEY_HOME,
                                         0,
@@ -181,6 +227,10 @@ class TextEditor(wx.Panel):
                                         wx.stc.STC_SCMOD_ALT,
                                         wx.stc.STC_CMD_LINEENDDISPLAY)
 
+        self.textCtrl.IndicatorSetStyle(self.SPELL_ERROR_INDICATOR, wx.stc.STC_INDIC_SQUIGGLE)
+        self.textCtrl.IndicatorSetForeground(self.SPELL_ERROR_INDICATOR, "red")
+        self._styleSet = False
+
 
     def __setMarginWidth (self, editor):
         """
@@ -198,7 +248,7 @@ class TextEditor(wx.Panel):
         """
         Расчет размера серой области с номером строк
         """
-        fontSize = self.config.fontSize.value
+        fontSize = self._config.fontSize.value
         linescount = len (self.GetText().split("\n"))
 
         if linescount == 0:
@@ -359,3 +409,125 @@ class TextEditor(wx.Panel):
         text_left = self.textCtrl.GetTextRange (0, pos_bytes)
         currpos = len (text_left)
         return currpos
+
+
+    def checkSpellWord (self, word):
+        match = self._digitRegex.search (word)
+        if match is not None:
+            return True
+
+        return self._spellChecker.check (word)
+
+
+    def _getTextForParse (self):
+        # Табуляция в редакторе считается за несколько символов
+        return self.textCtrl.GetText().replace ("\t", " ")
+
+
+    def setSpellError (self, stylelist, startpos, endpos):
+        """
+        Mark positions as error
+        startpos, endpos - positions in characters
+        """
+        text = self._getTextForParse()
+        startbytes = self.calcBytePos (text, startpos)
+        endbytes = self.calcBytePos (text, endpos)
+
+        self.addStyle (stylelist, self.SPELL_ERROR_INDICATOR_MASK, startbytes, endbytes)
+
+
+    def addStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
+        """
+        Добавляет (с помощью операции побитового ИЛИ) стиль с идентификатором styleid к массиву байт stylelist
+        """
+        style_src = stylelist[bytepos_start: bytepos_end]
+        style_new = [style | styleid for style in style_src]
+
+        stylelist[bytepos_start: bytepos_end] = style_new
+
+
+    def setStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
+        """
+        Добавляет стиль с идентификатором styleid к массиву байт stylelist
+        """
+        stylelist[bytepos_start: bytepos_end] = [styleid] * (bytepos_end - bytepos_start)
+
+
+    def runSpellChecking (self, stylelist, start, end):
+        if not self._enableSpellChecking:
+            return
+
+        text = self._getTextForParse()[start: end]
+
+        words = self._wordRegex.finditer (text)
+        for wordMatch in words:
+            word = wordMatch.group(0)
+            if not self.checkSpellWord (word):
+                self.setSpellError (stylelist, wordMatch.start() + start, wordMatch.end() + start)
+
+
+    def _onStyleNeeded (self, event):
+        if (not self._styleSet and
+                datetime.now() - self._lastEdit >= self._DELAY and
+                (self._colorizingThread is None or not self._colorizingThread.isAlive())):
+            text = self._getTextForParse()
+            self._colorizingThread = threading.Thread (None, self._colorizeThreadFunc, args=(text,))
+            self._colorizingThread.start()
+
+
+    def _colorizeThreadFunc (self, text):
+        stylebytes = self.getStyleBytes (text)
+        indicatorsbytes = self.getIndcatorsStyleBytes (text)
+        event = ApplyStyleEvent (text=text,
+                                 stylebytes=stylebytes,
+                                 indicatorsbytes = indicatorsbytes)
+        wx.PostEvent (self, event)
+
+
+    def _onApplyStyle (self, event):
+        if event.text == self._getTextForParse():
+            stylebytes = event.stylebytes
+            indicatorsbytes = event.indicatorsbytes
+
+            if stylebytes is not None:
+                self.textCtrl.StartStyling (0, 0xff ^ wx.stc.STC_INDICS_MASK)
+                self.textCtrl.SetStyleBytes (len (stylebytes), stylebytes)
+
+            if indicatorsbytes is not None:
+                self.textCtrl.StartStyling (0, wx.stc.STC_INDICS_MASK)
+                self.textCtrl.SetStyleBytes (len (indicatorsbytes), indicatorsbytes)
+
+            self._styleSet = True
+
+
+    def getStyleBytes (self, text):
+        """
+        Функция должна возвращать список байт, описывающих раскраску (стили)
+        для текста text (за исключением индикаторов).
+        Функцию нужно переопределить, если используется собственная раскраска текста.
+        Исли функция возвращает None, то раскраска синтаксиса не применяется.
+        """
+        return None
+
+
+    def getIndcatorsStyleBytes (self, text):
+        """
+        Функция должна возвращать список байт, описывающих раскраску (стили индикаторов) для текста text.
+        Функцию нужно переопределить, если используются индикаторы.
+        Исли функция возвращает None, то раскраска индикаторов не применяется.
+        """
+        return None
+
+
+    def getSpellChecker (self):
+        langlist = self._getDictsFromConfig()
+        return SpellChecker (langlist,
+                             outwiker.core.system.getSpellDirList())
+
+
+    def _getDictsFromConfig (self):
+        dictsStr = self._config.spellCheckerDicts.value
+        return [item.strip()
+                for item
+                in dictsStr.split(',')
+                if item.strip()]
