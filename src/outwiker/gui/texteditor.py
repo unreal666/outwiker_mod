@@ -18,7 +18,7 @@ from outwiker.core.spellchecker import SpellChecker
 from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.searchreplacecontroller import SearchReplaceController
 from outwiker.gui.searchreplacepanel import SearchReplacePanel
-from outwiker.gui.mainid import MainId
+from outwiker.gui.texteditormenu import TextEditorMenu
 
 ApplyStyleEvent, EVT_APPLY_STYLE = wx.lib.newevent.NewEvent()
 
@@ -30,6 +30,8 @@ class TextEditor(wx.Panel):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
 
+        self.ID_ADD_WORD = wx.NewId()
+
         self._config = EditorConfig (Application.config)
 
         self._enableSpellChecking = True
@@ -40,8 +42,14 @@ class TextEditor(wx.Panel):
         self.SPELL_ERROR_INDICATOR = 0
         self.SPELL_ERROR_INDICATOR_MASK = wx.stc.STC_INDIC0_MASK
 
+        self._spellErrorText = None
+
         # Уже были установлены стили текста (раскраска)
         self._styleSet = False
+
+        self.__stylebytes = None
+        self.__indicatorsbytes = None
+
         # Начинаем раскраску кода не менее чем через это время с момента его изменения
         self._DELAY = timedelta (milliseconds=300)
 
@@ -54,26 +62,31 @@ class TextEditor(wx.Panel):
 
         self.textCtrl = StyledTextCtrl(self, -1)
 
+        self._popupMenu = TextEditorMenu(self)
+
         # Создание панели поиска и ее контроллера
         self._searchPanel = SearchReplacePanel (self)
         self._searchPanelController = SearchReplaceController (self._searchPanel, self)
         self._searchPanel.setController (self._searchPanelController)
 
         self.__do_layout()
-
         self.__createCoders()
 
         self.__showlinenumbers = self._config.lineNumbers.value
 
         self.setDefaultSettings()
 
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onCopyFromEditor, id = MainId.ID_COPY)
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onCutFromEditor, id = MainId.ID_CUT)
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onPasteToEditor, id = MainId.ID_PASTE)
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onUndo, id = MainId.ID_UNDO)
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onRedo, id = MainId.ID_REDO)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onCopyFromEditor, id = wx.ID_COPY)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onCutFromEditor, id = wx.ID_CUT)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onPasteToEditor, id = wx.ID_PASTE)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onUndo, id = wx.ID_UNDO)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onRedo, id = wx.ID_REDO)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onSelectAll, id = wx.ID_SELECTALL)
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onAddWordToDict, id = self.ID_ADD_WORD)
+
         self.textCtrl.Bind (wx.EVT_CHAR, self.__OnChar_ImeWorkaround)
         self.textCtrl.Bind (wx.EVT_KEY_DOWN, self.__onKeyDown)
+        self.textCtrl.Bind (wx.EVT_CONTEXT_MENU, self.__onContextMenu)
 
         # self.textCtrl.Bind (wx.stc.EVT_STC_STYLENEEDED, self._onStyleNeeded)
         self.textCtrl.Bind (wx.EVT_IDLE, self._onStyleNeeded)
@@ -140,6 +153,10 @@ class TextEditor(wx.Panel):
 
     def __onRedo (self, event):
         self.textCtrl.Redo()
+
+
+    def __onSelectAll (self, event):
+        self.textCtrl.SelectAll()
 
 
     def __do_layout(self):
@@ -269,6 +286,10 @@ class TextEditor(wx.Panel):
     def calcBytePos (self, text, pos):
         """Преобразовать позицию в символах в позицию в байтах"""
         return len(self.encoder (text[: pos])[0])
+
+
+    def getPosChar (self, posBytes):
+        return len (self.textCtrl.GetTextRange (0, posBytes))
 
 
     def __createCoders (self):
@@ -486,16 +507,28 @@ class TextEditor(wx.Panel):
 
     def _onApplyStyle (self, event):
         if event.text == self._getTextForParse():
-            stylebytes = event.stylebytes
-            indicatorsbytes = event.indicatorsbytes
+            textlength = self.calcByteLen (event.text)
+            self.__stylebytes = [0] * textlength
 
-            if stylebytes is not None:
+            if event.stylebytes is not None:
+                self.__stylebytes = [item1 | item2
+                                     for item1, item2
+                                     in zip (self.__stylebytes, event.stylebytes)]
+
+            if event.indicatorsbytes is not None:
+                self.__stylebytes = [item1 | item2
+                                     for item1, item2
+                                     in zip (self.__stylebytes, event.indicatorsbytes)]
+
+            stylebytesstr = "".join ([chr(byte) for byte in self.__stylebytes])
+
+            if event.stylebytes is not None:
                 self.textCtrl.StartStyling (0, 0xff ^ wx.stc.STC_INDICS_MASK)
-                self.textCtrl.SetStyleBytes (len (stylebytes), stylebytes)
+                self.textCtrl.SetStyleBytes (len (stylebytesstr), stylebytesstr)
 
-            if indicatorsbytes is not None:
+            if event.indicatorsbytes is not None:
                 self.textCtrl.StartStyling (0, wx.stc.STC_INDICS_MASK)
-                self.textCtrl.SetStyleBytes (len (indicatorsbytes), indicatorsbytes)
+                self.textCtrl.SetStyleBytes (len (stylebytesstr), stylebytesstr)
 
             self._styleSet = True
 
@@ -505,7 +538,7 @@ class TextEditor(wx.Panel):
         Функция должна возвращать список байт, описывающих раскраску (стили)
         для текста text (за исключением индикаторов).
         Функцию нужно переопределить, если используется собственная раскраска текста.
-        Исли функция возвращает None, то раскраска синтаксиса не применяется.
+        Если функция возвращает None, то раскраска синтаксиса не применяется.
         """
         return None
 
@@ -514,7 +547,7 @@ class TextEditor(wx.Panel):
         """
         Функция должна возвращать список байт, описывающих раскраску (стили индикаторов) для текста text.
         Функцию нужно переопределить, если используются индикаторы.
-        Исли функция возвращает None, то раскраска индикаторов не применяется.
+        Если функция возвращает None, то раскраска индикаторов не применяется.
         """
         return None
 
@@ -531,3 +564,56 @@ class TextEditor(wx.Panel):
                 for item
                 in dictsStr.split(',')
                 if item.strip()]
+
+
+    def _getMenu (self):
+        """
+        pos_byte - nearest text position (in bytes) where was produce a click
+        """
+        self._popupMenu.RefreshItems ()
+        return self._popupMenu
+
+
+    def __onContextMenu (self, event):
+        point = self.textCtrl.ScreenToClient (event.GetPosition())
+        pos_byte = self.textCtrl.PositionFromPoint(point)
+
+        popupMenu = self._getMenu ()
+        self._appendSpellItems (popupMenu, pos_byte)
+        self.textCtrl.PopupMenu(popupMenu)
+
+
+    def getCachedStyleBytes (self):
+        return self.__stylebytes
+
+
+    def __onAddWordToDict (self, event):
+        if self._spellErrorText is not None:
+            self._spellChecker.addToCustomDict (self._spellErrorText)
+            self._spellErrorText = None
+            self._styleSet = False
+
+
+    def _appendSpellItems (self, menu, pos_byte):
+        stylebytes = self.getCachedStyleBytes()
+        stylebytes_len = len (stylebytes)
+
+        if (stylebytes is None or
+                pos_byte >= stylebytes_len or
+                stylebytes[pos_byte] & self.SPELL_ERROR_INDICATOR_MASK == 0):
+            return
+
+        endSpellError = startSpellError = pos_byte
+
+        while (startSpellError >= 0 and
+               stylebytes[startSpellError] & self.SPELL_ERROR_INDICATOR_MASK != 0):
+            startSpellError -= 1
+
+
+        while (endSpellError < stylebytes_len and
+               stylebytes[endSpellError] & self.SPELL_ERROR_INDICATOR_MASK != 0):
+            endSpellError += 1
+
+        self._spellErrorText = self.textCtrl.GetTextRange (startSpellError + 1, endSpellError)
+        menu.AppendSeparator ()
+        menu.Append (self.ID_ADD_WORD, _(u'Add to dictionary'))

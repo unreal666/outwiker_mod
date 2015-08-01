@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-25 21:01+0300\n"
+"POT-Creation-Date: 2015-07-31 18:46+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -439,7 +439,7 @@ msgstr ""
 
 #: outwiker/pages/wiki/wikipageview.py:140
 #: outwiker/pages/html/htmlpageview.py:218
-#: outwiker/gui/preferences/wikieditorpanel.py:38
+#: outwiker/gui/preferences/wikieditorpanel.py:37
 msgid "Heading"
 msgstr ""
 
@@ -701,51 +701,51 @@ msgstr ""
 msgid "Toggle tag selection"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:60
+#: outwiker/gui/preferences/tagspanel.py:59
 msgid "Tag color"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:62
+#: outwiker/gui/preferences/tagspanel.py:61
 msgid "Hover tag color"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:64
+#: outwiker/gui/preferences/tagspanel.py:63
 msgid "Marked tag color"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:66
+#: outwiker/gui/preferences/tagspanel.py:65
 msgid "Hover marked tag color"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:68
+#: outwiker/gui/preferences/tagspanel.py:67
 msgid "Marked tag background color"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:91
+#: outwiker/gui/preferences/tagspanel.py:90
 msgid "Left click on the tag"
 msgstr ""
 
-#: outwiker/gui/preferences/tagspanel.py:92
+#: outwiker/gui/preferences/tagspanel.py:91
 msgid "Middle click on the tag"
 msgstr ""
 
-#: outwiker/gui/preferences/pluginspanel.py:29
+#: outwiker/gui/preferences/pluginspanel.py:30
 msgid "Download more plugins"
 msgstr ""
 
-#: outwiker/gui/preferences/pluginspanel.py:30
+#: outwiker/gui/preferences/pluginspanel.py:31
 msgid "http://jenyay.net/Outwiker/PluginsEn"
 msgstr ""
 
-#: outwiker/gui/preferences/pluginspanel.py:130
+#: outwiker/gui/preferences/pluginspanel.py:131
 msgid "Version"
 msgstr ""
 
-#: outwiker/gui/preferences/pluginspanel.py:134
+#: outwiker/gui/preferences/pluginspanel.py:135
 msgid "Description"
 msgstr ""
 
-#: outwiker/gui/preferences/pluginspanel.py:139
+#: outwiker/gui/preferences/pluginspanel.py:140
 msgid "Site"
 msgstr ""
 
@@ -765,7 +765,7 @@ msgstr ""
 msgid "Additional styles (CSS):"
 msgstr ""
 
-#: outwiker/gui/preferences/spellpanel.py:31
+#: outwiker/gui/preferences/spellpanel.py:30
 msgid "Use dictionaries"
 msgstr ""
 
@@ -777,7 +777,7 @@ msgstr ""
 msgid "Open file"
 msgstr ""
 
-#: outwiker/gui/preferences/attachpanel.py:59
+#: outwiker/gui/preferences/attachpanel.py:40
 msgid "Double click on an attached file"
 msgstr ""
 
@@ -785,77 +785,77 @@ msgstr ""
 msgid "Recent used"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:35 outwiker/gui/mainmenu.py:19
+#: outwiker/gui/preferences/generalpanel.py:35 outwiker/gui/mainmenu.py:17
 msgid "Edit"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:87
+#: outwiker/gui/preferences/generalpanel.py:74
 msgid "Autosave interval in seconds (0 - disabled)"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:108
+#: outwiker/gui/preferences/generalpanel.py:95
 msgid "Date and time format"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:124
+#: outwiker/gui/preferences/generalpanel.py:111
 msgid "Ask before exit"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:131
+#: outwiker/gui/preferences/generalpanel.py:118
 msgid "Minimize to tray"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:132
+#: outwiker/gui/preferences/generalpanel.py:119
 msgid "Start iconized"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:133
+#: outwiker/gui/preferences/generalpanel.py:120
 msgid "Always show tray icon"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:134
+#: outwiker/gui/preferences/generalpanel.py:121
 msgid "Minimize on close window"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:141
+#: outwiker/gui/preferences/generalpanel.py:128
 msgid "Recent files history length (restart required)"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:149
+#: outwiker/gui/preferences/generalpanel.py:136
 msgid "Automatically open the recent file"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:164
+#: outwiker/gui/preferences/generalpanel.py:151
 msgid "Wiki file name"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:165
+#: outwiker/gui/preferences/generalpanel.py:152
 msgid "Page title"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:168
+#: outwiker/gui/preferences/generalpanel.py:155
 msgid "Main window title format"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:182
+#: outwiker/gui/preferences/generalpanel.py:175
 msgid "Language (restart required)"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:208
+#: outwiker/gui/preferences/generalpanel.py:192
 msgid "Default opening page mode"
 msgstr ""
 
-#: outwiker/gui/preferences/generalpanel.py:367
+#: outwiker/gui/preferences/generalpanel.py:333
 msgid "Auto"
 msgstr ""
 
-#: outwiker/gui/preferences/wikieditorpanel.py:37
+#: outwiker/gui/preferences/wikieditorpanel.py:36
 #: outwiker/gui/linkdialog.py:19 outwiker/gui/linkdialog.py:33
 #: outwiker/core/commands.py:951
 msgid "Link"
 msgstr ""
 
-#: outwiker/gui/preferences/wikieditorpanel.py:39
+#: outwiker/gui/preferences/wikieditorpanel.py:38
 msgid "Command"
 msgstr ""
 
@@ -916,6 +916,31 @@ msgstr ""
 #: outwiker/gui/preferences/htmleditorpanel.py:43
 #: outwiker/gui/linkdialog.py:39
 msgid "Comment"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:22 outwiker/gui/mainmenu.py:39
+msgid "Undo"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:23 outwiker/gui/mainmenu.py:44
+msgid "Redo"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:25 outwiker/gui/mainmenu.py:51
+msgid "Cut"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:26 outwiker/gui/mainmenu.py:56
+msgid "Copy"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:27 outwiker/gui/mainmenu.py:61
+#: outwiker/gui/attachpanel.py:118 outwiker/gui/attachpanel.py:123
+msgid "Paste"
+msgstr ""
+
+#: outwiker/gui/texteditormenu.py:29 outwiker/gui/mainmenu.py:68
+msgid "Select All"
 msgstr ""
 
 #: outwiker/gui/overwritedialog.py:18
@@ -1118,49 +1143,28 @@ msgstr ""
 msgid "weather"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:16
+#: outwiker/gui/mainmenu.py:14
 msgid "File"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:22
+#: outwiker/gui/mainmenu.py:20
 msgid "Tree"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:25
+#: outwiker/gui/mainmenu.py:23
 msgid "Tools"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:28
+#: outwiker/gui/mainmenu.py:26
 msgid "Bookmarks"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:31
+#: outwiker/gui/mainmenu.py:29
 msgid "View"
 msgstr ""
 
-#: outwiker/gui/mainmenu.py:34 outwiker/actions/openhelp.py:21
+#: outwiker/gui/mainmenu.py:32 outwiker/actions/openhelp.py:21
 msgid "Help"
-msgstr ""
-
-#: outwiker/gui/mainmenu.py:41
-msgid "Undo"
-msgstr ""
-
-#: outwiker/gui/mainmenu.py:46
-msgid "Redo"
-msgstr ""
-
-#: outwiker/gui/mainmenu.py:53
-msgid "Cut"
-msgstr ""
-
-#: outwiker/gui/mainmenu.py:58
-msgid "Copy"
-msgstr ""
-
-#: outwiker/gui/mainmenu.py:63 outwiker/gui/attachpanel.py:118
-#: outwiker/gui/attachpanel.py:123
-msgid "Paste"
 msgstr ""
 
 #: outwiker/gui/currentpagepanel.py:84
@@ -1252,6 +1256,10 @@ msgstr ""
 #: outwiker/gui/pagepopupmenu.py:93 outwiker/gui/attachpanel.py:136
 #: outwiker/gui/attachpanel.py:141 outwiker/actions/openattachfolder.py:23
 msgid "Open Attachments Folder"
+msgstr ""
+
+#: outwiker/gui/texteditor.py:619
+msgid "Add to dictionary"
 msgstr ""
 
 #: outwiker/gui/datetimeformatctrl.py:20
