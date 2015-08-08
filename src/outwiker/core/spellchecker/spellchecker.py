@@ -10,10 +10,9 @@ class SpellChecker (object):
     def __init__ (self, langlist, folders):
         """
         langlist - list of a languages for checking (for example ["ru_RU", "en_US"])
-        folders - list of pathes to dictionaries
+        folders - list of paths to dictionaries
         """
         self._realChecker = self._getSpellCheckerWrapper (langlist, folders)
-
 
 
     def check (self, word):
@@ -30,5 +29,13 @@ class SpellChecker (object):
         return EnchantWrapper (langlist, folders)
 
 
-    def addToCustomDict (self, word):
-        self._realChecker.addToCustomDict (word)
+    def addCustomDict (self, path):
+        self._realChecker.addCustomDict (path)
+
+
+    def addToCustomDict (self, dictIndex, word):
+        self._realChecker.addToCustomDict (dictIndex, word)
+
+
+    def getSuggest (self, word):
+        return self._realChecker.getSuggest (word)

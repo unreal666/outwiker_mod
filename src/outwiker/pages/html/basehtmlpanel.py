@@ -9,7 +9,6 @@ import wx.lib.newevent
 from outwiker.actions.search import SearchAction, SearchNextAction, SearchPrevAction, SearchAndReplaceAction
 from outwiker.actions.attachfiles import AttachFilesAction
 from outwiker.actions.globalsearch import GlobalSearchAction
-from outwiker.core.application import Application
 from outwiker.core.commands import MessageBox, setStatusText
 from outwiker.core.system import getImagesDir
 from outwiker.core.attachment import Attachment
@@ -54,10 +53,13 @@ class BaseHtmlPanel(BaseTextPanel):
         self.__do_layout()
 
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._onTabChanged, self.notebook)
+        self.Bind (self.EVT_SPELL_ON_OFF, handler=self._onSpellOnOff)
 
 
     def Clear (self):
-        self.Unbind(wx.EVT_NOTEBOOK_PAGE_CHANGED, source = self.notebook, handler = self._onTabChanged)
+        self.Unbind(wx.EVT_NOTEBOOK_PAGE_CHANGED, source=self.notebook, handler=self._onTabChanged)
+        self.Unbind (self.EVT_SPELL_ON_OFF, handler=self._onSpellOnOff)
+
         super (BaseHtmlPanel, self).Clear()
 
 
@@ -258,7 +260,7 @@ class BaseHtmlPanel(BaseTextPanel):
         assert page is not None
 
         # Get global tab option
-        generalConfig = GeneralGuiConfig (Application.config)
+        generalConfig = GeneralGuiConfig (self._application.config)
         generalTab = generalConfig.pageTab.value
 
         if generalTab == GeneralGuiConfig.PAGE_TAB_CODE:
@@ -275,7 +277,7 @@ class BaseHtmlPanel(BaseTextPanel):
         """
         Обработка события при переключении на код страницы
         """
-        self._enableActions (not Application.selectedPage.readonly)
+        self._enableActions (not self._application.selectedPage.readonly)
         self.checkForExternalEditAndSave()
         self._enableAllTools ()
         self.codeEditor.SetFocus()
@@ -302,7 +304,7 @@ class BaseHtmlPanel(BaseTextPanel):
         status_item = 0
 
         setStatusText (_(u"Page rendered. Please wait…"), status_item)
-        Application.onHtmlRenderingBegin (self._currentpage, self.htmlWindow)
+        self._application.onHtmlRenderingBegin (self._currentpage, self.htmlWindow)
 
         try:
             html = self.generateHtml (self._currentpage)
@@ -328,7 +330,7 @@ class BaseHtmlPanel(BaseTextPanel):
                         wx.ICON_ERROR | wx.OK)
 
         setStatusText (u"", status_item)
-        Application.onHtmlRenderingEnd (self._currentpage, self.htmlWindow)
+        self._application.onHtmlRenderingEnd (self._currentpage, self.htmlWindow)
 
 
     def _enableAllTools (self):
@@ -344,20 +346,20 @@ class BaseHtmlPanel(BaseTextPanel):
         # Поиск не должен работать только на странице просмотра
         searchEnabled = self.selectedPageIndex != self.RESULT_PAGE_INDEX
 
-        actionController = Application.actionController
+        actionController = self._application.actionController
 
         actionController.enableTools (SearchAction.stringId, searchEnabled)
         actionController.enableTools (SearchNextAction.stringId, searchEnabled)
         actionController.enableTools (SearchPrevAction.stringId, searchEnabled)
 
         actionController.enableTools (SearchAndReplaceAction.stringId, searchEnabled
-                                      and not Application.selectedPage.readonly)
+                                      and not self._application.selectedPage.readonly)
 
         actionController.enableTools (AttachFilesAction.stringId, searchEnabled
-                                      and not Application.selectedPage.readonly)
+                                      and not self._application.selectedPage.readonly)
 
         actionController.enableTools (GlobalSearchAction.stringId, searchEnabled
-                                      and not Application.selectedPage.readonly)
+                                      and not self._application.selectedPage.readonly)
 
         self.mainWindow.UpdateAuiManager()
 
@@ -402,7 +404,7 @@ class BaseHtmlPanel(BaseTextPanel):
         Обернуть выделенный текст строками left и right.
         Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
         """
-        Application.mainWindow.pagePanel.pageView.codeEditor.turnText (left, right)
+        self._application.mainWindow.pagePanel.pageView.codeEditor.turnText (left, right)
 
 
     def replaceText (self, text):
@@ -410,7 +412,7 @@ class BaseHtmlPanel(BaseTextPanel):
         Заменить выделенный текст строкой text
         Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
         """
-        Application.mainWindow.pagePanel.pageView.codeEditor.replaceText (text)
+        self._application.mainWindow.pagePanel.pageView.codeEditor.replaceText (text)
 
 
     def escapeHtml (self):
@@ -418,4 +420,8 @@ class BaseHtmlPanel(BaseTextPanel):
         Заменить символы на их HTML-представление
         Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
         """
-        Application.mainWindow.pagePanel.pageView.codeEditor.escapeHtml ()
+        self._application.mainWindow.pagePanel.pageView.codeEditor.escapeHtml ()
+
+
+    def _onSpellOnOff (self, event):
+        self._codeEditor.setDefaultSettings()

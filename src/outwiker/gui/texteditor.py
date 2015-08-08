@@ -6,6 +6,7 @@ import math
 import re
 from datetime import datetime, timedelta
 import threading
+import os.path
 
 import wx
 import wx.lib.newevent
@@ -15,6 +16,7 @@ import outwiker.core.system
 from outwiker.core.application import Application
 from outwiker.core.textprinter import TextPrinter
 from outwiker.core.spellchecker import SpellChecker
+from outwiker.core.spellchecker.defines import CUSTOM_DICT_FILE_NAME
 from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.searchreplacecontroller import SearchReplaceController
 from outwiker.gui.searchreplacepanel import SearchReplacePanel
@@ -30,8 +32,6 @@ class TextEditor(wx.Panel):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
 
-        self.ID_ADD_WORD = wx.NewId()
-
         self._config = EditorConfig (Application.config)
 
         self._enableSpellChecking = True
@@ -43,6 +43,11 @@ class TextEditor(wx.Panel):
         self.SPELL_ERROR_INDICATOR_MASK = wx.stc.STC_INDIC0_MASK
 
         self._spellErrorText = None
+        self._spellSuggestList = []
+
+        self._spellMaxSuggest = len (TextEditorMenu.ID_SUGGESTS)
+        self._spellStartByteError = -1
+        self._spellEndByteError = -1
 
         # Уже были установлены стили текста (раскраска)
         self._styleSet = False
@@ -82,7 +87,10 @@ class TextEditor(wx.Panel):
         self.textCtrl.Bind(wx.EVT_MENU, self.__onUndo, id = wx.ID_UNDO)
         self.textCtrl.Bind(wx.EVT_MENU, self.__onRedo, id = wx.ID_REDO)
         self.textCtrl.Bind(wx.EVT_MENU, self.__onSelectAll, id = wx.ID_SELECTALL)
-        self.textCtrl.Bind(wx.EVT_MENU, self.__onAddWordToDict, id = self.ID_ADD_WORD)
+
+        self.textCtrl.Bind(wx.EVT_MENU, self.__onAddWordToDict, id = TextEditorMenu.ID_ADD_WORD)
+        for suggestId in TextEditorMenu.ID_SUGGESTS:
+            self.textCtrl.Bind(wx.EVT_MENU, self.__onSpellSuggest, id = suggestId)
 
         self.textCtrl.Bind (wx.EVT_CHAR, self.__OnChar_ImeWorkaround)
         self.textCtrl.Bind (wx.EVT_KEY_DOWN, self.__onKeyDown)
@@ -208,6 +216,8 @@ class TextEditor(wx.Panel):
 
         self.__setMarginWidth (self.textCtrl)
         self.textCtrl.SetTabWidth (self._config.tabWidth.value)
+
+        self.enableSpellChecking = self._config.spellEnabled.value
 
         if self._config.homeEndKeys.value == EditorConfig.HOME_END_OF_LINE:
             # Клавиши Home / End переносят курсор на начало / конец строки
@@ -554,8 +564,12 @@ class TextEditor(wx.Panel):
 
     def getSpellChecker (self):
         langlist = self._getDictsFromConfig()
-        return SpellChecker (langlist,
-                             outwiker.core.system.getSpellDirList())
+        spellDirList = outwiker.core.system.getSpellDirList()
+
+        spellChecker = SpellChecker (langlist, spellDirList)
+        spellChecker.addCustomDict (os.path.join (spellDirList[-1], CUSTOM_DICT_FILE_NAME))
+
+        return spellChecker
 
 
     def _getDictsFromConfig (self):
@@ -589,13 +603,16 @@ class TextEditor(wx.Panel):
 
     def __onAddWordToDict (self, event):
         if self._spellErrorText is not None:
-            self._spellChecker.addToCustomDict (self._spellErrorText)
+            self._spellChecker.addToCustomDict (0, self._spellErrorText)
             self._spellErrorText = None
             self._styleSet = False
 
 
     def _appendSpellItems (self, menu, pos_byte):
         stylebytes = self.getCachedStyleBytes()
+        if stylebytes is None:
+            return
+
         stylebytes_len = len (stylebytes)
 
         if (stylebytes is None or
@@ -614,6 +631,20 @@ class TextEditor(wx.Panel):
                stylebytes[endSpellError] & self.SPELL_ERROR_INDICATOR_MASK != 0):
             endSpellError += 1
 
-        self._spellErrorText = self.textCtrl.GetTextRange (startSpellError + 1, endSpellError)
-        menu.AppendSeparator ()
-        menu.Append (self.ID_ADD_WORD, _(u'Add to dictionary'))
+        self._spellStartByteError = startSpellError + 1
+        self._spellEndByteError = endSpellError
+        self._spellErrorText = self.textCtrl.GetTextRange (self._spellStartByteError, self._spellEndByteError)
+        self._spellSuggestList = self._spellChecker.getSuggest (self._spellErrorText)[:self._spellMaxSuggest]
+
+        menu.AppendSeparator()
+        menu.AppendSpellSubmenu (self._spellErrorText, self._spellSuggestList)
+
+
+    def __onSpellSuggest (self, event):
+        assert event.GetId() in TextEditorMenu.ID_SUGGESTS
+
+        index = TextEditorMenu.ID_SUGGESTS.index (event.GetId())
+        word = self._spellSuggestList[index]
+
+        self.textCtrl.SetSelection (self._spellStartByteError, self._spellEndByteError)
+        self.textCtrl.ReplaceSelection (word)
