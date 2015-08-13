@@ -2,7 +2,7 @@
 
 import re
 
-from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Suppress
+from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Suppress, Empty, OnlyOnce
 from .utils import TagAttrsPattern
 
 
@@ -20,11 +20,11 @@ class TableToken (object):
 
     def __init__ (self, parser):
         self.parser = parser
-        self.unitEnd = '\n'
-        self.rowGroups = {'thead': u'', 'tfoot': u'', 'caption': u''}
 
 
     def getToken (self):
+        emptyToken = Empty().setParseAction(self.__initVars)
+
         tableCell = Regex (r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)' + TagAttrsPattern.value, re.UNICODE)
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
@@ -36,11 +36,16 @@ class TableToken (object):
                                             r'(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*', re.UNICODE) + Optional (LineEnd())
         tableCaption.leaveWhitespace().setParseAction(self.__convertTableCaption)
 
-        table = LineStart() + Regex (r'\|\| *(?P<params>.+)?', re.UNICODE) + Suppress (LineEnd()) + \
+        table = LineStart() + Regex (r'\|\| *(?P<params>.+)?', re.UNICODE) + Suppress (LineEnd()) + emptyToken + \
                 Suppress (Optional (tableCaption)) + OneOrMore (tableRow)
-        table = table.setParseAction(self.__convertTable)('table')
+        table.setParseAction(self.__convertTable)('table')
 
         return table
+
+    def __initVars (self):
+    # def __initVars (self, s, loc, toks):
+        self.unitEnd = '\n'
+        self.rowGroups = {'thead': u'', 'tfoot': u'', 'caption': u''}
 
 
     def __convertTableCell (self, s, loc, toks):
