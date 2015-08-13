@@ -199,6 +199,20 @@ class ApplicationParams (object):
         self.onLinkClick = Event()
 
 
+        # Event occurs when user click with right button in text editor
+        # Parameters:
+        #     page - current page
+        #     params - instance of the the outwiker.core.events.EditorPopupMenuParams class
+        self.onEditorPopupMenu = Event()
+
+
+        # Event occurs after spell checking for any word
+        # Parameters:
+        #     page - current page
+        #     params - instance of the the outwiker.core.events.SpellCheckingParams class
+        self.onSpellChecking = Event()
+
+
     def init (self, configFilename):
         """
         Initialize config and locale

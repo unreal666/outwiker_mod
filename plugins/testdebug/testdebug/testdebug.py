@@ -25,6 +25,8 @@ class PluginDebug (Plugin):
         self._enablePostProcessing = False
         self._enableOnHoverLink = False
         self._enableOnLinkClick = False
+        self._enableOnEditorPopup = False
+        self._enableOnSpellChecking = True
 
 
     def __createMenu (self):
@@ -171,6 +173,20 @@ class PluginDebug (Plugin):
         # params["process"] = True
 
 
+    def __onEditorPopupMenu (self, page, params):
+        if self._enableOnEditorPopup:
+            params.menu.AppendSeparator()
+            params.menu.Append (-1, u'Debug popup menu item')
+
+
+    def __onSpellChecking (self, page, params):
+        if self._enableOnSpellChecking:
+            if params.word.lower() == u'хрень':
+                params.isValid = False
+            elif params.word.lower() == u'блаблабла':
+                params.isValid = True
+
+
     ###################################################
     # Свойства и методы, которые необходимо определить
     ###################################################
@@ -234,6 +250,8 @@ class PluginDebug (Plugin):
             self._application.onPreprocessing += self.__onPreProcessing
             self._application.onHoverLink += self.__onHoverLink
             self._application.onLinkClick += self.__onLinkClick
+            self._application.onEditorPopupMenu += self.__onEditorPopupMenu
+            self._application.onSpellChecking += self.__onSpellChecking
 
 
     def destroy (self):
@@ -273,5 +291,7 @@ class PluginDebug (Plugin):
             self._application.onPreprocessing -= self.__onPreProcessing
             self._application.onHoverLink -= self.__onHoverLink
             self._application.onLinkClick -= self.__onLinkClick
+            self._application.onEditorPopupMenu -= self.__onEditorPopupMenu
+            self._application.onSpellChecking += self.__onSpellChecking
 
     #############################################

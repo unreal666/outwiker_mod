@@ -17,6 +17,7 @@ from outwiker.core.application import Application
 from outwiker.core.textprinter import TextPrinter
 from outwiker.core.spellchecker import SpellChecker
 from outwiker.core.spellchecker.defines import CUSTOM_DICT_FILE_NAME
+from outwiker.core.events import EditorPopupMenuParams, SpellCheckingParams
 from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.searchreplacecontroller import SearchReplaceController
 from outwiker.gui.searchreplacepanel import SearchReplacePanel
@@ -37,7 +38,7 @@ class TextEditor(wx.Panel):
         self._enableSpellChecking = True
         self._spellSkipWordsWithNumbers = True
         self._spellChecker = None
-        self._wordRegex = re.compile ('[\w-]*\w[\w-]*', re.U)
+        self._wordRegex = re.compile (r'(?:(?:\w-\w)|\w)+', re.U)
         self._digitRegex = re.compile ('\d', re.U)
 
         self.SPELL_ERROR_INDICATOR = 0
@@ -445,6 +446,9 @@ class TextEditor(wx.Panel):
 
 
     def checkSpellWord (self, word):
+        """
+        Return True if word in dictionary (valid word) and False otherwise
+        """
         if self._spellSkipWordsWithNumbers:
             match = self._digitRegex.search (word)
             if match is not None:
@@ -496,7 +500,11 @@ class TextEditor(wx.Panel):
         words = self._wordRegex.finditer (text)
         for wordMatch in words:
             word = wordMatch.group(0)
-            if not self.checkSpellWord (word):
+            isValid = self.checkSpellWord (word)
+            params = SpellCheckingParams (word, isValid)
+            Application.onSpellChecking (Application.selectedPage, params)
+
+            if not params.isValid:
                 self.setSpellError (stylelist, wordMatch.start() + start, wordMatch.end() + start)
 
 
@@ -597,6 +605,12 @@ class TextEditor(wx.Panel):
 
         popupMenu = self._getMenu ()
         self._appendSpellItems (popupMenu, pos_byte)
+
+        Application.onEditorPopupMenu (
+            Application.selectedPage,
+            EditorPopupMenuParams (self, popupMenu, point, pos_byte)
+        )
+
         self.textCtrl.PopupMenu(popupMenu)
 
 
