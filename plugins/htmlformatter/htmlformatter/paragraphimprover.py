@@ -22,27 +22,19 @@ class ParagraphHtmlImprover (HtmlImprover):
     def _improveRedability (self, text):
         result = text
 
-        opentags = r"[uod]l|hr|h\d|tr|td|blockquote"
-        closetags = r"li|d[td]|t[rdh]|caption|thead|tfoot|tbody|colgroup|col|h\d|blockquote"
+        opentags = r"[uod]l|hr|h\d|tr|td|blockquote|table"
+        closetags = r"[uod]l|li|d[td]|t[rdh]|caption|table|thead|tfoot|tbody|colgroup|col|h\d|blockquote"
 
         # Remove <br> tag before some block elements
-        remove_br_before = r"<br\s*/?>\s*(?=<(?:" + opentags + "|table" + r")[ >])"
+        remove_br_before = r"<br\s*/?>\s*(?=<(?:" + opentags + r")[ >])"
         result = re.sub(remove_br_before, "", result, flags=re.I | re.M)
 
         # Remove <br> tag after some block elements
-        remove_br_after = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + "|table" r")>)\s*<br\s*/?>"
+        remove_br_after = r"(<(?:" + opentags + r")(?: [^>]*?)?>|</(?:" + closetags + r")>)\s*<br\s*/?>"
         result = re.sub(remove_br_after, r"\1", result, flags=re.I | re.M)
 
-        # Remove <p> tag before some block elements
-        remove_p_before = r"<p>\s*(?=<(?:" + opentags + r")[ >])"
-        result = re.sub(remove_p_before, "", result, flags=re.I | re.M)
-
-        # Remove </p> tag after some block elements
-        remove_p_after = r"(<(?:" + opentags + r")[ >]|</(?:" + closetags + r")>)\s*</p>"
-        result = re.sub(remove_p_after, r"\1", result, flags=re.I | re.M)
-
         # Append </p> before some elements
-        append_p_before = r"(?<!</p>)(<(?:h\d|blockquote)[ >])"
+        append_p_before = r"(?<!</p>)(<(?:h\d|blockquote|[uod]l)[ >])"
         result = re.sub(append_p_before, "</p>\\1", result, flags=re.I | re.M | re.S)
 
         # Append <p> after some closing elements
@@ -57,6 +49,14 @@ class ParagraphHtmlImprover (HtmlImprover):
         append_p_before_inside = r"(</(?:blockquote)>)"
         result = re.sub(append_p_before_inside, "</p>\\1", result, flags=re.I | re.M)
 
+        # Remove <p> tag before some block elements
+        remove_p_before = r"<p>\s*(?=<(?:" + opentags + r")[ >])"
+        result = re.sub(remove_p_before, "", result, flags=re.I | re.M)
+
+        # Remove </p> tag after some block elements
+        remove_p_after = r"(<(?:" + opentags + r")(?: [^>]*?)?>|</(?:" + closetags + r")>)\s*</p>"
+        result = re.sub(remove_p_after, r"\1", result, flags=re.I | re.M)
+
         # Remove empty paragraphs
         empty_par = r"<p></p>"
         result = re.sub (empty_par, "", result, flags=re.I | re.M)
@@ -70,7 +70,7 @@ class ParagraphHtmlImprover (HtmlImprover):
         result = re.sub(append_eol_before, "\n\\1", result, flags=re.I | re.M)
 
         # Append line breaks after some elements (to improve readability)
-        append_eol_after = r"(<(?:hr(?: .*?)?/?|br\s*/?|/\s*(?:h\d|p|script|[uo]l|table))>)\n*"
+        append_eol_after = r"(<(?:hr(?: [^>]*?)?/?|br\s*/?|/\s*(?:h\d|p|script|[uo]l|table))>)\n*"
         result = re.sub(append_eol_after, "\\1\n", result, flags=re.I | re.M)
 
         # Remove </p> at the begin
@@ -89,16 +89,15 @@ class ParagraphHtmlImprover (HtmlImprover):
 
 
     def _coverParagraphs (self, text):
-        paragraphs = [par.strip()
+        paragraphs = (par.strip()
                       for par
                       in text.split (u'\n\n')
-                      if len (par.strip()) != 0]
+                      if len (par.strip()) != 0)
 
         buf = StringIO()
         for par in paragraphs:
-            if len (par.strip()) != 0:
-                buf.write ("<p>")
-                buf.write (par.strip())
-                buf.write ("</p>")
+            buf.write ("<p>")
+            buf.write (par)
+            buf.write ("</p>")
 
         return buf.getvalue()
