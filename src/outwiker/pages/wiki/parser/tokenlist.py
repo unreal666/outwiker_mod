@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from outwiker.libs.pyparsing import Regex, OneOrMore, Suppress
+from outwiker.libs.pyparsing import Regex, OneOrMore
 from outwiker.pages.wiki.parser.utils import noConvert
 import re
 
