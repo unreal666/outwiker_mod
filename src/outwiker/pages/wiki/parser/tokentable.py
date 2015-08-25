@@ -43,7 +43,6 @@ class TableToken (object):
         return table
 
     def __initVars (self):
-    # def __initVars (self, s, loc, toks):
         self.unitEnd = '\n'
         self.rowGroups = {'thead': u'', 'tfoot': u'', 'caption': u''}
 
@@ -111,4 +110,4 @@ class TableToken (object):
         if tfoot != u'':
             tfoot = u''.join([u'<tfoot>', tfoot, u'</tfoot>'])
 
-        return u'<table %s>' % toks['params'] + caption + thead + tfoot + u''.join(toks[1:]) + u'</table>' + self.unitEnd
+        return u'<table %s>' % toks[0][2:].strip() + caption + thead + tfoot + u''.join(toks[1:]) + u'</table>' + self.unitEnd
