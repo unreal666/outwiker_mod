@@ -22,7 +22,8 @@ class ParagraphHtmlImprover (HtmlImprover):
     def _improveRedability (self, text):
         result = text
 
-        opentags = r"[uod]l|hr|h\d|tr|td|blockquote|table"
+        minopentags = r"[uod]l|hr|h\d|tr|td|blockquote"
+        opentags = minopentags + r"|table"
         closetags = r"[uod]l|li|d[td]|t[rdh]|caption|table|thead|tfoot|tbody|colgroup|col|h\d|blockquote"
 
         # Remove <br> tag before some block elements
@@ -50,7 +51,7 @@ class ParagraphHtmlImprover (HtmlImprover):
         result = re.sub(append_p_before_inside, "</p>\\1", result, flags=re.I | re.M)
 
         # Remove <p> tag before some block elements
-        remove_p_before = r"<p>\s*(?=<(?:" + opentags + r")[ >])"
+        remove_p_before = r"<p>\s*(?=<(?:" + minopentags + r")[ >])"
         result = re.sub(remove_p_before, "", result, flags=re.I | re.M)
 
         # Remove </p> tag after some block elements
