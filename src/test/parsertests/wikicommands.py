@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 
 from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
-from outwiker.pages.wiki.parser.commandtest import TestCommand, ExceptionCommand
+from outwiker.pages.wiki.parser.commands.test import TestCommand, ExceptionCommand
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.pages.wiki.parser.command import Command
 from outwiker.pages.wiki.parserfactory import ParserFactory
@@ -282,3 +282,60 @@ content: Контент"""
         result = parser.toHtml(text)
         # Исключение не должно бросаться, а должно быть выведено в результирующий текст
         self.assertTrue ("Exception" in result, result)
+
+
+    def testCommand_remove (self):
+        command = TestCommand (self.parser)
+
+        self.parser.addCommand (command)
+        text = u"""(:test:)"""
+
+        result_right = u"""Command name: test
+params: 
+content: """
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result_right, result)
+
+        self.parser.removeCommand (command.name)
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (text, result)
+
+
+    def testCommand_remove_none (self):
+        command = TestCommand (self.parser)
+
+        self.parser.addCommand (command)
+        text = u"""(:test:)"""
+
+        result_right = u"""Command name: test
+params: 
+content: """
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result_right, result)
+
+        self.parser.removeCommand (None)
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result_right, result)
+
+
+    def testCommand_remove_invalid (self):
+        command = TestCommand (self.parser)
+
+        self.parser.addCommand (command)
+        text = u"""(:test:)"""
+
+        result_right = u"""Command name: test
+params: 
+content: """
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result_right, result)
+
+        self.parser.removeCommand (u'абырвалг')
+
+        result = self.parser.toHtml (text)
+        self.assertEqual (result_right, result)

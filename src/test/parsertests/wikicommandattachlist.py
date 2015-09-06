@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
 from outwiker.core.attachment import Attachment
-from outwiker.pages.wiki.parser.commandattachlist import AttachListCommand
+from outwiker.pages.wiki.parser.commands.attachlist import AttachListCommand
 from outwiker.pages.wiki.parserfactory import ParserFactory
 from outwiker.pages.wiki.thumbnails import Thumbnails
 from outwiker.pages.wiki.wikipage import WikiPageFactory
@@ -29,7 +29,6 @@ class WikiAttachListCommandTest (unittest.TestCase):
         filesPath = u"../test/samplefiles/"
         self.files = [u"image.jpg", u"add.png", u"anchor.png", u"файл с пробелами.tmp", u"dir", u"for_sort"]
         self.fullFilesPath = [os.path.join (filesPath, fname) for fname in self.files]
-
 
 
     def _attachFiles (self):

@@ -36,7 +36,7 @@ class Parser (object):
         # Массив строк, которые надо добавить в заголовок страницы
         self.__headers = []
 
-        # Команды, обрабатывает парсер.
+        # Команды, которые обрабатывает парсер.
         # Формат команд: (:name params... :) content... (:nameend:)
         # Ключ - имя команды, значение - экземпляр класса команды
         self.commands = {}
@@ -269,3 +269,8 @@ class Parser (object):
 
     def addCommand (self, command):
         self.commands[command.name] = command
+
+
+    def removeCommand (self, commandName):
+        if commandName in self.commands:
+            del self.commands[commandName]

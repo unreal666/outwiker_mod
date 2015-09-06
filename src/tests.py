@@ -88,6 +88,7 @@ if __name__ == '__main__':
     from test.parsertests.wikicommandchildlist import WikiChildListCommandTest
     from test.parsertests.wikicommandattachlist import WikiAttachListCommandTest
     from test.parsertests.wikicommanddates import WikiCommandDatesTest
+    from test.parsertests.wikicommandtable import WikiCommandTableTest
 
     from test.thumbmakerwx import ThumbmakerWxTest
     from test.thumbmakerpil import ThumbmakerPilTest
@@ -101,6 +102,7 @@ if __name__ == '__main__':
     from test.htmltemplate import HtmlTemplateTest
     from test.htmlpages import HtmlPagesTest
     from test.wikilinkcreator import WikiLinkCreatorTest
+    from test.wikiutils import WikiUtilsTest
 
     from test.event import EventTest, EventsTest
     from test.config import ConfigTest, ConfigOptionsTest, TrayConfigTest, EditorConfigTest
@@ -150,6 +152,7 @@ if __name__ == '__main__':
     from test.guitests.openwiki import OpenWikiGuiTest
     from test.guitests.newwiki import NewWikiGuiTest
     from test.guitests.pagetabs import PageTabsTest
+    from test.guitests.wikitabledialog import WikiTableDialogTest
 
     from test.guitests.fileicons import FileIconsTestWindows
 
