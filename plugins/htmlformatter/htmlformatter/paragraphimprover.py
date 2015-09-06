@@ -39,7 +39,7 @@ class ParagraphHtmlImprover (HtmlImprover):
         result = re.sub(append_p_before, "</p>\\1", result, flags=re.I | re.M | re.S)
 
         # Append <p> after some closing elements
-        append_p_after = r"(</(?:h\d|blockquote)>)(?!\s*<p[ >])"
+        append_p_after = r"(</(?:h\d|blockquote)>)(?!\s*(?:<p[ >]|</t[dh]>))"
         result = re.sub(append_p_after, "\\1<p>", result, flags=re.I | re.M | re.S)
 
         # Append <p> inside after some elements
