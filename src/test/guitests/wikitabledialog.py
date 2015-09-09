@@ -6,7 +6,8 @@ from outwiker.core.application import Application
 from outwiker.gui.tester import Tester
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.gui.tabledialog import TableDialog
-from outwiker.pages.wiki.tabledialogcontroller import TableDialogController
+from outwiker.pages.wiki.tabledialogcontroller import BaseTableDialogController, TableDialogController
+from outwiker.gui.guiconfig import GeneralGuiConfig
 
 
 class WikiTableDialogTest (BaseMainWndTest):
@@ -14,6 +15,8 @@ class WikiTableDialogTest (BaseMainWndTest):
         super (WikiTableDialogTest, self).setUp()
         self._application = Application
 
+        config = GeneralGuiConfig (self._application.config)
+        config.tableColsCount.remove_option()
         factory = WikiPageFactory()
         self._testpage = factory.create (self.wikiroot, u"Страница 1", [])
 
@@ -24,7 +27,7 @@ class WikiTableDialogTest (BaseMainWndTest):
 
     def testDictToStr_01_empty (self):
         params = {}
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u''
 
@@ -35,7 +38,7 @@ class WikiTableDialogTest (BaseMainWndTest):
         params = {
             u'param1': 10
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10"'
 
@@ -47,7 +50,7 @@ class WikiTableDialogTest (BaseMainWndTest):
             u'param1': 10,
             u'Параметр2': u'абырвалг',
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10", Параметр2="абырвалг"'
 
@@ -59,7 +62,7 @@ class WikiTableDialogTest (BaseMainWndTest):
             u'param1': 10,
             u'Параметр2': u"абыр'валг",
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10", Параметр2="абыр\'валг"'
 
@@ -71,7 +74,7 @@ class WikiTableDialogTest (BaseMainWndTest):
             u'param1': 10,
             u'Параметр2': u'абыр"валг',
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10", Параметр2=\'абыр"валг\''
 
@@ -83,7 +86,7 @@ class WikiTableDialogTest (BaseMainWndTest):
             u'param1': 10,
             u'Параметр2': u'аб\'ыр"валг',
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10", Параметр2="аб\'ыр\\"валг"'
 
@@ -95,7 +98,7 @@ class WikiTableDialogTest (BaseMainWndTest):
             u'param1': 10,
             u'Параметр2': u'',
         }
-        result = TableDialogController.dictToStr (params)
+        result = BaseTableDialogController.dictToStr (params)
 
         validResult = u'param1="10", Параметр2=""'
 
@@ -199,7 +202,7 @@ class WikiTableDialogTest (BaseMainWndTest):
         self.assertEqual (result, validResult, result)
 
 
-    def testBorder (self):
+    def testBorder_01 (self):
         suffix = u''
         dlg = TableDialog (self.wnd)
         controller = TableDialogController (dlg, suffix, self._application.config)
@@ -216,3 +219,40 @@ class WikiTableDialogTest (BaseMainWndTest):
 (:tableend:)'''
 
         self.assertEqual (result, validResult, result)
+
+
+    def testBorder_02 (self):
+        suffix = u''
+        dlg = TableDialog (self.wnd)
+        controller = TableDialogController (dlg, suffix, self._application.config)
+        Tester.dialogTester.appendOk()
+
+        dlg.borderWidth = 0
+        controller.showDialog()
+
+        result = controller.getResult()
+
+        validResult = u'''(:table:)
+(:row:)
+(:cell:)
+(:tableend:)'''
+
+        self.assertEqual (result, validResult, result)
+
+
+    def testColsCount (self):
+        suffix = u''
+        dlg = TableDialog (self.wnd)
+        Tester.dialogTester.appendOk()
+
+        controller = TableDialogController (dlg, suffix, self._application.config)
+        dlg.colsCount = 10
+        controller.showDialog()
+
+        dlg2 = TableDialog (self.wnd)
+        controller2 = TableDialogController (dlg2, suffix, self._application.config)
+
+        self.assertEqual (dlg2.colsCount, 10)
+
+        Tester.dialogTester.appendOk()
+        controller2.showDialog()

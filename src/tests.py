@@ -153,6 +153,8 @@ if __name__ == '__main__':
     from test.guitests.newwiki import NewWikiGuiTest
     from test.guitests.pagetabs import PageTabsTest
     from test.guitests.wikitabledialog import WikiTableDialogTest
+    from test.guitests.wikitablerowsdialog import WikiTableRowsDialogTest
+    from test.guitests.wikitableactions import WikiTableActionsTest
 
     from test.guitests.fileicons import FileIconsTestWindows
 
