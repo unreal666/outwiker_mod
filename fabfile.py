@@ -4,8 +4,9 @@
 import os
 import os.path
 import shutil
+import glob
 
-from fabric.api import local, lcd
+from fabric.api import local, lcd, settings
 
 # Supported Ubuntu releases
 distribs = ["vivid", "trusty", "precise"]
@@ -241,13 +242,12 @@ def win (skipinstaller=False):
         local ("7z a ..\outwiker_win_unstable_all_plugins.7z .\* .\plugins -r -aoa -xr!*.pyc -xr!.ropeproject")
 
 
-
-def wintests():
-    """
-    Assemble test in an exe file.
-    """
-    with lcd ("src"):
-        local ("python setup_tests.py build")
+# def wintests():
+#     """
+#     Assemble test in an exe file.
+#     """
+#     with lcd ("src"):
+#         local ("python setup_tests.py build")
 
 
 def nextversion():
@@ -308,23 +308,34 @@ def run ():
         local ("python runoutwiker.py")
 
 
-def test (params=""):
+def test (section=u'', params=u''):
     """
     Run the unit tests
     """
+    testdir = u'src'
+    files = [fname[len(testdir) + 1:]
+             for fname
+             in glob.glob (u'{}/tests_*.py'.format (testdir))]
+    files.sort()
+
     with lcd ("src"):
-        local ("python tests.py " + params)
+        if section:
+            local ("python tests_{}.py {}".format (section, params))
+        else:
+            with settings (warn_only=True):
+                for fname in files:
+                    local ("python {}".format (fname, params))
 
 
-def testcoverage (params=""):
-    """
-    Run the unit tests and measure the coverage (coverage required)
-    """
-    with lcd ("src"):
-        local (u"coverage run tests.py " + params)
-        local (u"rm -rf ../doc/coverage")
-        local (u'coverage html --omit=outwiker/libs/*,/usr/share/pyshared/*,../plugins/source/source/pygments/* -d "../doc/coverage"')
-
+# def testcoverage (params=""):
+#     """
+#     Run the unit tests and measure the coverage (coverage required)
+#     """
+#     with lcd ("src"):
+#         local (u"coverage run tests.py " + params)
+#         local (u"rm -rf ../doc/coverage")
+#         local (u'coverage html --omit=outwiker/libs/*,/usr/share/pyshared/*,../plugins/source/source/pygments/* -d "../doc/coverage"')
+#
 
 def _makechangelog (distrib_src, distrib_new):
     """

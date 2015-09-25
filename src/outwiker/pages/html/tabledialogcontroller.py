@@ -7,34 +7,30 @@ from outwiker.core.commands import dictToStr
 
 
 class BaseTableDialogController (object):
-    def __init__ (self, dialog, suffix, config):
-        """
-        suffix - suffix for future table ('', '2', '3', etc)
-        """
+    def __init__ (self, dialog, config):
         self._dialog = dialog
         self._config = GeneralGuiConfig (config)
-        self._suffix = suffix
 
 
     def _getCells (self):
-        cell = u'\n(:cell{}:)'.format (self._suffix)
+        cell = u'\n<td></td>'
         cells = u''.join ([cell] * self._dialog.colsCount)
         return cells
 
 
     def _getHCells (self):
-        cell = u'\n(:hcell{}:)'.format (self._suffix)
+        cell = u'\n<th></th>'
         cells = u''.join ([cell] * self._dialog.colsCount)
         return cells
 
 
     def _getRows (self):
         cells = self._getCells()
-        row = u'\n(:row{}:)'.format (self._suffix) + cells
+        row = u'\n<tr>{}\n</tr>'.format (cells)
 
         if self._dialog.headerCells:
             hcells = self._getHCells()
-            hrow = u'\n(:row{}:)'.format (self._suffix) + hcells
+            hrow = u'\n<tr>{}\n</tr>'.format (hcells)
             body = u''.join ([hrow] + [row] * (self._dialog.rowsCount - 1))
         else:
             body = u''.join ([row] * self._dialog.rowsCount)
@@ -44,12 +40,8 @@ class BaseTableDialogController (object):
 
 
 class TableDialogController (BaseTableDialogController):
-    def __init__ (self, dialog, suffix, config):
-        """
-        suffix - suffix for future table ('', '2', '3', etc)
-        """
-        super (TableDialogController, self).__init__(dialog, suffix, config)
-
+    def __init__ (self, dialog, config):
+        super (TableDialogController, self).__init__(dialog, config)
         self._dialog.colsCount = self._config.tableColsCount.value
 
 
@@ -62,17 +54,14 @@ class TableDialogController (BaseTableDialogController):
 
 
     def getResult (self):
-        """
-        Return wiki notation string with (:table:)...(:tableend:) commands
-        """
         params = dictToStr (self._getTableParams ())
 
         if params:
             params = u' ' + params
 
-        begin = u'(:table{}{}:)'.format (self._suffix, params)
+        begin = u'<table{}>'.format (params)
         body = self._getRows()
-        end = u'\n(:table{}end:)'.format (self._suffix)
+        end = u'\n</table>'
 
         result = u''.join ([begin, body, end])
         return result
@@ -90,11 +79,8 @@ class TableDialogController (BaseTableDialogController):
 
 
 class TableRowsDialogController (BaseTableDialogController):
-    def __init__ (self, dialog, suffix, config):
-        """
-        suffix - suffix for future table ('', '2', '3', etc)
-        """
-        super (TableRowsDialogController, self).__init__(dialog, suffix, config)
+    def __init__ (self, dialog, config):
+        super (TableRowsDialogController, self).__init__(dialog, config)
         self._dialog.colsCount = self._config.tableColsCount.value
 
 
@@ -107,8 +93,5 @@ class TableRowsDialogController (BaseTableDialogController):
 
 
     def getResult (self):
-        """
-        Return wiki notation string with (:row:)(:cell:)(:cell:)... commands
-        """
         body = self._getRows().strip()
         return body

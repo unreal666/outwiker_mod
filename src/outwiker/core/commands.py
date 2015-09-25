@@ -504,6 +504,36 @@ def isImage (fname):
             fnameLower.endswith (".gif"))
 
 
+def dictToStr (paramsDict):
+    """
+    Return string like param_1="value1" param_2='value "" with double quotes'...
+    """
+    items = []
+    for name, value in paramsDict.items():
+        valueStr = unicode (value)
+
+        hasSingleQuote = u"'" in valueStr
+        hasDoubleQuote = u'"' in valueStr
+
+        if hasSingleQuote and hasDoubleQuote:
+            valueStr = valueStr.replace (u'"', u'\\"')
+            quote = u'"'
+        elif hasDoubleQuote:
+            quote = u"'"
+        else:
+            quote = u'"'
+
+        paramStr = u'{name}={quote}{value}{quote}'.format (
+            name = name,
+            quote = quote,
+            value = valueStr
+        )
+
+        items.append (paramStr)
+
+    items.sort()
+    return u', '.join (items)
+
 
 def registerActions (application):
     """
@@ -1005,8 +1035,8 @@ def _registerPolyActions (application):
 
     application.actionController.register (PolyAction (application,
                                                        TABLE_ROW_STR_ID,
-                                                       _(u"Table row"),
-                                                       _(u"Insert a table row")),
+                                                       _(u"Table rows"),
+                                                       _(u"Insert table rows")),
                                            HotKey ("W", ctrl=True))
 
     application.actionController.register (PolyAction (application,
