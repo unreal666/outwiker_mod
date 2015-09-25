@@ -168,6 +168,7 @@ class Parser (object):
                               self.boldItalicized |
                               self.bolded |
                               self.italicized |
+                              self.code |
                               self.small |
                               self.big |
                               self.noformat |
