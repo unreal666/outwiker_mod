@@ -38,7 +38,7 @@ class TableToken (object):
 
         table = LineStart() + Regex (r'\|\| *(?P<params>.+)?', re.UNICODE) + Suppress (LineEnd()) + emptyToken + \
                 Suppress (Optional (tableCaption)) + OneOrMore (tableRow)
-        table.setParseAction(self.__convertTable)('table')
+        table = table.setParseAction(self.__convertTable)('table')
 
         return table
 
