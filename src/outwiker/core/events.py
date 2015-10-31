@@ -109,7 +109,7 @@ class PreHtmlImprovingParams (object):
 
 class EditorPopupMenuParams (object):
     """
-    Parameter set for onEditorPopupMenu event
+    Parameter set for the onEditorPopupMenu event
     """
     def __init__ (self, editor, menu, point, pos_byte):
         """
@@ -126,9 +126,70 @@ class EditorPopupMenuParams (object):
 
 class SpellCheckingParams (object):
     """
-    Parameter set for onSpellChecking event
+    Parameter set for the onSpellChecking event
     """
     def __init__ (self, spellChecker, word, isValid):
         self.spellChecker = spellChecker
         self.word = word
         self.isValid = isValid
+
+
+class PageDialogInitParams (object):
+    """
+    Parameter set for the onPageDialogInit event
+    """
+    def __init__ (self, dialog):
+        self.dialog = dialog
+
+
+class PageDialogDestroyParams (object):
+    """
+    Parameter set for the onPageDialogDestroy event
+    """
+    def __init__ (self, dialog):
+        self.dialog = dialog
+
+
+class PageDialogPageTypeChangedParams (object):
+    """
+    Parameter set for the onPageDialogPageTypeChanged event
+    """
+    def __init__ (self, dialog, pageType):
+        self.dialog = dialog
+        self.pageType = pageType
+
+
+class PageDialogPageTitleChangedParams (object):
+    """
+    Parameter set for the PageDialogPageTitleChanged event
+    """
+    def __init__ (self, dialog, pageTitle):
+        self.dialog = dialog
+        self.pageTitle = pageTitle
+
+
+class PageDialogPageStyleChangedParams (object):
+    """
+    Parameter set for the PageDialogPageStyleChanged event
+    """
+    def __init__ (self, dialog, pageStyle):
+        self.dialog = dialog
+        self.pageStyle = pageStyle
+
+
+class PageDialogPageIconChangedParams (object):
+    """
+    Parameter set for the PageDialogPageIconChanged event
+    """
+    def __init__ (self, dialog, pageIcon):
+        self.dialog = dialog
+        self.pageIcon = pageIcon
+
+
+class PageDialogPageTagsChangedParams (object):
+    """
+    Parameter set for the PageDialogPageTagsChanged event
+    """
+    def __init__ (self, dialog, pageTags):
+        self.dialog = dialog
+        self.pageTags = pageTags

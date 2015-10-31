@@ -29,7 +29,19 @@ class ThumbnailToken (object):
 
 
     def getToken (self):
-        result = Regex (r"""% *?(?:(?:thumb +)?(?:width *?= *?(?P<width>\d+)|height *?= *?(?P<height>\d+)|maxsize *?= *?(?P<maxsize>\d+)) *?(?:px)?|thumb *?) *?(?: +?(?P<mode>soft) *?)?% *?Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png)) *?%%""", re.IGNORECASE)
+        result = Regex (r"""%\s*?
+                        (?:
+                            (?:thumb\s+)?
+                            (?:width\s*?=\s*?(?P<width>\d+)
+                            |height\s*?=\s*?(?P<height>\d+)
+                            |maxsize\s*?=\s*?(?P<maxsize>\d+))\s*?
+                            (?:px)?
+                            |thumb\s*?
+                        )\s*?
+                        (?:\s+?(?P<mode>soft)\s*?)?
+                        %\s*?
+                        Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png))\s*?%%""",
+                        re.IGNORECASE | re.VERBOSE)
         result = result.setParseAction (self.__convertThumb)("thumbnail")
         return result
 
@@ -41,10 +53,7 @@ class ThumbnailToken (object):
         fname = t["fname"]
 
         if t["width"] is not None:
-            try:
-                size = int (t["width"])
-            except ValueError:
-                return _(u"<b>Width error</b>")
+            size = int (t["width"])
 
             if t["mode"] == u"soft":
                 return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"width", size)
@@ -52,10 +61,7 @@ class ThumbnailToken (object):
             func = self.thumbmaker.createThumbByWidth
 
         elif t["height"] is not None:
-            try:
-                size = int (t["height"])
-            except ValueError:
-                return u"<b>Height error</b>"
+            size = int (t["height"])
 
             if t["mode"] == u"soft":
                 return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"height", size)
@@ -63,11 +69,7 @@ class ThumbnailToken (object):
             func = self.thumbmaker.createThumbByHeight
 
         elif t["maxsize"] is not None:
-            try:
-                size = int (t["maxsize"])
-            except ValueError:
-                return u"<b>Maxsize error</b>"
-
+            size = int (t["maxsize"])
             func = self.thumbmaker.createThumbByMaxSize
 
         else:
@@ -78,10 +80,7 @@ class ThumbnailToken (object):
         try:
             thumb = func (self.parser.page, fname, size)
 
-        except ThumbException as e:
-            return _(u"<b>Can't create thumbnail: \n%s</b>" % repr (e))
-
-        except IOError as e:
-            return _(u"<b>Can't create thumbnail: \n%s</b>" % repr (e))
+        except (ThumbException, IOError):
+            return _(u"<b>Can't create thumbnail for \"{}\"</b>").format (fname)
 
         return u'<a href="%s/%s"><img src="%s"/></a>' % (Attachment.attachDir, fname, thumb.replace ("\\", "/"))

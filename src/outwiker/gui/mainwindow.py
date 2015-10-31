@@ -58,6 +58,10 @@ from outwiker.actions.history import HistoryBackAction, HistoryForwardAction
 from outwiker.actions.applystyle import SetStyleToBranchAction
 from outwiker.actions.openpluginsfolder import OpenPluginsFolderAction
 
+from outwiker.pages.wiki.wikipagecontroller import WikiPageController
+from outwiker.pages.html.htmlpagecontroller import HtmlPageController
+from outwiker.gui.preferences.prefcontroller import PrefController
+
 
 class MainWindow(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -107,6 +111,23 @@ class MainWindow(wx.Frame):
         self.taskBarIcon = OutwikerTrayIcon(self)
         self.tabsController = TabsController (self.pagePanel.panel.tabsCtrl,
                                               Application)
+
+        self._coreControllers = [
+            WikiPageController (Application),
+            HtmlPageController (Application),
+            PrefController (Application),
+        ]
+
+        self._initCoreControllers ()
+
+
+    def _initCoreControllers (self):
+        map (lambda controller: controller.initialize(), self._coreControllers)
+
+
+    def _destroyCoreControllers (self):
+        map (lambda controller: controller.clear(), self._coreControllers)
+        self._coreControllers = []
 
 
     def createGui (self):
@@ -543,6 +564,8 @@ class MainWindow(wx.Frame):
         """
         self.__saveParams()
         Application.actionController.saveHotKeys()
+
+        self._destroyCoreControllers()
 
         self.__unbindGuiEvents()
         self._dropTarget.destroy()

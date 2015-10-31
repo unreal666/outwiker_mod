@@ -213,6 +213,55 @@ class ApplicationParams (object):
         self.onSpellChecking = Event()
 
 
+        # Event occurs after page dialog creation
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogInitParams class
+        self.onPageDialogInit = Event()
+
+
+        # Event occurs before page dialog will be destroyed
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogDestroyParams class
+        self.onPageDialogDestroy = Event()
+
+
+        # Event occurs after page type changing
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogPageTypeChangedParams class
+        self.onPageDialogPageTypeChanged = Event()
+
+
+        # Event occurs after page type changing
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogPageTitleChangedParams class
+        self.onPageDialogPageTitleChanged = Event()
+
+
+        # Event occurs after page style changing
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogPageStyleChangedParams class
+        self.onPageDialogPageStyleChanged = Event()
+
+
+        # Event occurs after page icon changing
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogPageIconChangedParams class
+        self.onPageDialogPageIconChanged = Event()
+
+
+        # Event occurs after page tag list changing
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PageDialogPageTagsChangedParams class
+        self.onPageDialogPageTagsChanged = Event()
+
+
     def init (self, configFilename):
         """
         Initialize config and locale

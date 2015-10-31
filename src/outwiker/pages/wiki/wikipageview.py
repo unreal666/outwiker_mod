@@ -22,7 +22,6 @@ from actions.fontsizesmall import WikiFontSizeSmallAction
 from actions.nonparsed import WikiNonParsedAction
 from actions.thumb import WikiThumbAction
 from actions.link import insertLink
-from actions.equation import WikiEquationAction
 from actions.attachlist import WikiAttachListAction
 from actions.childlist import WikiChildListAction
 from actions.include import WikiIncludeAction
@@ -122,7 +121,6 @@ class WikiPageView (BaseWikiPageView):
             WikiFontSizeSmallAction,
             WikiNonParsedAction,
             WikiThumbAction,
-            WikiEquationAction,
             WikiAttachListAction,
             WikiChildListAction,
             WikiIncludeAction,
@@ -488,13 +486,6 @@ class WikiPageView (BaseWikiPageView):
                                                                 os.path.join (self.imagesDir, "linebreak.png"),
                                                                 fullUpdate=False)
 
-
-        # Вставка формулы
-        self._application.actionController.appendMenuItem (WikiEquationAction.stringId, menu)
-        self._application.actionController.appendToolbarButton (WikiEquationAction.stringId,
-                                                                toolbar,
-                                                                os.path.join (self.imagesDir, "equation.png"),
-                                                                fullUpdate=False)
 
         # Текущая дата
         self._application.actionController.getAction (CURRENT_DATE).setFunc (lambda param: insertCurrentDate (self.mainWindow,
