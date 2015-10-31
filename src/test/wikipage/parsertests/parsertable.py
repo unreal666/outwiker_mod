@@ -43,7 +43,7 @@ class ParserTableTest (unittest.TestCase):
 """
 
         result = u'''бла-бла-бла
-<table border=1><tr><td align="center">Ячейка 1</td><td align="left">Ячейка 2</td><td align="right">Ячейка 3</td></tr><tr><td>Ячейка 4</td><td>Ячейка 5</td><td>Ячейка 6</td></tr></table>'''
+<table border=1><tr><td align="center">Ячейка 1</td><td align="left">Ячейка 2</td><td align="right">Ячейка 3</td></tr><tr><td>Ячейка 4</td><td>Ячейка 5</td><td>Ячейка 6</td></tr></table>\n'''
 
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
 
@@ -57,7 +57,7 @@ class ParserTableTest (unittest.TestCase):
 ||[@[[http://example.com | Пример ссылки]]@]||[[http://example.com | Пример ссылки]]||Ссылка на адрес в интернете с заданным текстом||
 """
 
-        result = u'''<table border=1><tr><td align="center"><b>Синтаксис</b></td><td align="center"><b>Результат</b></td><td align="center"><b>Комментарий</b></td></tr><tr><td><pre>http://example.com</pre></td><td><a href="http://example.com">http://example.com</a></td><td>Ссылка на адрес в интернете</td></tr><tr><td><pre>[[http://example.com]]</pre></td><td><a href="http://example.com">http://example.com</a></td><td>Ссылка на адрес в интернете</td></tr><tr><td><pre>[[Пример ссылки -&gt; http://example.com]]</pre></td><td><a href="http://example.com">Пример ссылки</a></td><td>Ссылка на адрес в интернете с заданным текстом</td></tr><tr><td><pre>[[http://example.com | Пример ссылки]]</pre></td><td><a href="http://example.com">Пример ссылки</a></td><td>Ссылка на адрес в интернете с заданным текстом</td></tr></table>'''
+        result = u'''<table border=1><tr><td align="center"><b>Синтаксис</b></td><td align="center"><b>Результат</b></td><td align="center"><b>Комментарий</b></td></tr><tr><td><pre>http://example.com</pre></td><td><a href="http://example.com">http://example.com</a></td><td>Ссылка на адрес в интернете</td></tr><tr><td><pre>[[http://example.com]]</pre></td><td><a href="http://example.com">http://example.com</a></td><td>Ссылка на адрес в интернете</td></tr><tr><td><pre>[[Пример ссылки -&gt; http://example.com]]</pre></td><td><a href="http://example.com">Пример ссылки</a></td><td>Ссылка на адрес в интернете с заданным текстом</td></tr><tr><td><pre>[[http://example.com | Пример ссылки]]</pre></td><td><a href="http://example.com">Пример ссылки</a></td><td>Ссылка на адрес в интернете с заданным текстом</td></tr></table>\n'''
 
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
 
@@ -71,7 +71,7 @@ sdfsdf || centered || right aligned||
 ||left aligned [[<<]][[<<]] sdfsdfsdf || centered || right aligned||
 """
 
-        result = u'''<table border=1 width=350><tr><td align="left">left aligned sdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/><br/> sdfsdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr></table>'''
+        result = u'''<table border=1 width=350><tr><td align="left">left aligned sdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/><br/> sdfsdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr></table>\n'''
 
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
 
@@ -95,9 +95,10 @@ sdfsdf || centered || right aligned||
 """
 
         result = u'''<table border=1 width=350><tr><td align="left">left aligned sdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/><br/> sdfsdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr></table>
+
 Бла-бла-бла
 
-<table border=1 width=350><tr><td align="left">left aligned sdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/><br/> sdfsdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr></table>'''
+<table border=1 width=350><tr><td align="left">left aligned sdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/> dsfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr><tr><td align="left">left aligned <br/><br/> sdfsdfsdf</td><td align="center">centered</td><td align="right">right aligned</td></tr></table>\n'''
 
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
 
@@ -155,6 +156,6 @@ sdfsdf || centered || right aligned||
 """
 
         result = u'''бла-бла-бла
-<table border=1><tr><td align="center">Ячейка 1</td><td align="left">Ячейка 2</td><td align="right">Ячейка 3</td></tr><tr><td>Ячейка 4</td><td><blockquote>Ячейка 5</blockquote></td><td>Ячейка 6</td></tr></table>'''
+<table border=1><tr><td align="center">Ячейка 1</td><td align="left">Ячейка 2</td><td align="right">Ячейка 3</td></tr><tr><td>Ячейка 4</td><td><blockquote>Ячейка 5</blockquote></td><td>Ячейка 6</td></tr></table>\n'''
 
         self.assertEqual (self.parser.toHtml (text), result, self.parser.toHtml (text).encode (self.encoding))
