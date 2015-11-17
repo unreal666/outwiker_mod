@@ -18,7 +18,6 @@ class PrefDialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
         self.__treeBook = wx.Treebook(self, -1)
 
-        self.__set_properties()
         self.__do_layout()
 
         Application.onPreferencesDialogCreate (self)
@@ -26,7 +25,7 @@ class PrefDialog(wx.Dialog):
         self.__treeBook.SetSelection (0)
 
         self.__loadAllOptions()
-        self.Center(wx.CENTRE_ON_SCREEN)
+        self.__set_properties()
 
 
     @property
@@ -37,35 +36,37 @@ class PrefDialog(wx.Dialog):
         return self.__treeBook
 
 
-    def appendPreferenceGroup (self, groupname, panelsList):
+    def appendPreferenceGroup (self, groupname, prefPanelsInfoList):
         """
         Добавить группу настроек
         groupname - имя группы
-        panels - массив экземпляров класса PreferencePanelInfo
+        prefPanelsInfoList - массив экземпляров класса PreferencePanelInfo
 
         Страница корня группы - первая страница в списке панелей.
         Массив не должен быть пустым
         """
-        assert len (panelsList) != 0
-        self.__treeBook.AddPage (panelsList[0].panel, groupname)
+        assert len (prefPanelsInfoList) != 0
+        self.__treeBook.AddPage (prefPanelsInfoList[0].panel, groupname)
 
         # Если всего одна страница в списке, то не будем добавлять вложенные страницы
-        if len (panelsList) > 1:
-            for panelInfo in panelsList:
+        if len (prefPanelsInfoList) > 1:
+            for panelInfo in prefPanelsInfoList:
                 self.__treeBook.AddSubPage (panelInfo.panel, panelInfo.name)
 
         self.__expandAllPages()
 
 
     def __set_properties(self):
-        title = _("Preferences")
-        self.SetTitle(title)
-
-        width = 800
+        width = 850
         height = 500
 
-        self.SetSize((width, height))
+        self.SetTitle(_("Preferences"))
         self.__treeBook.SetMinSize((300, -1))
+
+        self.Fit()
+        fitWidth, fitHeight = self.GetSizeTuple()
+        self.SetMinSize ((fitWidth, fitHeight))
+        self.SetSize((width, height))
 
         self.__centerWindow()
 
