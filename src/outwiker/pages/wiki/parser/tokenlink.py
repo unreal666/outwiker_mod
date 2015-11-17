@@ -50,25 +50,35 @@ class LinkToken (object):
         """
         Преобразовать ссылки в виде [[comment -> url]]
         """
+        attrs = ''
         comment, url = text.rsplit ("->", 1)
+
+        if "=>" in url:
+            url, attrs = url.split ("=>", 1)
+
         realurl = self.__prepareUrl (url)
 
-        return self.__getUrlTag (realurl, cgi.escape (comment))
+        return self.__getUrlTag (realurl, cgi.escape (comment), attrs)
 
 
     def __convertLinkLine (self, text):
         """
         Преобразовать ссылки в виде [[url | comment]]
         """
+        attrs = ''
         # Т.к. символ | может быть в ссылке и в тексте,
         # считаем, что после ссылки пользователь поставит пробел
         if " |" in text:
             url, comment = text.split (" |", 1)
         else:
             url, comment = text.rsplit ("|", 1)
+
+        if "=>" in url:
+            url, attrs = url.split ("=>", 1)
+
         realurl = self.__prepareUrl (url)
 
-        return self.__getUrlTag (realurl, cgi.escape (comment))
+        return self.__getUrlTag (realurl, cgi.escape (comment), attrs)
 
 
     def __prepareUrl (self, url):
@@ -81,8 +91,13 @@ class LinkToken (object):
         return url
 
 
-    def __getUrlTag (self, url, comment):
-        return '<a href="%s">%s</a>' % (url.strip(), self.parser.parseLinkMarkup (comment.strip()))
+    def __getUrlTag (self, url, comment, attrs = ''):
+        attrs = attrs.strip()
+
+        if attrs:
+            attrs = ' ' + attrs
+
+        return '<a href="%s"%s>%s</a>' % (url.strip(), attrs, self.parser.parseLinkMarkup (comment.strip()))
 
 
     def __convertEmptyLink (self, text):
