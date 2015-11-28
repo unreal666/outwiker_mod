@@ -124,16 +124,6 @@ class EditorPopupMenuParams (object):
         self.pos_byte = pos_byte
 
 
-class SpellCheckingParams (object):
-    """
-    Parameter set for the onSpellChecking event
-    """
-    def __init__ (self, spellChecker, word, isValid):
-        self.spellChecker = spellChecker
-        self.word = word
-        self.isValid = isValid
-
-
 class PageDialogInitParams (object):
     """
     Parameter set for the onPageDialogInit event
@@ -161,7 +151,7 @@ class PageDialogPageTypeChangedParams (object):
 
 class PageDialogPageTitleChangedParams (object):
     """
-    Parameter set for the PageDialogPageTitleChanged event
+    Parameter set for the onPageDialogPageTitleChanged event
     """
     def __init__ (self, dialog, pageTitle):
         self.dialog = dialog
@@ -170,7 +160,7 @@ class PageDialogPageTitleChangedParams (object):
 
 class PageDialogPageStyleChangedParams (object):
     """
-    Parameter set for the PageDialogPageStyleChanged event
+    Parameter set for the onPageDialogPageStyleChanged event
     """
     def __init__ (self, dialog, pageStyle):
         self.dialog = dialog
@@ -179,7 +169,7 @@ class PageDialogPageStyleChangedParams (object):
 
 class PageDialogPageIconChangedParams (object):
     """
-    Parameter set for the PageDialogPageIconChanged event
+    Parameter set for the onPageDialogPageIconChanged event
     """
     def __init__ (self, dialog, pageIcon):
         self.dialog = dialog
@@ -188,8 +178,18 @@ class PageDialogPageIconChangedParams (object):
 
 class PageDialogPageTagsChangedParams (object):
     """
-    Parameter set for the PageDialogPageTagsChanged event
+    Parameter set for the onPageDialogPageTagsChanged event
     """
     def __init__ (self, dialog, pageTags):
         self.dialog = dialog
         self.pageTags = pageTags
+
+
+class EditorStyleNeededParams (object):
+    """
+    Parameter set for the onEditorStyleNeeded event
+    """
+    def __init__ (self, editor, text, enableSpellChecking):
+        self.editor = editor
+        self.text = text
+        self.enableSpellChecking = enableSpellChecking

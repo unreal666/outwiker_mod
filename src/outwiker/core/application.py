@@ -206,13 +206,6 @@ class ApplicationParams (object):
         self.onEditorPopupMenu = Event()
 
 
-        # Event occurs after spell checking for any word
-        # Parameters:
-        #     page - current page
-        #     params - instance of the the outwiker.core.events.SpellCheckingParams class
-        self.onSpellChecking = Event()
-
-
         # Event occurs after page dialog creation
         # Parameters:
         #     page - current (selected) page
@@ -260,6 +253,13 @@ class ApplicationParams (object):
         #     page - current (selected) page
         #     params - instance of the PageDialogPageTagsChangedParams class
         self.onPageDialogPageTagsChanged = Event()
+
+
+        # Event occurs by TextEditor when it needs styles
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the EditorStyleNeededParams class
+        self.onEditorStyleNeeded = Event()
 
 
     def init (self, configFilename):

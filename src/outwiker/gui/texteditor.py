@@ -4,7 +4,6 @@ import codecs
 import cgi
 import math
 from datetime import datetime, timedelta
-import threading
 import os.path
 
 import wx
@@ -21,6 +20,9 @@ from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.searchreplacecontroller import SearchReplaceController
 from outwiker.gui.searchreplacepanel import SearchReplacePanel
 from outwiker.gui.texteditormenu import TextEditorMenu
+from outwiker.gui.texteditorhelper import TextEditorHelper
+from outwiker.core.events import EditorStyleNeededParams
+
 
 ApplyStyleEvent, EVT_APPLY_STYLE = wx.lib.newevent.NewEvent()
 
@@ -38,7 +40,6 @@ class TextEditor(wx.Panel):
         self._spellChecker = None
 
         self.SPELL_ERROR_INDICATOR = 0
-        self.SPELL_ERROR_INDICATOR_MASK = wx.stc.STC_INDIC0_MASK
 
         self._spellErrorText = None
         self._spellSuggestList = []
@@ -61,8 +62,6 @@ class TextEditor(wx.Panel):
         # после каждой введенной буквы
         self._lastEdit = datetime.now() - self._DELAY * 2
 
-        self._colorizingThread = None
-
         self.textCtrl = StyledTextCtrl(self, -1)
 
         self._popupMenu = TextEditorMenu(self)
@@ -74,6 +73,7 @@ class TextEditor(wx.Panel):
 
         self.__do_layout()
         self.__createCoders()
+        self._helper = TextEditorHelper()
 
         self.__showlinenumbers = self._config.lineNumbers.value
 
@@ -292,25 +292,13 @@ class TextEditor(wx.Panel):
         return width
 
 
-    def calcByteLen(self, text):
-        """Посчитать длину строки в байтах, а не в символах"""
-        return len(self.encoder(text)[0])
-
-
-    def calcBytePos (self, text, pos):
-        """Преобразовать позицию в символах в позицию в байтах"""
-        return len(self.encoder (text[: pos])[0])
-
-
     def getPosChar (self, posBytes):
         return len (self.textCtrl.GetTextRange (0, posBytes))
 
 
     def __createCoders (self):
         encoding = outwiker.core.system.getOS().inputEncoding
-
         self.mbcsEnc = codecs.getencoder(encoding)
-        self.encoder = codecs.getencoder("utf-8")
 
 
     def __onKeyDown (self, event):
@@ -405,8 +393,8 @@ class TextEditor(wx.Panel):
         startText = self.GetText()[:start]
         endText = self.GetText()[:end]
 
-        firstByte = self.calcByteLen (startText)
-        endByte = self.calcByteLen (endText)
+        firstByte = self._helper.calcByteLen (startText)
+        endByte = self._helper.calcByteLen (endText)
 
         self.textCtrl.SetSelection (firstByte, endByte)
 
@@ -451,73 +439,39 @@ class TextEditor(wx.Panel):
         return self.textCtrl.GetText().replace ("\t", " ")
 
 
-    def setSpellError (self, stylelist, startpos, endpos):
-        """
-        Mark positions as error
-        startpos, endpos - positions in characters
-        """
-        text = self._getTextForParse()
-        startbytes = self.calcBytePos (text, startpos)
-        endbytes = self.calcBytePos (text, endpos)
-
-        self.addStyle (stylelist, self.SPELL_ERROR_INDICATOR_MASK, startbytes, endbytes)
-
-
-    def addStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
-        """
-        Добавляет (с помощью операции побитового ИЛИ) стиль с идентификатором styleid к массиву байт stylelist
-        """
-        style_src = stylelist[bytepos_start: bytepos_end]
-        style_new = [style | styleid for style in style_src]
-
-        stylelist[bytepos_start: bytepos_end] = style_new
-
-
-    def setStyle (self, stylelist, styleid, bytepos_start, bytepos_end):
-        """
-        Добавляет стиль с идентификатором styleid к массиву байт stylelist
-        """
-        stylelist[bytepos_start: bytepos_end] = [styleid] * (bytepos_end - bytepos_start)
-
-
-    def runSpellChecking (self, stylelist, start, end):
-        if not self._enableSpellChecking:
-            return
-
-        text = self._getTextForParse()[start: end]
-        errors = self._spellChecker.findErrors (text)
+    def runSpellChecking (self, stylelist, fullText, start, end):
+        errors = self._spellChecker.findErrors (fullText[start: end])
 
         for word, err_start, err_end in errors:
-            self.setSpellError (stylelist, err_start + start, err_end + start)
+            self._helper.setSpellError (stylelist,
+                                        fullText,
+                                        err_start + start,
+                                        err_end + start)
 
 
     def _onStyleNeeded (self, event):
         if (not self._styleSet and
-                datetime.now() - self._lastEdit >= self._DELAY and
-                (self._colorizingThread is None or not self._colorizingThread.isAlive())):
+                datetime.now() - self._lastEdit >= self._DELAY):
+            page = Application.selectedPage
             text = self._getTextForParse()
-            self._colorizingThread = threading.Thread (None, self._colorizeThreadFunc, args=(text,))
-            self._colorizingThread.start()
-
-
-    def _colorizeThreadFunc (self, text):
-        stylebytes = self.getStyleBytes (text)
-        indicatorsbytes = self.getIndcatorsStyleBytes (text)
-        event = ApplyStyleEvent (text=text,
-                                 stylebytes=stylebytes,
-                                 indicatorsbytes = indicatorsbytes)
-        wx.PostEvent (self, event)
+            params = EditorStyleNeededParams (self,
+                                              text,
+                                              self._enableSpellChecking)
+            Application.onEditorStyleNeeded (page, params)
+            self._styleSet = True
 
 
     def _onApplyStyle (self, event):
         if event.text == self._getTextForParse():
-            textlength = self.calcByteLen (event.text)
+            startByte = self._helper.calcBytePos (event.text, event.start)
+            endByte = self._helper.calcBytePos (event.text, event.end)
+            lenBytes = endByte - startByte
+
+            textlength = self._helper.calcByteLen (event.text)
             self.__stylebytes = [0] * textlength
 
             if event.stylebytes is not None:
-                self.__stylebytes = [item1 | item2
-                                     for item1, item2
-                                     in zip (self.__stylebytes, event.stylebytes)]
+                self.__stylebytes = event.stylebytes
 
             if event.indicatorsbytes is not None:
                 self.__stylebytes = [item1 | item2
@@ -526,34 +480,16 @@ class TextEditor(wx.Panel):
 
             stylebytesstr = "".join ([chr(byte) for byte in self.__stylebytes])
 
+
             if event.stylebytes is not None:
-                self.textCtrl.StartStyling (0, 0xff ^ wx.stc.STC_INDICS_MASK)
-                self.textCtrl.SetStyleBytes (len (stylebytesstr), stylebytesstr)
+                self.textCtrl.StartStyling (startByte, 0xff ^ wx.stc.STC_INDICS_MASK)
+                self.textCtrl.SetStyleBytes (lenBytes, stylebytesstr[startByte:endByte])
 
             if event.indicatorsbytes is not None:
-                self.textCtrl.StartStyling (0, wx.stc.STC_INDICS_MASK)
-                self.textCtrl.SetStyleBytes (len (stylebytesstr), stylebytesstr)
+                self.textCtrl.StartStyling (startByte, wx.stc.STC_INDICS_MASK)
+                self.textCtrl.SetStyleBytes (lenBytes, stylebytesstr[startByte:endByte])
 
             self._styleSet = True
-
-
-    def getStyleBytes (self, text):
-        """
-        Функция должна возвращать список байт, описывающих раскраску (стили)
-        для текста text (за исключением индикаторов).
-        Функцию нужно переопределить, если используется собственная раскраска текста.
-        Если функция возвращает None, то раскраска синтаксиса не применяется.
-        """
-        return None
-
-
-    def getIndcatorsStyleBytes (self, text):
-        """
-        Функция должна возвращать список байт, описывающих раскраску (стили индикаторов) для текста text.
-        Функцию нужно переопределить, если используются индикаторы.
-        Если функция возвращает None, то раскраска индикаторов не применяется.
-        """
-        return None
 
 
     def getSpellChecker (self):
@@ -626,18 +562,18 @@ class TextEditor(wx.Panel):
 
         if (stylebytes is None or
                 pos_byte >= stylebytes_len or
-                stylebytes[pos_byte] & self.SPELL_ERROR_INDICATOR_MASK == 0):
+                stylebytes[pos_byte] & self._helper.SPELL_ERROR_INDICATOR_MASK == 0):
             return
 
         endSpellError = startSpellError = pos_byte
 
         while (startSpellError >= 0 and
-               stylebytes[startSpellError] & self.SPELL_ERROR_INDICATOR_MASK != 0):
+               stylebytes[startSpellError] & self._helper.SPELL_ERROR_INDICATOR_MASK != 0):
             startSpellError -= 1
 
 
         while (endSpellError < stylebytes_len and
-               stylebytes[endSpellError] & self.SPELL_ERROR_INDICATOR_MASK != 0):
+               stylebytes[endSpellError] & self._helper.SPELL_ERROR_INDICATOR_MASK != 0):
             endSpellError += 1
 
         self._spellStartByteError = startSpellError + 1
