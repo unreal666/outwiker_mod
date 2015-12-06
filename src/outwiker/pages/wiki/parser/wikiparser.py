@@ -32,6 +32,7 @@ class Parser (object):
     def __init__ (self, page, config):
         self.page = page
         self.config = config
+        self.options = Options()
         self.error_template = u"<B>{error}</B>"
 
         # Массив строк, которые надо добавить в заголовок страницы
@@ -118,6 +119,7 @@ class Parser (object):
             self.bolded,
             self.italicized,
             self.underlined,
+            self.code,
             self.small,
             self.big,
             self.strike,
@@ -311,3 +313,11 @@ class Parser (object):
     def removeCommand (self, commandName):
         if commandName in self.commands:
             del self.commands[commandName]
+
+
+
+class Options (object):
+    """
+    Класс для хранения "расшаренных" опций экземпляра парсера, изменяемых токенами или плагинами.
+    """
+    pass
