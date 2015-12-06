@@ -92,7 +92,7 @@ class LinkToken (object):
 
         realurl = self.__prepareUrl (url)
 
-        if getattr(self.parser.options, 'escapeLinkComments', True):
+        if self.parser.options.escapeLinkComments:
             comment = cgi.escape (comment)
 
         return '<a href="%s"%s>%s</a>' % (realurl.strip(), attrs, self.parser.parseLinkMarkup (comment.strip()))

@@ -320,4 +320,5 @@ class Options (object):
     """
     Класс для хранения "расшаренных" опций экземпляра парсера, изменяемых токенами или плагинами.
     """
-    pass
+    def __init__ (self):
+        self.escapeLinkComments = True
