@@ -90,10 +90,12 @@ class LinkToken (object):
             if attrs:
                 attrs = ' ' + attrs
 
-        realurl = self.__prepareUrl (url.strip())
-        comment = cgi.escape (comment.strip())
+        realurl = self.__prepareUrl (url)
 
-        return '<a href="%s"%s>%s</a>' % (realurl, attrs, self.parser.parseLinkMarkup (comment))
+        if getattr(self.parser.options, 'escapeLinkComments', True):
+            comment = cgi.escape (comment)
+
+        return '<a href="%s"%s>%s</a>' % (realurl.strip(), attrs, self.parser.parseLinkMarkup (comment.strip()))
 
 
     def __convertEmptyLink (self, text):
