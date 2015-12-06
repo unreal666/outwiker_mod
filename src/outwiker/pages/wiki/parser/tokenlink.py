@@ -58,7 +58,7 @@ class LinkToken (object):
 
         realurl = self.__prepareUrl (url)
 
-        return self.__getUrlTag (realurl, cgi.escape (comment), attrs)
+        return self.__getUrlTag (realurl, comment, attrs)
 
 
     def __convertLinkLine (self, text):
@@ -78,7 +78,7 @@ class LinkToken (object):
 
         realurl = self.__prepareUrl (url)
 
-        return self.__getUrlTag (realurl, cgi.escape (comment), attrs)
+        return self.__getUrlTag (realurl, comment, attrs)
 
 
     def __prepareUrl (self, url):
@@ -92,6 +92,7 @@ class LinkToken (object):
 
 
     def __getUrlTag (self, url, comment, attrs = ''):
+        comment = cgi.escape (comment)
         attrs = attrs.strip()
 
         if attrs:
