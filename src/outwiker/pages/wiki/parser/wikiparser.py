@@ -33,7 +33,10 @@ class Parser (object):
         self.page = page
         self.config = config
         self.options = Options()
-        self.error_template = u"<B>{error}</B>"
+        self.error_template = u"<b>{error}</b>"
+
+        # Dictionary with nonstandard parameters (for plugins for example)
+        self.customProps = {}
 
         # Массив строк, которые надо добавить в заголовок страницы
         self.__headers = []
