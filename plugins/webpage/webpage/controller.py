@@ -12,6 +12,17 @@ from spellcontroller import WebPageSpellController
 from i18n import get_
 from gui.guicontroller import GuiController
 
+from actions.downloadaction import (CreateChildWebPageAction,
+                                    CreateSiblingWebPageAction)
+from actions.opensourceurl import OpenSourceURLAction
+from actions.showpageinfo import ShowPageInfoAction
+from actions.disablescripts import DisableScriptsAction
+from actions.copysourceurl import CopySourceURLToClipboardAction
+
+from misc import onPrepareHtmlEventString
+from htmlprocessors.disablescripts import disableScripts
+from htmlprocessors.maxieversion import maxIEVersion
+
 
 class Controller (object):
     """General plugin controller."""
@@ -22,6 +33,19 @@ class Controller (object):
         self._guiController = GuiController(self._application)
 
         self._spellController = WebPageSpellController (self._application)
+        self._actions = [
+            (CreateChildWebPageAction, None),
+            (CreateSiblingWebPageAction, None),
+            (OpenSourceURLAction, None),
+            (ShowPageInfoAction, None),
+            (DisableScriptsAction, None),
+            (CopySourceURLToClipboardAction, None),
+        ]
+
+        self._htmlProcessors = [
+            disableScripts,
+            maxIEVersion,
+        ]
 
 
     def initialize (self):
@@ -33,7 +57,11 @@ class Controller (object):
         self._application.onPageViewDestroy += self._onPageViewDestroy
         self._application.onPageViewCreate += self._onPageViewCreate
 
-        self._guiController.initialize()
+        self._registerHtmlProcessors()
+
+        if self._application.mainWindow is not None:
+            self._registerActions ()
+            self._guiController.initialize()
         FactorySelector.addFactory (WebPageFactory())
 
 
@@ -42,13 +70,35 @@ class Controller (object):
         self._application.onPageViewDestroy -= self._onPageViewDestroy
         self._application.onPageViewCreate -= self._onPageViewCreate
 
-        self._guiController.destroy()
+        self._unregisterHtmlProcessors()
+
+        if self._application.mainWindow is not None:
+            self._guiController.destroy()
+            self._unregisterActions ()
 
         if (self._application.selectedPage is not None and
                 self._application.selectedPage.getTypeString() == WebNotePage.getTypeString()):
             self._spellController.clear()
 
         FactorySelector.removeFactory (WebPageFactory().getTypeString())
+
+
+    def _registerHtmlProcessors (self):
+        for proc in self._htmlProcessors:
+            self._application.getEvent(onPrepareHtmlEventString).bind(proc)
+
+
+    def _unregisterHtmlProcessors (self):
+        for proc in self._htmlProcessors:
+            self._application.getEvent(onPrepareHtmlEventString).unbind(proc)
+
+
+    def _registerActions (self):
+        map (lambda actionTuple: self._application.actionController.register (actionTuple[0](self._application), actionTuple[1]), self._actions)
+
+
+    def _unregisterActions (self):
+        map (lambda actionTuple: self._application.actionController.removeAction (actionTuple[0].stringId), self._actions)
 
 
     def _correctSysPath (self):
@@ -79,4 +129,4 @@ class Controller (object):
     def _onPageViewDestroy (self, page):
         assert page is not None
         if page.getTypeString() == WebNotePage.getTypeString():
-            self._spellController.clear
+            self._spellController.clear()

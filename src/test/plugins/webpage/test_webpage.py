@@ -22,9 +22,10 @@ class WebPageTest (BaseMainWndTest):
 
 
     def tearDown (self):
-        BaseMainWndTest.tearDown (self)
+        Application.selectedPage = None
         Application.wikiroot = None
         self.loader.clear()
+        super (WebPageTest, self).tearDown ()
 
 
     def testPluginLoad (self):
@@ -79,7 +80,7 @@ class WebPageTest (BaseMainWndTest):
 
     def testPageView (self):
         from webpage.webnotepage import WebPageFactory
-        from webpage.webpageview import WebPageView
+        from webpage.gui.webpageview import WebPageView
 
         wikiroot = WikiDocument.create (self.path)
         test_page = WebPageFactory().create (wikiroot, u"Страница 1", [])
@@ -120,6 +121,7 @@ class WebPageTest (BaseMainWndTest):
 
         pageview = Application.mainWindow.pagePanel.pageView
         pageview.codeEditor.SetText (u"Бла-бла-бла")
+        pageview.Save()
 
         Application.selectedPage = None
         Application.wikiroot = None

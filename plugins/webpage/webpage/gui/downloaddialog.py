@@ -95,6 +95,16 @@ class DownloadDialog (TestedDialog):
         self.urlText.Value = url
 
 
+    @property
+    def tags (self):
+        return self.tagsSelector.tags
+
+
+    @tags.setter
+    def tags (self, tags):
+        self.tagsSelector.tags = tags
+
+
 
 class DownloadDialogController (object):
     def __init__ (self, dialog, application, parentPage):
@@ -144,7 +154,6 @@ class DownloadDialogController (object):
 
         count = len (self._dialog.logText.Value)
         self._dialog.logText.SetSelection (count, count)
-        self._dialog.logText.SetFocus()
         self._dialog.logText.ShowPosition (count)
 
 
@@ -156,6 +165,8 @@ class DownloadDialogController (object):
     def _loadState (self):
         tagslist = TagsList (self._application.wikiroot)
         self._dialog.setTagsList (tagslist)
+        if self._parentPage is not None and self._parentPage.parent is not None:
+            self._dialog.tags = self._parentPage.tags
 
 
     def _saveState (self):
@@ -167,7 +178,7 @@ class DownloadDialogController (object):
 
 
     def _removeDownloadDir (self):
-        if self._downloadDir is not None:
+        if self._downloadDir is not None and os.path.exists (self._downloadDir):
             try:
                 rmtree (self._downloadDir)
             except EnvironmentError:
@@ -195,9 +206,6 @@ class DownloadDialogController (object):
                                            self._downloadDir,
                                            url)
             self._thread.start()
-        elif self._thread is not None:
-            self._removeDownloadDir()
-            event.Skip()
 
 
     def _onCancel (self, event):
@@ -212,29 +220,52 @@ class DownloadDialogController (object):
     def _onDownloadError (self, event):
         self._onLogUpdate (event)
         self._thread = None
+        self._removeDownloadDir()
 
 
     def _onDownloadFinish (self, event):
+        self._thread = None
+        if not self._runEvent.is_set():
+            self.addToLog (_(u"Page creation is canceled."))
+            self._removeDownloadDir()
+            return
+
         parentPage = self._parentPage
         title = event.title
         favicon = event.favicon
-        tags = self._dialog.tagsSelector.tags
+        tags = self._dialog.tags
         content = event.content
         url = event.url
         tmpStaticDir = event.staticPath
         logContent = self._dialog.logText.Value
 
-        page = WebPageFactory().createWebPage (parentPage,
-                                               title,
-                                               favicon,
-                                               tags,
-                                               content,
-                                               url,
-                                               tmpStaticDir,
-                                               logContent)
+        titleDlg = wx.TextEntryDialog (self._dialog,
+                                       _(u'Enter a title for the page'),
+                                       _(u'Page title'),
+                                       title)
 
-        self._dialog.EndModal (wx.ID_OK)
-        self._application.selectedPage = page
+        if titleDlg.ShowModal() == wx.ID_OK:
+            title = titleDlg.GetValue()
+        else:
+            self.addToLog (_(u"Page creation is canceled."))
+            self._removeDownloadDir()
+            return
+
+        try:
+            page = WebPageFactory().createWebPage (parentPage,
+                                                   title,
+                                                   favicon,
+                                                   tags,
+                                                   content,
+                                                   url,
+                                                   tmpStaticDir,
+                                                   logContent)
+            self._dialog.EndModal (wx.ID_OK)
+            self._application.selectedPage = page
+        except EnvironmentError:
+            self.addToLog (_(u"Can't create the page. Perhaps the title of the page is too long."))
+        finally:
+            self._removeDownloadDir()
 
 
 class DownloadThread (Thread):
@@ -268,7 +299,7 @@ class DownloadThread (Thread):
             self._error (_(u'Download error: {}\n').format (
                 unicode (error.reason))
             )
-        except ValueError as e:
+        except (IOError, ValueError) as e:
             self._error (_(u'Invalid URL or file format\n'))
             self._error (unicode (e))
         else:

@@ -92,6 +92,14 @@ class FontsFactory (object):
         return BigFontToken(parser).getToken()
 
 
+    @staticmethod
+    def makeMark (parser):
+        """
+        Create the mark token
+        """
+        return MarkToken(parser).getToken()
+
+
 
 class CodeToken (TextBlockToken):
     """
@@ -239,3 +247,16 @@ class BigFontToken (TextBlockToken):
             size=size,
             text=self.parser.parseTextLevelMarkup (t["text"])
         )
+
+
+class MarkToken (TextBlockToken):
+    """
+    Mark text token
+    """
+    start = "[!"
+    end = "!]"
+
+    def getToken (self):
+        return QuotedString (MarkToken.start,
+                             endQuoteChar = MarkToken.end,
+                             multiline = True).setParseAction(self.convertToHTML("<mark>", "</mark>"))("mark")

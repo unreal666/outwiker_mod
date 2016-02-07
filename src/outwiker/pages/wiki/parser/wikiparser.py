@@ -55,6 +55,7 @@ class Parser (object):
         if not hasattr(self, 'superscript'): self.superscript = FontsFactory.makeSuperscript (self)
         if not hasattr(self, 'quote'): self.quote = QuoteFactory.make (self)
         if not hasattr(self, 'code'): self.code = FontsFactory.makeCode (self)
+        if not hasattr(self, 'mark'): self.mark = FontsFactory.makeMark (self)
         if not hasattr(self, 'small'): self.small = FontsFactory.makeSmall(self)
         if not hasattr(self, 'big'): self.big = FontsFactory.makeBig(self)
         if not hasattr(self, 'headings'): self.headings = HeadingFactory.make(self)
@@ -93,6 +94,7 @@ class Parser (object):
             self.bolded,
             self.italicized,
             self.code,
+            self.mark,
             self.small,
             self.big,
             self.quote,
@@ -125,6 +127,7 @@ class Parser (object):
             self.code,
             self.small,
             self.big,
+            self.mark,
             self.strike,
             self.command,
             self.lineBreak,
@@ -150,6 +153,7 @@ class Parser (object):
             self.code,
             self.small,
             self.big,
+            self.mark,
             self.noformat,
             self.thumb,
             self.underlined,
@@ -175,6 +179,7 @@ class Parser (object):
             self.bolded,
             self.italicized,
             self.code,
+            self.mark,
             self.small,
             self.big,
             self.noformat,
@@ -198,6 +203,7 @@ class Parser (object):
             self.bolded,
             self.italicized,
             self.code,
+            self.mark,
             self.small,
             self.big,
             self.preformat,

@@ -4,7 +4,8 @@ from outwiker.core.application import Application
 from outwiker.gui.htmltexteditor import HtmlTextEditor
 from outwiker.pages.html.basehtmlpanel import BaseHtmlPanel, EVT_PAGE_TAB_CHANGED
 
-from webpage.misc import polyActions
+from webpage.misc import polyActions, onPrepareHtmlEventString
+from webpage.events import PrepareHtmlEventParams
 
 
 class WebPageView (BaseHtmlPanel):
@@ -54,11 +55,23 @@ class WebPageView (BaseHtmlPanel):
     def __onPageUpdate (self, sender, **kwargs):
         if sender == self._currentpage:
             if self.notebook.GetSelection() == self.RESULT_PAGE_INDEX:
-                self._updateResult()
+                self.updateHtml()
+
+
+    def updateHtml (self):
+        self._updateResult()
 
 
     def generateHtml (self, page):
-        return page.content
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup (page.content, "html.parser")
+        params = PrepareHtmlEventParams (self._application.selectedPage,
+                                         soup)
+        self._application.getEvent(onPrepareHtmlEventString)(params)
+        html = params.soup.prettify()
+
+        return html
 
 
     def removeGui (self):
