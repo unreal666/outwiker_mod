@@ -23,6 +23,8 @@ class LinkToken (object):
 
     def __init__ (self, parser):
         self.parser = parser
+        if hasattr(parser, 'customProps'):
+            parser.customProps.setdefault('outwiker', {})['escapeLinkComments'] = True
 
 
     def getToken (self):
@@ -92,7 +94,7 @@ class LinkToken (object):
 
         realurl = self.__prepareUrl (url)
 
-        if self.parser.options.escapeLinkComments:
+        if self.parser.customProps['outwiker']['escapeLinkComments']:
             comment = cgi.escape (comment)
 
         return '<a href="%s"%s>%s</a>' % (realurl.strip(), attrs, self.parser.parseLinkMarkup (comment.strip()))

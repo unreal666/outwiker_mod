@@ -32,7 +32,6 @@ class Parser (object):
     def __init__ (self, page, config):
         self.page = page
         self.config = config
-        self.options = Options()
         self.error_template = u"<b>{error}</b>"
 
         # Dictionary with nonstandard parameters (for plugins for example)
@@ -322,12 +321,3 @@ class Parser (object):
     def removeCommand (self, commandName):
         if commandName in self.commands:
             del self.commands[commandName]
-
-
-
-class Options (object):
-    """
-    Класс для хранения "расшаренных" опций экземпляра парсера, изменяемых токенами или плагинами.
-    """
-    def __init__ (self):
-        self.escapeLinkComments = True
