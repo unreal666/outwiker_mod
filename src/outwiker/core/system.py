@@ -118,7 +118,6 @@ class Windows (System):
         return HtmlRenderIE (parent)
 
 
-
 class Unix (System):
     @property
     def name (self):
@@ -126,24 +125,15 @@ class Unix (System):
 
 
     def init (self):
-        """
-        Активировать дополнительные библиотеки, в частности, pyGTK
-        """
-        import gobject
-        gobject.threads_init()
-
-        import pygtk
-        pygtk.require('2.0')
-        import gtk
-        import gtk.gdk
+        if 'LD_PRELOAD' in os.environ:
+            del os.environ['LD_PRELOAD']
 
 
     def startFile (self, path):
         """
         Запустить программу по умолчанию для path
         """
-        runcmd = "xdg-open '%s'" % path
-        wx.Execute (runcmd)
+        subprocess.Popen ([u'xdg-open', path])
 
 
     @property

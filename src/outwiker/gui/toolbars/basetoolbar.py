@@ -69,12 +69,13 @@ class BaseToolBar (wx.aui.AuiToolBar):
                 kind=wx.ITEM_NORMAL,
                 fullUpdate=True):
         self.Freeze()
-        super (BaseToolBar, self).AddTool (tool_id, label, bitmap, short_help_string, kind)
+        item = super (BaseToolBar, self).AddTool (tool_id, label, bitmap, short_help_string, kind)
         self.UpdateToolBar()
         if fullUpdate:
             self._parent.UpdateAuiManager()
             self.updatePaneInfo()
         self.Thaw()
+        return item
 
 
     @property

@@ -26,7 +26,7 @@ class BookmarksController (object):
 
         if Application.wikiroot is not None:
             for n in range (len (Application.wikiroot.bookmarks)):
-                id = wx.NewId()
+                id = wx.Window.NewControlId()
                 page = Application.wikiroot.bookmarks[n]
                 if page is None:
                     continue
@@ -44,8 +44,6 @@ class BookmarksController (object):
 
                 self.controller.mainMenu.bookmarksMenu.Append (id, label, "", wx.ITEM_NORMAL)
                 self.controller.mainWindow.Bind(wx.EVT_MENU, self.__onSelectBookmark, id=id)
-
-            self.controller.mainWindow.updateShortcuts()
 
 
     def __onSelectBookmark (self, event):

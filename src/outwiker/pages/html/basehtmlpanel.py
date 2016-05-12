@@ -48,6 +48,8 @@ class BaseHtmlPanel(BaseTextPanel):
 
         self.notebook = wx.Notebook(self, -1, style=wx.NB_BOTTOM)
         self._codeEditor = self.getTextEditor()(self.notebook)
+
+        # self.htmlWindowPanel = HtmlWindowPanel (self.notebook)
         self.htmlWindow = getOS().getHtmlRender (self.notebook)
 
         self.__do_layout()
@@ -55,6 +57,10 @@ class BaseHtmlPanel(BaseTextPanel):
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._onTabChanged, self.notebook)
         self.Bind (self.EVT_SPELL_ON_OFF, handler=self._onSpellOnOff)
 
+
+    # @property
+    # def htmlWindow (self):
+    #     return self.htmlWindowPanel.getHtmlWindow()
 
     def Clear (self):
         self.Unbind(wx.EVT_NOTEBOOK_PAGE_CHANGED, source=self.notebook, handler=self._onTabChanged)
@@ -196,6 +202,12 @@ class BaseHtmlPanel(BaseTextPanel):
     def __do_layout(self):
         self.addPage(self.codeEditor, _("HTML"))
         self.addPage(self.htmlWindow, _("Preview"))
+        # self.addPage(self.htmlWindowPanel, _("Preview"))
+        # self.htmlWindow.Hide()
+        # self.htmlWindow.Show()
+
+        # self.htmlWindowPanel.Hide()
+        # self.htmlWindowPanel.Show()
 
         mainSizer = wx.FlexGridSizer(1, 1, 0, 0)
         mainSizer.Add(self.notebook, 1, wx.EXPAND, 0)
@@ -332,8 +344,6 @@ class BaseHtmlPanel(BaseTextPanel):
         """
         Активировать или дезактивировать инструменты (пункты меню и кнопки) в зависимости от текущей выбранной вкладки
         """
-        self.mainWindow.Freeze()
-
         for tool in self.allTools:
             self.enableTool (tool, self._isEnabledTool (tool))
 
@@ -357,8 +367,6 @@ class BaseHtmlPanel(BaseTextPanel):
                                       searchEnabled and not self._application.selectedPage.readonly)
 
         self.mainWindow.UpdateAuiManager()
-
-        self.mainWindow.Thaw()
 
 
     def _isEnabledTool (self, tool):
