@@ -20,10 +20,11 @@ class CommandToken (object):
     Этот токен находит в тексте команду, а затем в парсере ищет обработчика данной команды.
     Если обработчика нет, возвращается исходный текст команды
     """
-    regex = r"""\(:\s*(?P<name>\w+)          # Имя команды "(:name"
-            \s*(?P<params>.*?)\s*:\)         # Параметры команды "params... :)"
-            ((?P<content>.*?)                # Контент между (:name:) и (:nameend:)
-            \(:\s*(?P=name)end\s*:\))?       # Конец команды "(:nameend:)" """
+    regex = r"""\(:\s*(?P<name>[\w][-\w<>]+)    # Имя команды "(:name"
+            (?:\s+(?P<params>.*?)\s*)?:\)       # Параметры команды "params... :)"
+            ((?P<content>.*?)                   # Контент между (:name:) и (:nameend:)
+            \(:\s*(?P=name)end\s*:\))?          # Конец команды "(:nameend:)"
+            """
 
     def __init__ (self, parser):
         self.parser = parser
@@ -40,15 +41,23 @@ class CommandToken (object):
         params = t["params"]
         content = t["content"]
 
-        if params is None:
-            params = u""
-
-        if content is None:
-            content = u""
-
         try:
             command = self.parser.commands[name]
         except KeyError:
             return t[0]
 
-        return command.execute (params, content)
+        hasCmdend = True
+
+        if params is None:
+            params = u""
+
+        if content is None:
+            content = u""
+            hasCmdend = False
+
+        argcount = command.execute.func_code.co_argcount
+
+        if argcount != 4:
+            return command.execute (params, content)
+        else:
+            return command.execute (params, content, {'hasCmdend': hasCmdend})
