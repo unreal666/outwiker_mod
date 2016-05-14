@@ -12,9 +12,22 @@ class ParagraphHtmlImprover (HtmlImprover):
     Class cover paragraphes by <p> tags
     """
     def _appendLineBreaks (self, text):
-        result = self._coverParagraphs (text)
+        result = self._prepareText (text)
+        result = self._coverParagraphs (result)
         result = self._addLineBreaks (result)
         result = self._improveRedability (result)
+
+        return result
+
+
+    def _prepareText (self, text):
+        result = text
+
+        closetags = r"[uod]l|li|d[td]"
+
+        # Remove \n before some block elements
+        pattern = r"\n(?=</(?:" + closetags + r")>)"
+        result = re.sub(pattern, "", result, flags=re.I | re.M)
 
         return result
 
