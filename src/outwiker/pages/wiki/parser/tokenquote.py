@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from outwiker.libs.pyparsing import Forward, CharsNotIn, NotAny, ZeroOrMore, OneOrMore, Combine, Literal, Suppress, Regex
-from .utils import TagAttrsPattern
+from .utils import TagAttrsPattern, getAttributes
 
 
 class QuoteFactory (object):
@@ -36,8 +36,7 @@ class QuoteToken (object):
         leftpos = text.find (u'<blockquote>')
         rightpos = text.rfind (u'</blockquote>')
 
-        attrs = toks[TagAttrsPattern.name]
-        attrs = u''.join([u' ', attrs]) if attrs else u''
+        attrs = getAttributes(toks)
 
         if leftpos == -1 or rightpos == -1:
             return u''.join([u'<blockquote', attrs, u'>', self.parser.parseWikiMarkup (text), u'</blockquote>'])

@@ -7,6 +7,11 @@ class TagAttrsPattern (object):
     name = "attributes"
 
 
+def getAttributes(toks):
+    attrs = toks[TagAttrsPattern.name]
+    return u''.join([u' ', attrs]) if attrs else u''
+
+
 def noConvert (s, l, t):
     return t[0]
 

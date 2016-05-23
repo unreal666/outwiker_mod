@@ -3,7 +3,7 @@
 import re
 
 from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Suppress, Empty, OnlyOnce
-from .utils import TagAttrsPattern
+from .utils import TagAttrsPattern, getAttributes
 
 
 class TableFactory (object):
@@ -28,7 +28,7 @@ class TableToken (object):
         tableCell = Regex (r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)' + TagAttrsPattern.value, re.UNICODE)
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
-        tableRow = LineStart() + Regex (r'\|{2,4}(?!\|)') + Regex (TagAttrsPattern.value, re.UNICODE) + \
+        tableRow = LineStart() + Regex (r'\|{2,4}(?!\|)' + TagAttrsPattern.value, re.UNICODE) + \
                    OneOrMore (tableCell) + Optional (LineEnd())
         tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
@@ -57,8 +57,7 @@ class TableToken (object):
 
         align = u''
 
-        attrs = toks[TagAttrsPattern.name]
-        attrs = u''.join([u' ', attrs]) if attrs else u''
+        attrs = getAttributes(toks)
 
         if leftAlign and rightAlign:
             align = u' align="center"'
@@ -81,8 +80,7 @@ class TableToken (object):
             lastindex = len (toks)
             self.unitEnd = ''
 
-        attrs = toks[TagAttrsPattern.name]
-        attrs = u''.join([u' ', attrs]) if attrs else u''
+        attrs = getAttributes(toks)
 
         result = u''.join([u'<tr', attrs, u'>']) + u''.join(toks[2: lastindex]) + u'</tr>'
 
@@ -94,8 +92,7 @@ class TableToken (object):
 
 
     def __convertTableCaption (self, s, loc, toks):
-        attrs = toks[TagAttrsPattern.name]
-        attrs = u''.join([u' ', attrs]) if attrs else u''
+        attrs = getAttributes(toks)
 
         self.rowGroups['caption'] = u'<caption%s>%s</caption>' % (attrs, self.parser.parseWikiMarkup (toks['text'].strip()))
 

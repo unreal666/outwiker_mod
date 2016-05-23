@@ -5,7 +5,7 @@ import re
 from outwiker.libs.pyparsing import QuotedString, Regex, OneOrMore, Suppress, Combine, ZeroOrMore, NotAny, CharsNotIn
 
 from .tokenblock import TextBlockToken
-from .utils import returnNone
+from .utils import returnNone, TagAttrsPattern, getAttributes
 
 
 class FontsFactory (object):
@@ -105,13 +105,15 @@ class CodeToken (TextBlockToken):
     """
     Токен для кода
     """
-    start = "@@"
-    end = "@@"
-
     def getToken (self):
-        return QuotedString (CodeToken.start,
-                             endQuoteChar = CodeToken.end,
-                             multiline = True).setParseAction(self.convertToHTML("<code>", "</code>"))("code")
+        return Regex (r"@@" + TagAttrsPattern.value + r"(?P<text>.*?)@@",
+                      re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("code")
+
+
+    def __parse (self, s, l, t):
+        attrs = getAttributes(t)
+
+        return u'<code%s>%s</code>' % (attrs, self.parser.parseTextLevelMarkup (t["text"]))
 
 
 class SuperscriptToken (TextBlockToken):
