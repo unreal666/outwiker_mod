@@ -50,6 +50,8 @@ class TableToken (object):
     def __convertTableCell (self, s, loc, toks):
         text = toks['text']
 
+        isTh = False if toks['end'] != u'|||' else True
+
         leftAlign = text[-1] in u' \t'
         rightAlign = text[0] in u' \t'
 
@@ -60,10 +62,12 @@ class TableToken (object):
 
         if leftAlign and rightAlign:
             align = u' align="center"'
+        elif isTh and leftAlign:
+            align = u' align="left"'
         elif rightAlign:
             align = u' align="right"'
 
-        pattern = u'<th%s%s>%s</th>' if toks['end'] == u'|||' else u'<td%s%s>%s</td>'
+        pattern = u'<th%s%s>%s</th>' if isTh else u'<td%s%s>%s</td>'
 
         return pattern % (align, attrs, self.parser.parseWikiMarkup (text.strip()))
 
