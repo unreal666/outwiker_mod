@@ -60,8 +60,6 @@ class TableToken (object):
 
         if leftAlign and rightAlign:
             align = u' align="center"'
-        elif leftAlign:
-            align = u' align="left"'
         elif rightAlign:
             align = u' align="right"'
 
