@@ -82,7 +82,7 @@ class TableToken (object):
 
         attrs = getAttributes(toks)
 
-        result = u''.join([u'<tr', attrs, u'>']) + u''.join(toks[2: lastindex]) + u'</tr>'
+        result = u''.join([u'<tr', attrs, u'>']) + u''.join(toks[1: lastindex]) + u'</tr>'
 
         if rowStart in TableToken.rowGroupsLabels:
             self.rowGroups[TableToken.rowGroupsLabels[rowStart]] += result
