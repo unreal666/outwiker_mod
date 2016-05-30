@@ -138,7 +138,7 @@ class ActionController (object):
         self._actionsInfo[strid].menuItem = menuItem
 
         self._mainWindow.Bind (wx.EVT_MENU,
-                               handler=lambda event: action.run(None),
+                               handler=self._onMenuItemHandler,
                                id=menuItem.GetId())
 
 
@@ -153,7 +153,7 @@ class ActionController (object):
         self._actionsInfo[strid].menuItem = menuItem
 
         self._mainWindow.Bind (wx.EVT_MENU,
-                               handler=lambda event: self._onCheck (action, event.IsChecked()),
+                               handler=self._onCheckMenuItemHandler,
                                id=menuItem.GetId())
 
 
@@ -221,7 +221,7 @@ class ActionController (object):
                                                fullUpdate)
 
         self._mainWindow.Bind (wx.EVT_TOOL,
-                               handler=lambda event: action.run(None),
+                               handler=self._onToolItemHandler,
                                id=toolbarItem.GetId())
 
 
@@ -246,7 +246,7 @@ class ActionController (object):
                                                fullUpdate)
 
         self._mainWindow.Bind (wx.EVT_TOOL,
-                               handler=lambda event: self._onCheck (action, event.IsChecked()),
+                               handler=self._onCheckToolItemHandler,
                                id=toolbarItem.GetId())
 
 
@@ -257,11 +257,49 @@ class ActionController (object):
         self._onCheck (self._actionsInfo[strid].action, checked)
 
 
+    def _getActionInfoByMenuItemId (self, menuItemId):
+        for actionInfo in self._actionsInfo.values():
+            if actionInfo.menuItem is not None and actionInfo.menuItem.GetId() == menuItemId:
+                return actionInfo
+
+
+    def _getActionInfoByToolItemId (self, toolItemId):
+        for actionInfo in self._actionsInfo.values():
+            if actionInfo.toolItemId is not None and actionInfo.toolItemId == toolItemId:
+                return actionInfo
+
+
+    def _onCheckMenuItemHandler (self, event):
+        actionInfo = self._getActionInfoByMenuItemId (event.GetId())
+        assert actionInfo is not None
+
+        self._onCheck (actionInfo.action, event.IsChecked())
+
+
+    def _onCheckToolItemHandler (self, event):
+        actionInfo = self._getActionInfoByToolItemId (event.GetId())
+        assert actionInfo is not None
+
+        self._onCheck (actionInfo.action, event.IsChecked())
+
+
+    def _onMenuItemHandler (self, event):
+        actionInfo = self._getActionInfoByMenuItemId (event.GetId())
+        assert actionInfo is not None
+        actionInfo.action.run (None)
+
+
+    def _onToolItemHandler (self, event):
+        actionInfo = self._getActionInfoByToolItemId (event.GetId())
+        assert actionInfo is not None
+        actionInfo.action.run (None)
+
+
     def _onCheck (self, action, checked):
         """
-        Обработчик события нажатия залипающей кнопки или пункта меню с чекбоксом
+        Run the checked action and refresh tool item
         """
-        # Установим флажки на соответствующем пункте меню и зажмем соответствующую кнопку
+        # Установим флажки на соответствующем пункте меню
         menuItem = self._actionsInfo[action.stringId].menuItem
         if (menuItem is not None):
             menuItem.Check (checked)
