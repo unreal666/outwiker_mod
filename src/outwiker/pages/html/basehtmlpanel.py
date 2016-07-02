@@ -14,7 +14,8 @@ from outwiker.core.system import getImagesDir
 from outwiker.core.attachment import Attachment
 from outwiker.core.config import IntegerOption
 from outwiker.core.defines import PAGE_RESULT_HTML
-from outwiker.core.system import writeTextFile, getOS
+from outwiker.core.system import getOS
+from outwiker.utilites.textfile import writeTextFile
 from outwiker.gui.basetextpanel import BaseTextPanel
 from outwiker.gui.guiconfig import GeneralGuiConfig
 
@@ -57,11 +58,6 @@ class BaseHtmlPanel(BaseTextPanel):
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._onTabChanged, self.notebook)
         self.Bind (self.EVT_SPELL_ON_OFF, handler=self._onSpellOnOff)
 
-
-    # @property
-    # def htmlWindow (self):
-    #     return self.htmlWindowPanel.getHtmlWindow()
-
     def Clear (self):
         self.Unbind(wx.EVT_NOTEBOOK_PAGE_CHANGED, source=self.notebook, handler=self._onTabChanged)
         self.Unbind (self.EVT_SPELL_ON_OFF, handler=self._onSpellOnOff)
@@ -75,13 +71,43 @@ class BaseHtmlPanel(BaseTextPanel):
         """
         self.codeEditor.SetSelection (position, position)
 
-
     def GetCursorPosition (self):
         """
         Возвращает положение курсора в текстовом редакторе
         """
         return self.codeEditor.GetCurrentPosition()
 
+    def _onLineDuplicate(self, params):
+        """
+        Handler for the LINE_DUPLICATE_ID polyaction
+
+        Added in OutWiker 2.0.0.795
+        """
+        self.codeEditor.LineDuplicate()
+
+    def _onMoveSelectedLinesUp(self, params):
+        """
+        Handler for the MOVE_SELECTED_LINES_UP_ID polyaction
+
+        Added in OutWiker 2.0.0.795
+        """
+        self.codeEditor.MoveSelectedLinesUp()
+
+    def _onMoveSelectedLinesDown(self, params):
+        """
+        Handler for the MOVE_SELECTED_LINES_Down_ID polyaction
+
+        Added in OutWiker 2.0.0.795
+        """
+        self.codeEditor.MoveSelectedLinesDown()
+
+    def _onDeleteCurrentLine(self, params):
+        """
+        Handler for the DELETE_CURRENT_LINE_ID polyaction
+
+        Added in OutWiker 2.0.0.795
+        """
+        self.codeEditor.LineDelete()
 
     @property
     def codeEditor (self):

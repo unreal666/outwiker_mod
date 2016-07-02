@@ -9,7 +9,7 @@ from outwiker.core.application import Application
 from outwiker.core.htmlimproverfactory import HtmlImproverFactory
 from outwiker.core.htmltemplate import HtmlTemplate
 from outwiker.core.style import Style
-from outwiker.core.system import readTextFile
+from outwiker.utilites.textfile import readTextFile
 from outwiker.core.events import (PreprocessingParams,
                                   PreHtmlImprovingParams,
                                   PostprocessingParams
@@ -82,6 +82,10 @@ class HtmlPageView (BaseHtmlPanel):
             IMAGE_STR_ID,
             CURRENT_DATE,
             MARK_STR_ID,
+            LINE_DUPLICATE_ID,
+            MOVE_SELECTED_LINES_UP_ID,
+            MOVE_SELECTED_LINES_DOWN_ID,
+            DELETE_CURRENT_LINE_ID,
         ]
 
         # Список действий, которые нужно удалять с панелей и из меню.

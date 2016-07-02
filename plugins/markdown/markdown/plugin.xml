@@ -1,0 +1,45 @@
+<?xml version="1.1" encoding="UTF-8" ?>
+<info>
+	<name>Markdown</name>
+    <updates>http://jenyay.net/Outwiker/Markdown/plugin.xml</updates>
+    <requirements>
+        <outwiker>2.0.0.795 dev</outwiker>
+        <os>Windows, Linux</os>
+    </requirements>
+
+	<data lang="en">
+		<website>http://jenyay.net/Outwiker/MarkdownEn</website>
+		<description>The Markdown plug-in add a new page type with Markdown notation.</description>
+
+		<author>
+			<name>Eugene Ilin (aka Jenyay)</name>
+			<email>jenyay.ilin@gmail.com</email>
+			<site>http://jenyay.net</site>
+		</author>
+
+		<changelog>
+			<version number="1.0">
+                <download os="all">http://jenyay.net/Outwiker/Markdown/markdown-1.0.zip</download>
+				<change>The first version</change>
+			</version>
+		</changelog>
+	</data>
+
+	<data lang="ru">
+		<website>http://jenyay.net/Outwiker/Markdown</website>
+		<description>Плагин Markdown добавляет новый тип страниц, который использует нотацию Markdown.</description>
+
+		<author>
+			<name>Евгений Ильин (aka Jenyay)</name>
+			<email>jenyay.ilin@gmail.com</email>
+			<site>http://jenyay.net</site>
+		</author>
+
+		<changelog>
+			<version number="1.0">
+                <download os="all">http://jenyay.net/Outwiker/Markdown/markdown-1.0.zip</download>
+				<change>Первая версия</change>
+			</version>
+		</changelog>
+	</data>
+</info>

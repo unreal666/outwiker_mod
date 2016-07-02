@@ -6,12 +6,12 @@ from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.actions.polyactionsid import *
 
 
-class WikiActionsTest (BaseMainWndTest):
+class WikiActionsTest(BaseMainWndTest):
     """
     Тесты действий для викистраницы
     """
-    def setUp (self):
-        BaseMainWndTest.setUp (self)
+    def setUp(self):
+        BaseMainWndTest.setUp(self)
 
         self._turnSyntax = [
             (BOLD_STR_ID, "'''", "'''"),
@@ -25,12 +25,6 @@ class WikiActionsTest (BaseMainWndTest):
             (ALIGN_CENTER_STR_ID, "%center%", ""),
             (ALIGN_RIGHT_STR_ID, "%right%", ""),
             (ALIGN_JUSTIFY_STR_ID, "%justify%", ""),
-            (HEADING_1_STR_ID, "!! ", ""),
-            (HEADING_2_STR_ID, "!!! ", ""),
-            (HEADING_3_STR_ID, "!!!! ", ""),
-            (HEADING_4_STR_ID, "!!!!! ", ""),
-            (HEADING_5_STR_ID, "!!!!!! ", ""),
-            (HEADING_6_STR_ID, "!!!!!!! ", ""),
             (PREFORMAT_STR_ID, "[@", "@]"),
             (CODE_STR_ID, "@@", "@@"),
             (ANCHOR_STR_ID, "[[#", "]]"),
@@ -41,34 +35,42 @@ class WikiActionsTest (BaseMainWndTest):
             (HORLINE_STR_ID, u"----"),
         ]
 
-        WikiPageFactory().create (self.wikiroot, u"Викистраница", [])
-        WikiPageFactory().create (self.wikiroot, u"temp", [])
+        self._headingsSyntax = [
+            (HEADING_1_STR_ID, u'!!'),
+            (HEADING_2_STR_ID, u'!!!'),
+            (HEADING_3_STR_ID, u'!!!!'),
+            (HEADING_4_STR_ID, u'!!!!!'),
+            (HEADING_5_STR_ID, u'!!!!!!'),
+            (HEADING_6_STR_ID, u'!!!!!!!'),
+        ]
 
-        # Страница, куда будем переключаться перед изменением содержимого основной страницы
-        # Можно было бы вместо temppage использовать None, но тогда программе
-        # пришлось бы каждый раз удалять и создавать панели инструментов, что медленно
+        WikiPageFactory().create(self.wikiroot, u"Викистраница", [])
+        WikiPageFactory().create(self.wikiroot, u"temp", [])
+
+        # Страница, куда будем переключаться перед изменением содержимого
+        # основной страницы. Можно было бы вместо temppage использовать None,
+        # но тогда программе пришлось бы каждый раз удалять и создавать панели
+        # инструментов, что медленно
         self.temppage = self.wikiroot[u"temp"]
         self.testpage = self.wikiroot[u"Викистраница"]
 
         Application.wikiroot = self.wikiroot
         Application.selectedPage = self.testpage
 
-
-    def _getEditor (self):
+    def _getEditor(self):
         return Application.mainWindow.pagePanel.pageView.codeEditor
 
-
-    def testTurnSyntaxEmpty (self):
+    def testTurnSyntaxEmpty(self):
         for syntax in self._turnSyntax:
             Application.selectedPage = self.temppage
             self.testpage.content = u""
             Application.selectedPage = self.testpage
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), syntax[1] + syntax[2])
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(self._getEditor().GetText(),
+                             syntax[1] + syntax[2])
 
-
-    def testTurnSyntaxSelectedAll (self):
+    def testTurnSyntaxSelectedAll(self):
         text = u"Бла-бла-бла"
 
         for syntax in self._turnSyntax:
@@ -76,13 +78,13 @@ class WikiActionsTest (BaseMainWndTest):
             self.testpage.content = text
             Application.selectedPage = self.testpage
 
-            self._getEditor().SetSelection (0, len (text))
+            self._getEditor().SetSelection(0, len(text))
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), syntax[1] + u"Бла-бла-бла" + syntax[2])
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(self._getEditor().GetText(),
+                             syntax[1] + u"Бла-бла-бла" + syntax[2])
 
-
-    def testTurnSyntaxSelectedPart (self):
+    def testTurnSyntaxSelectedPart(self):
         text = u"Бла-бла-бла"
 
         for syntax in self._turnSyntax:
@@ -90,23 +92,23 @@ class WikiActionsTest (BaseMainWndTest):
             self.testpage.content = text
             Application.selectedPage = self.testpage
 
-            self._getEditor().SetSelection (4, 7)
+            self._getEditor().SetSelection(4, 7)
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), u"Бла-{}бла{}-бла".format (syntax[1], syntax[2]))
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(
+                self._getEditor().GetText(),
+                u"Бла-{}бла{}-бла".format(syntax[1], syntax[2]))
 
-
-    def testReplaceSyntaxEmpty (self):
+    def testReplaceSyntaxEmpty(self):
         for syntax in self._replaceSyntax:
             Application.selectedPage = self.temppage
             self.testpage.content = u""
             Application.selectedPage = self.testpage
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), syntax[1])
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(self._getEditor().GetText(), syntax[1])
 
-
-    def testReplaceSyntaxSelectedAll (self):
+    def testReplaceSyntaxSelectedAll(self):
         text = u"Бла-бла-бла"
 
         for syntax in self._replaceSyntax:
@@ -114,13 +116,12 @@ class WikiActionsTest (BaseMainWndTest):
             self.testpage.content = text
             Application.selectedPage = self.testpage
 
-            self._getEditor().SetSelection (0, len (text))
+            self._getEditor().SetSelection(0, len(text))
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), syntax[1])
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(self._getEditor().GetText(), syntax[1])
 
-
-    def testReplaceSyntaxSelectedPart (self):
+    def testReplaceSyntaxSelectedPart(self):
         text = u"Бла-бла-бла"
 
         for syntax in self._replaceSyntax:
@@ -128,31 +129,29 @@ class WikiActionsTest (BaseMainWndTest):
             self.testpage.content = text
             Application.selectedPage = self.testpage
 
-            self._getEditor().SetSelection (4, 7)
+            self._getEditor().SetSelection(4, 7)
 
-            Application.actionController.getAction (syntax[0]).run(None)
-            self.assertEqual (self._getEditor().GetText(), u"Бла-{}-бла".format (syntax[1]))
+            Application.actionController.getAction(syntax[0]).run(None)
+            self.assertEqual(self._getEditor().GetText(),
+                             u"Бла-{}-бла".format(syntax[1]))
 
-
-    def testListBulletsEmpty (self):
+    def testListBulletsEmpty(self):
         Application.selectedPage = self.temppage
         self.testpage.content = u""
         Application.selectedPage = self.testpage
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
-        self.assertEqual (self._getEditor().GetText(), u"* ")
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
+        self.assertEqual(self._getEditor().GetText(), u"* ")
 
-
-    def testListNumbersEmpty (self):
+    def testListNumbersEmpty(self):
         Application.selectedPage = self.temppage
         self.testpage.content = u""
         Application.selectedPage = self.testpage
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
-        self.assertEqual (self._getEditor().GetText(), u"# ")
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
+        self.assertEqual(self._getEditor().GetText(), u"# ")
 
-
-    def testListBulletsSelectedAll (self):
+    def testListBulletsSelectedAll(self):
         text = u"""йцкуйцук
 укеуке
 ывапвыап
@@ -169,13 +168,12 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (0, len (text))
+        self._getEditor().SetSelection(0, len(text))
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
-        self.assertEqual (self._getEditor().GetText(), result)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
+        self.assertEqual(self._getEditor().GetText(), result)
 
-
-    def testListNumbersSelectedAll (self):
+    def testListNumbersSelectedAll(self):
         text = u"""йцкуйцук
 укеуке
 ывапвыап
@@ -192,13 +190,12 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (0, len (text))
+        self._getEditor().SetSelection(0, len(text))
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
-        self.assertEqual (self._getEditor().GetText(), result)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
+        self.assertEqual(self._getEditor().GetText(), result)
 
-
-    def testListBulletsSelectedPart_01 (self):
+    def testListBulletsSelectedPart_01(self):
         text = u"""йцкуйцук
 укеуке
 ывапвыап
@@ -212,22 +209,21 @@ class WikiActionsTest (BaseMainWndTest):
 * ывапываппа"""
 
         start = 3
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_01 (self):
+    def testListNumbersSelectedPart_01(self):
         text = u"""йцкуйцук
 укеуке
 ывапвыап
@@ -241,22 +237,21 @@ class WikiActionsTest (BaseMainWndTest):
 # ывапываппа"""
 
         start = 3
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_02 (self):
+    def testListBulletsSelectedPart_02(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -270,22 +265,21 @@ class WikiActionsTest (BaseMainWndTest):
 * ывапываппа"""
 
         start = 7
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_03 (self):
+    def testListBulletsSelectedPart_03(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -299,22 +293,21 @@ class WikiActionsTest (BaseMainWndTest):
 * ывапываппа"""
 
         start = 10
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_02 (self):
+    def testListNumbersSelectedPart_02(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -328,22 +321,21 @@ class WikiActionsTest (BaseMainWndTest):
 # ывапываппа"""
 
         start = 7
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_03 (self):
+    def testListNumbersSelectedPart_03(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -357,22 +349,21 @@ class WikiActionsTest (BaseMainWndTest):
 # ывапываппа"""
 
         start = 10
-        end = len (text) - 3
+        end = len(text) - 3
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_04 (self):
+    def testListBulletsSelectedPart_04(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -392,16 +383,15 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_04 (self):
+    def testListNumbersSelectedPart_04(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -421,16 +411,15 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_05 (self):
+    def testListBulletsSelectedPart_05(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -450,16 +439,15 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_05 (self):
+    def testListNumbersSelectedPart_05(self):
         text = u"""йцукен
 укеуке
 ывапвыап
@@ -479,16 +467,15 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_06 (self):
+    def testListBulletsSelectedPart_06(self):
         text = u"""* йцукен
 * укеуке
 * ывапвыап
@@ -502,22 +489,21 @@ class WikiActionsTest (BaseMainWndTest):
 ** ывапываппа"""
 
         start = 0
-        end = len (text)
+        end = len(text)
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_06 (self):
+    def testListNumbersSelectedPart_06(self):
         text = u"""# йцукен
 # укеуке
 # ывапвыап
@@ -531,22 +517,21 @@ class WikiActionsTest (BaseMainWndTest):
 ## ывапываппа"""
 
         start = 0
-        end = len (text)
+        end = len(text)
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListBulletsSelectedPart_07 (self):
+    def testListBulletsSelectedPart_07(self):
         text = u"""# йцукен
 # укеуке
 # ывапвыап
@@ -560,22 +545,21 @@ class WikiActionsTest (BaseMainWndTest):
 * # ывапываппа"""
 
         start = 0
-        end = len (text)
+        end = len(text)
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_07 (self):
+    def testListNumbersSelectedPart_07(self):
         text = u"""* йцукен
 * укеуке
 * ывапвыап
@@ -589,21 +573,20 @@ class WikiActionsTest (BaseMainWndTest):
 # * ывапываппа"""
 
         start = 0
-        end = len (text)
+        end = len(text)
 
         Application.selectedPage = self.temppage
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result)
+        self.assertEqual(self._getEditor().GetText(),
+                         result)
 
-
-    def testListBulletsSelectedPart_08 (self):
+    def testListBulletsSelectedPart_08(self):
         text = u"""йцукен
 * укеуке
 ывапвыап
@@ -623,16 +606,15 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_BULLETS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_BULLETS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
 
-
-    def testListNumbersSelectedPart_08 (self):
+    def testListNumbersSelectedPart_08(self):
         text = u"""йцукен
 # укеуке
 ывапвыап
@@ -652,10 +634,83 @@ class WikiActionsTest (BaseMainWndTest):
         self.testpage.content = text
         Application.selectedPage = self.testpage
 
-        self._getEditor().SetSelection (start, end)
+        self._getEditor().SetSelection(start, end)
 
-        Application.actionController.getAction (LIST_NUMBERS_STR_ID).run(None)
+        Application.actionController.getAction(LIST_NUMBERS_STR_ID).run(None)
 
-        self.assertEqual (self._getEditor().GetText(),
-                          result,
-                          self._getEditor().GetText())
+        self.assertEqual(self._getEditor().GetText(),
+                         result,
+                         self._getEditor().GetText())
+
+    def test_heading1_01(self):
+        editor = self._getEditor()
+        actionController = Application.actionController
+        text = u''
+        for action_str, syntax in self._headingsSyntax:
+            result = u'{} '.format(syntax)
+
+            editor.SetText(text)
+            editor.SetSelection(0, 0)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             result)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             text)
+
+    def test_heading1_02(self):
+        editor = self._getEditor()
+        actionController = Application.actionController
+        text = u'Строка 1\nСтрока 2\nСтрока 3'
+        for action_str, syntax in self._headingsSyntax:
+            result = u'{} Строка 1\nСтрока 2\nСтрока 3'.format(syntax)
+
+            editor.SetText(text)
+            editor.SetSelection(5, 5)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             result)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             text)
+
+    def test_heading1_03(self):
+        editor = self._getEditor()
+        actionController = Application.actionController
+        text = u'Строка 1\nСтрока 2\nСтрока 3'
+        for action_str, syntax in self._headingsSyntax:
+            result = u'Строка 1\n{} Строка 2\nСтрока 3'.format(syntax)
+
+            editor.SetText(text)
+            editor.SetSelection(10, 10)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             result)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             text)
+
+    def test_heading1_04(self):
+        editor = self._getEditor()
+        actionController = Application.actionController
+        text = u'Строка 1\nСтрока 2\nСтрока 3'
+        for action_str, syntax in self._headingsSyntax:
+            result = u'{syntax} Строка 1\n{syntax} Строка 2\nСтрока 3'.format(
+                syntax=syntax)
+
+            editor.SetText(text)
+            editor.SetSelection(0, 10)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             result)
+
+            actionController.getAction(action_str).run(None)
+            self.assertEqual(editor.GetText().replace(u'\r\n', u'\n'),
+                             text)

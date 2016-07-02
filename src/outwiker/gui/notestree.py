@@ -10,8 +10,6 @@ from outwiker.core.application import Application
 import outwiker.core.commands
 import outwiker.core.system
 import outwiker.gui.pagedialog
-from outwiker.core.config import BooleanOption
-from outwiker.gui.pagepopupmenu import PagePopupMenu
 from outwiker.actions.addsiblingpage import AddSiblingPageAction
 from outwiker.actions.addchildpage import AddChildPageAction
 from outwiker.actions.movepageup import MovePageUpAction
@@ -19,8 +17,11 @@ from outwiker.actions.movepagedown import MovePageDownAction
 from outwiker.actions.removepage import RemovePageAction
 from outwiker.actions.editpageprop import EditPagePropertiesAction
 from outwiker.actions.moving import GoToParentAction
+from outwiker.core.config import BooleanOption
 from outwiker.core.events import PAGE_UPDATE_ICON
 from outwiker.core.defines import ICON_WIDTH, ICON_HEIGHT
+from outwiker.gui.pagepopupmenu import PagePopupMenu
+from outwiker.gui.controls.safeimagelist import SafeImageList
 
 
 class NotesTree(wx.Panel):
@@ -52,7 +53,7 @@ class NotesTree(wx.Panel):
         self.dragItem = None
 
         # Картинки для дерева
-        self.imagelist = wx.ImageList(ICON_WIDTH, self.iconHeight)
+        self.imagelist = SafeImageList(ICON_WIDTH, self.iconHeight)
         self.treeCtrl.AssignImageList (self.imagelist)
 
         # Кеш для страниц, чтобы было проще искать элемент дерева по странице
@@ -127,14 +128,13 @@ class NotesTree(wx.Panel):
         Добавляет иконку страницы в ImageList и возвращает ее идентификатор.
         Если иконки нет, то возвращает идентификатор иконки по умолчанию
         """
+        imageId = self.defaultImageId
         icon = page.icon
 
         if icon is not None:
-            image = wx.Bitmap (icon)
-            image.SetHeight (self.iconHeight)
-            imageId = self.imagelist.Add (image)
-        else:
-            imageId = self.defaultImageId
+            image = wx.Bitmap(icon)
+            if image.IsOk():
+                imageId = self.imagelist.Add(image)
 
         return imageId
 

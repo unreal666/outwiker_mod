@@ -12,12 +12,14 @@ import wx
 
 import outwiker.core.exceptions
 from outwiker.actions.polyactionsid import *
-from outwiker.core.system import getOS
-from outwiker.core.version import Version
+from outwiker.core.events import PreWikiOpenParams, PostWikiOpenParams
+from outwiker.core.system import getOS, getCurrentDir
 from outwiker.core.tree import WikiDocument
 from outwiker.core.application import Application
 from outwiker.core.attachment import Attachment
 from outwiker.core.pagetitletester import PageTitleError, PageTitleWarning
+from outwiker.core.defines import VERSION_FILE_NAME, VERSIONS_LANG
+from outwiker.core.xmlversionparser import XmlVersionParser
 from outwiker.gui.overwritedialog import OverwriteDialog
 from outwiker.gui.longprocessrunner import LongProcessRunner
 from outwiker.gui.hotkey import HotKey
@@ -26,6 +28,7 @@ from outwiker.gui.dateformatdialog import DateFormatDialog
 from outwiker.gui.guiconfig import GeneralGuiConfig
 from outwiker.gui.tester import Tester
 from outwiker.gui.testeddialog import TestedFileDialog
+from outwiker.utilites.textfile import readTextFile
 
 
 def MessageBox (*args, **kwargs):
@@ -158,18 +161,28 @@ def openWiki (path, readonly=False):
         except outwiker.core.exceptions.RootFormatError, error:
             return error
 
+    preWikiOpenParams = PreWikiOpenParams(path, readonly)
+    Application.onPreWikiOpen(Application.selectedPage,
+                              preWikiOpenParams)
+
     runner = LongProcessRunner (threadFunc,
                                 Application.mainWindow,
                                 _(u"Loading"),
                                 _(u"Opening notes tree..."))
     result = runner.run (os.path.realpath (path), readonly)
 
-    if isinstance (result, IOError):
-        __canNotLoadWikiMessage (path)
-    elif isinstance (result, outwiker.core.exceptions.RootFormatError):
-        __rootFormatErrorHandle (path, readonly)
+    success = False
+    if isinstance(result, IOError):
+        __canNotLoadWikiMessage(path)
+    elif isinstance(result, outwiker.core.exceptions.RootFormatError):
+        __rootFormatErrorHandle(path, readonly)
     else:
         Application.wikiroot = result
+        success = True
+
+    postWikiOpenParams = PostWikiOpenParams(path, readonly, success)
+    Application.onPostWikiOpen(Application.selectedPage,
+                               postWikiOpenParams)
 
     return Application.wikiroot
 
@@ -368,29 +381,15 @@ def setStatusText (text, index = 0):
 
 
 def getCurrentVersion ():
-    fname = "version.txt"
-    path = os.path.join (outwiker.core.system.getCurrentDir(), fname)
+    path = os.path.join (getCurrentDir(), VERSION_FILE_NAME)
 
     try:
-        with open (path) as fp:
-            lines = fp.readlines()
-    except IOError:
-        MessageBox (_(u"Can't open file %s") % fname, _(u"Error"), wx.ICON_ERROR | wx.OK)
-        return
+        text = readTextFile(path)
+        versionInfo = XmlVersionParser([_(VERSIONS_LANG), u'en']).parse(text)
+    except EnvironmentError:
+        return None
 
-    version_str = "%s.%s %s" % (lines[0].strip(),
-                                lines[1].strip(),
-                                lines[2].strip())
-
-    try:
-        version = Version.parse (version_str)
-    except ValueError:
-        MessageBox (_(u"Can't parse version"),
-                    _(u"Error"),
-                    wx.ICON_ERROR | wx.OK)
-        version = Version(0, 0)
-
-    return version
+    return versionInfo.currentVersion
 
 
 @testreadonly
@@ -1085,3 +1084,27 @@ def _registerPolyActions (application):
                                                        _(u"Spell checking"),
                                                        _(u"Enable / disable spell checking")),
                                            HotKey ("F7"))
+
+    application.actionController.register (PolyAction (application,
+                                                       LINE_DUPLICATE_ID,
+                                                       _(u"Duplicate line"),
+                                                       _(u"Duplicate current line")),
+                                           None)
+
+    application.actionController.register (PolyAction (application,
+                                                       MOVE_SELECTED_LINES_UP_ID,
+                                                       _(u"Move selected lines up"),
+                                                       _(u"Move the selected lines up one line")),
+                                           None)
+
+    application.actionController.register (PolyAction (application,
+                                                       MOVE_SELECTED_LINES_DOWN_ID,
+                                                       _(u"Move selected lines down"),
+                                                       _(u"Move the selected lines down one line")),
+                                           None)
+
+    application.actionController.register (PolyAction (application,
+                                                       DELETE_CURRENT_LINE_ID,
+                                                       _(u"Delete line"),
+                                                       _(u"Delete the current line")),
+                                           None)

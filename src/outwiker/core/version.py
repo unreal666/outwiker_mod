@@ -69,8 +69,7 @@ class StatusSet (object):
     RC4 = Status ("RC4", 340)
     RC5 = Status ("RC5", 350)
 
-    RELEASE = Status ("release", 400)
-    STABLE = Status ("stable", 500)
+    RELEASE = Status ("", 400)
 
     def __init__ (self):
         pass
@@ -78,9 +77,8 @@ class StatusSet (object):
 
 class Version (object):
     def __init__ (self, major, *args, **kwargs):
-        self.NONSTATUS = Status (u"", 10000)
         self.version = [major] + [int (arg) for arg in args]
-        self.status = kwargs["status"] if "status" in kwargs else self.NONSTATUS
+        self.status = kwargs["status"] if "status" in kwargs else StatusSet.RELEASE
 
 
     def __eq__ (self, other):
@@ -113,6 +111,26 @@ class Version (object):
 
         # Отбросим первую точку
         return result.strip()[1:]
+
+
+    def __repr__ (self):
+        """
+        Added in OutWiker 2.0.0.795
+        """
+        return self.__str__()
+
+    def __getitem__(self, index):
+        """
+        Added in OutWiker 2.0.0.795
+        """
+        return self.version[index]
+
+
+    def __setitem__(self, index, value):
+        """
+        Added in OutWiker 2.0.0.795
+        """
+        self.version[index] = value
 
 
     @staticmethod
