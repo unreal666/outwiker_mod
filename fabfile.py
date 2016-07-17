@@ -6,8 +6,10 @@ import __builtin__
 import os
 import os.path
 import glob
+import urllib2
 
 from fabric.api import local, lcd, settings, task
+from buildtools.libs.colorama import Fore
 
 from buildtools.utilites import (getPython,
                                  execute,
@@ -22,7 +24,10 @@ from buildtools.defines import(
     PLUGINS_LIST,
     PLUGIN_VERSIONS_FILENAME,
 )
-from buildtools.versions import getOutwikerVersion
+from buildtools.versions import (getOutwikerVersion,
+                                 downloadAppInfo,
+                                 getLocalAppInfoList
+                                 )
 from buildtools.contentgenerators import (SiteChangelogGenerator,
                                           SitePluginsTableGenerator)
 from buildtools.builders import (BuilderWindows,
@@ -101,11 +106,11 @@ def ppaunstable():
 
 
 @task
-def plugins():
+def plugins(updatedonly=False):
     """
     Create an archive with plugins(7z required)
     """
-    builder = BuilderPlugins()
+    builder = BuilderPlugins(updatedOnly=updatedonly)
     builder.build()
 
 
@@ -331,6 +336,32 @@ def plugins_list(lang):
     generator = SitePluginsTableGenerator(appinfo_list)
     text = generator.make()
     print(text)
+
+
+@task
+def show_site_versions():
+    app_list = getLocalAppInfoList()
+
+    # Downloading versions info
+    print(u'Downloading version info files:')
+    for localAppInfo in app_list:
+        url = localAppInfo.updatesUrl
+        name = localAppInfo.appname
+
+        print(u'{:.<30}'.format(name), end=u'')
+        try:
+            appinfo = downloadAppInfo(url)
+            if appinfo.currentVersion == localAppInfo.currentVersion:
+                font = Fore.GREEN
+            else:
+                font = Fore.RED
+
+            print(font + str(appinfo.currentVersion))
+        except (urllib2.URLError, urllib2.HTTPError) as e:
+            print(Fore.RED + u'Error')
+            print(str(e))
+            print(url)
+            print('')
 
 
 @task
