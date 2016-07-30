@@ -82,11 +82,7 @@ class HtmlPageView (BaseHtmlPanel):
             IMAGE_STR_ID,
             CURRENT_DATE,
             MARK_STR_ID,
-            LINE_DUPLICATE_ID,
-            MOVE_SELECTED_LINES_UP_ID,
-            MOVE_SELECTED_LINES_DOWN_ID,
-            DELETE_CURRENT_LINE_ID,
-        ]
+        ] + self._baseTextPolyactions
 
         # Список действий, которые нужно удалять с панелей и из меню.
         # А еще их надо дизаблить при переходе на вкладку просмотра результата

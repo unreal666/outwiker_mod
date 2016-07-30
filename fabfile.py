@@ -6,9 +6,11 @@ import __builtin__
 import os
 import os.path
 import glob
+import sys
 import urllib2
+import shutil
 
-from fabric.api import local, lcd, settings, task
+from fabric.api import local, lcd, settings, task, cd, put, hosts
 from buildtools.libs.colorama import Fore
 
 from buildtools.utilites import (getPython,
@@ -23,10 +25,13 @@ from buildtools.defines import(
     PLUGINS_DIR,
     PLUGINS_LIST,
     PLUGIN_VERSIONS_FILENAME,
+    FILES_FOR_UPLOAD_UNSTABLE_WIN,
+    OUTWIKER_VERSIONS_FILENAME,
 )
 from buildtools.versions import (getOutwikerVersion,
                                  downloadAppInfo,
-                                 getLocalAppInfoList
+                                 getLocalAppInfoList,
+                                 readAppInfo,
                                  )
 from buildtools.contentgenerators import (SiteChangelogGenerator,
                                           SitePluginsTableGenerator)
@@ -42,6 +47,14 @@ from buildtools.builders import (BuilderWindows,
 from outwiker.utilites.textfile import readTextFile
 from outwiker.core.xmlversionparser import XmlVersionParser
 
+try:
+    from buildtools.serverinfo import DEPLOY_SERVER_NAME, DEPLOY_UNSTABLE_PATH
+except ImportError:
+    shutil.copyfile(u'buildtools/serverinfo.py.example',
+                    u'buildtools/serverinfo.py')
+    from buildtools.serverinfo import DEPLOY_SERVER_NAME, DEPLOY_UNSTABLE_PATH
+
+# env.hosts = [DEPLOY_SERVER_NAME]
 
 @task
 def deb_sources_included():
@@ -392,3 +405,53 @@ def _create_tree(level, maxlevel, nsiblings, parent):
             newpage.content = u'Абырвалг'
             newpage.icon = u'images/outwiker_16.png'
             _create_tree(level + 1, maxlevel, nsiblings, newpage)
+
+
+@hosts(DEPLOY_SERVER_NAME)
+@task
+def upload_unstable(distrib_path):
+    """
+    Upload unstable version on the site
+
+    distrib_path - path to distribs for Windows
+    """
+    distrib_path = unicode(distrib_path, 'utf8')
+    versions = os.path.join(distrib_path, OUTWIKER_VERSIONS_FILENAME)
+    upload_files = map(lambda item: os.path.join(distrib_path, item),
+                       FILES_FOR_UPLOAD_UNSTABLE_WIN)
+    upload_files = upload_files + [versions]
+
+    for fname in upload_files:
+        print(u'Checking {}'.format(fname))
+        assert os.path.exists(fname)
+
+    print('Checking versions')
+    newOutWikerAppInfo = readAppInfo(versions)
+    print('Download {}'.format(newOutWikerAppInfo.updatesUrl))
+    prevOutWikerAppInfo = downloadAppInfo(newOutWikerAppInfo.updatesUrl)
+
+    if newOutWikerAppInfo.currentVersion < prevOutWikerAppInfo.currentVersion:
+        print('New version < Prev version')
+        sys.exit(1)
+    elif newOutWikerAppInfo.currentVersion == prevOutWikerAppInfo.currentVersion:
+        print (Fore.RED + 'Warning: Uploaded the same version')
+
+    print ('Uploading...')
+    for fname in upload_files:
+        with cd(DEPLOY_UNSTABLE_PATH):
+            basename = os.path.basename(fname)
+            put(fname, basename)
+
+
+@hosts(DEPLOY_SERVER_NAME)
+@task
+def deploy(distrib_path):
+    """
+    Upload unstable version on the site
+
+    distrib_path - path to distribs for Windows
+    """
+    test()
+    deb_sources_included()
+    ppaunstable()
+    upload_unstable(distrib_path)

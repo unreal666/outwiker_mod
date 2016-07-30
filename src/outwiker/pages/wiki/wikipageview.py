@@ -2,6 +2,7 @@
 
 import wx
 import os
+import re
 from StringIO import StringIO
 
 from outwiker.actions.polyactionsid import *
@@ -59,6 +60,23 @@ class WikiPageView(BaseWikiPageView):
     def _getCacher(self, page, application):
         return HtmlCache(page, application)
 
+    def _getAttachString (self, fnames):
+        """
+        Функция возвращает текст, который будет вставлен на страницу при
+        вставке выбранных прикрепленных файлов из панели вложений
+
+        Перегрузка метода из BaseTextPanel
+        """
+        text = ""
+        count = len (fnames)
+
+        for n in range (count):
+            text += "Attach:" + fnames[n]
+            if n != count - 1:
+                text += "\n"
+
+        return text
+
     @property
     def commandsMenu(self):
         """
@@ -94,6 +112,7 @@ class WikiPageView(BaseWikiPageView):
             LIST_BULLETS_STR_ID,
             LIST_NUMBERS_STR_ID,
             LIST_DEFINITIONS_STR_ID,
+            LIST_DECREASE_LEVEL_STR_ID,
             LINE_BREAK_STR_ID,
             HTML_ESCAPE_STR_ID,
             CURRENT_DATE,
@@ -101,11 +120,7 @@ class WikiPageView(BaseWikiPageView):
             TABLE_ROW_STR_ID,
             TABLE_CELL_STR_ID,
             MARK_STR_ID,
-            LINE_DUPLICATE_ID,
-            MOVE_SELECTED_LINES_UP_ID,
-            MOVE_SELECTED_LINES_DOWN_ID,
-            DELETE_CURRENT_LINE_ID,
-        ]
+        ] + self._baseTextPolyactions
 
     def _getSpecificActions(self):
         return [
@@ -348,22 +363,22 @@ class WikiPageView(BaseWikiPageView):
         actionController = self._application.actionController
 
         actionController.getAction(HEADING_1_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!! "))
+            lambda param: self._setHeading(u"!! "))
 
         actionController.getAction(HEADING_2_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!!! "))
+            lambda param: self._setHeading(u"!!! "))
 
         actionController.getAction(HEADING_3_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!!!! "))
+            lambda param: self._setHeading(u"!!!! "))
 
         actionController.getAction(HEADING_4_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!!!!! "))
+            lambda param: self._setHeading(u"!!!!! "))
 
         actionController.getAction(HEADING_5_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!!!!!! "))
+            lambda param: self._setHeading(u"!!!!!! "))
 
         actionController.getAction(HEADING_6_STR_ID).setFunc(
-            lambda param: self._toddleSelectedLinesPrefix(u"!!!!!!! "))
+            lambda param: self._setHeading(u"!!!!!!! "))
 
         actionController.appendMenuItem(HEADING_1_STR_ID, menu)
         actionController.appendToolbarButton(
@@ -448,6 +463,11 @@ class WikiPageView(BaseWikiPageView):
             os.path.join (self.imagesDir, "text_list_definition.png"),
             fullUpdate=False)
 
+        # Уменьшить уровень вложенности
+        actionController.getAction(LIST_DECREASE_LEVEL_STR_ID).setFunc(
+            lambda param: self._decreaseNestingListItems())
+
+        actionController.appendMenuItem(LIST_DECREASE_LEVEL_STR_ID, menu)
 
     def __addFormatTools(self):
         menu = self._formatMenu
@@ -628,9 +648,63 @@ class WikiPageView(BaseWikiPageView):
         toolbar = self.mainWindow.toolbars[self._getName()]
         toolbar.AddSeparator()
 
-    def _toddleSelectedLinesPrefix(self, prefix):
+    def _decreaseNestingListItems(self):
         editor = self._application.mainWindow.pagePanel.pageView.codeEditor
-        editor.toddleSelectedLinesPrefix(prefix)
+
+        old_sel_start = editor.GetSelectionStart()
+        old_sel_end = editor.GetSelectionEnd()
+        first_line, last_line = editor.GetSelectionLines()
+
+        editor.BeginUndoAction()
+
+        for n in range(first_line, last_line + 1):
+            line = editor.GetLine(n)
+            if line.startswith(u'*') or line.startswith(u'#'):
+                newline = line[1:]
+                newline = newline.lstrip()
+                editor.SetLine(n, newline)
+
+        if old_sel_start != old_sel_end:
+            new_sel_start = editor.GetLineStartPosition(first_line)
+            new_sel_end = editor.GetLineEndPosition(last_line)
+        else:
+            new_sel_start = new_sel_end = editor.GetLineEndPosition(last_line)
+
+        editor.SetSelection(new_sel_start, new_sel_end)
+
+        editor.EndUndoAction()
+
+    def _setHeading(self, prefix):
+        """
+        Mark selected lines with heading
+        """
+        editor = self._application.mainWindow.pagePanel.pageView.codeEditor
+
+        old_sel_start = editor.GetSelectionStart()
+        old_sel_end = editor.GetSelectionEnd()
+        first_line, last_line = editor.GetSelectionLines()
+
+        prefix_regex = re.compile('^(!!+\\s+)*', re.U | re.M)
+
+        editor.BeginUndoAction()
+
+        for n in range(first_line, last_line + 1):
+            line = editor.GetLine(n)
+            if line.startswith(prefix):
+                newline = line[len(prefix):]
+            else:
+                newline = prefix_regex.sub(prefix, line, 1)
+            editor.SetLine(n, newline)
+
+        if old_sel_start != old_sel_end:
+            new_sel_start = editor.GetLineStartPosition(first_line)
+            new_sel_end = editor.GetLineEndPosition(last_line)
+        else:
+            new_sel_start = new_sel_end = editor.GetLineEndPosition(last_line)
+
+        editor.SetSelection(new_sel_start, new_sel_end)
+
+        editor.EndUndoAction()
 
     def _turnList(self, symbol):
         editor = self._application.mainWindow.pagePanel.pageView.codeEditor
