@@ -3,10 +3,11 @@
 import sys
 
 from outwiker.core.application import Application
-from outwiker.gui.guiconfig import GeneralGuiConfig
-from outwiker.core.commands import openWiki
+from outwiker.core.commands import openWiki, findPage
 from outwiker.core.commandline import CommandLine, CommandLineException
 from outwiker.core.commands import getCurrentVersion
+from outwiker.core.defines import APP_DATA_DISABLE_MINIMIZING, APP_DATA_DEBUG
+from outwiker.gui.guiconfig import GeneralGuiConfig
 
 
 class StarterExit (BaseException):
@@ -18,11 +19,11 @@ class StarterExit (BaseException):
 
 class Starter (object):
     """
-    Класс для выполнения команд из командной строки (не для разбора параметров) и начального открытия вики
+    Класс для выполнения команд из командной строки (не для разбора параметров)
+    и начального открытия вики
     """
     def __init__ (self):
         self._commandLine = self.__parseCommandLine (sys.argv[1:])
-
 
     def processGUI (self):
         """
@@ -34,6 +35,10 @@ class Starter (object):
         else:
             openWiki (self._commandLine.wikipath, self._commandLine.readonly)
 
+        if self._commandLine is not None:
+            page = findPage(Application, self._commandLine.page_id)
+            if Application.wikiroot is not None and page is not None:
+                Application.selectedPage = page
 
     def processConsole (self):
         """
@@ -41,7 +46,6 @@ class Starter (object):
         """
         if self._commandLine is not None:
             self.__processConsoleCommands()
-
 
     def __parseCommandLine (self, args):
         cl = None
@@ -56,7 +60,6 @@ class Starter (object):
 
         return cl
 
-
     def __processConsoleCommands (self):
         # Вывод справки
         if self._commandLine.help:
@@ -65,9 +68,11 @@ class Starter (object):
 
         # Вывод информации о версии
         if self._commandLine.version:
-            print ur"""OutWiker {ver}""".format (ver = str (getCurrentVersion()))
+            print ur"""OutWiker {ver}""".format (ver=str (getCurrentVersion()))
             raise StarterExit
 
+        Application.sharedData[APP_DATA_DISABLE_MINIMIZING] = self._commandLine.disableMinimizing
+        Application.sharedData[APP_DATA_DEBUG] = self._commandLine.debug
 
     def __openRecentWiki (self):
         """

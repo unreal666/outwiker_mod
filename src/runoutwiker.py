@@ -6,7 +6,7 @@ import os.path
 import sys
 import logging
 
-from outwiker.core.defines import WX_VERSION
+from outwiker.core.defines import WX_VERSION, APP_DATA_DEBUG
 import wxversion
 
 try:
@@ -53,8 +53,13 @@ class OutWiker(wx.App):
         except StarterExit:
             return True
 
-        config = GeneralGuiConfig(Application.config)
-        level = logging.INFO if config.debug.value else logging.WARNING
+        if APP_DATA_DEBUG not in Application.sharedData:
+            config = GeneralGuiConfig(Application.config)
+            Application.sharedData[APP_DATA_DEBUG] = config.debug.value
+
+        level = (logging.INFO
+                 if Application.sharedData.get(APP_DATA_DEBUG, False)
+                 else logging.WARNING)
 
         redirector = LogRedirector(self.getLogFileName(self._fullConfigPath),
                                    level)
