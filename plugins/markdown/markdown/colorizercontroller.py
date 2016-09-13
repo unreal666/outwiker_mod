@@ -3,13 +3,13 @@
 import threading
 
 from outwiker.gui.basetextstylingcontroller import BaseTextStylingController
-
-from outwiker.pages.wiki.wikicolorizer import WikiColorizer
 from outwiker.pages.wiki.wikieditor import WikiEditor
 
+from .colorizer import MarkdownColorizer
 
-class WikiColorizerController(BaseTextStylingController):
-    """Controller for colorize text in wiki editor"""
+
+class ColorizerController(BaseTextStylingController):
+    """Controller for colorize text in Markdown editor"""
 
     def getColorizingThread(self, page, params, runEvent):
         if isinstance(params.editor, WikiEditor):
@@ -31,10 +31,10 @@ class WikiColorizerController(BaseTextStylingController):
                             colorizeSyntax,
                             enableSpellChecking,
                             runEvent):
-        colorizer = WikiColorizer(editor,
-                                  colorizeSyntax,
-                                  enableSpellChecking,
-                                  runEvent)
+        colorizer = MarkdownColorizer(editor,
+                                      colorizeSyntax,
+                                      enableSpellChecking,
+                                      runEvent)
         stylebytes = colorizer.colorize(text)
 
         if self._runColorizingEvent.is_set():
