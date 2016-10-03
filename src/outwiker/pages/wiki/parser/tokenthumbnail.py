@@ -37,8 +37,9 @@ class ThumbnailToken (object):
                             |maxsize\s*?=\s*?(?P<maxsize>\d+))\s*?
                             (?:px)?
                             |thumb\s*?
-                        )\s*?
-                        (?:\s+?(?P<mode>soft)\s*?)?
+                        )
+                        (?:\s+?(?P<mode>soft))?
+                        \s*?
                         %\s*?
                         Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png))\s*?%%""",
                         re.IGNORECASE | re.VERBOSE)
