@@ -41,6 +41,16 @@ class ThumbDialog (wx.Dialog):
         return self.sizeCtrl.GetValue()
 
 
+    @property
+    def softMode (self):
+        return self.softmodeCheckBox.GetValue()
+
+
+    @softMode.setter
+    def softMode (self, value):
+        return self.softmodeCheckBox.SetValue(value)
+
+
     def __createGui (self):
         # Элементы для выбор имени файла
         filenameLabel = wx.StaticText (self, label=_(u"File name"))
@@ -68,13 +78,16 @@ class ThumbDialog (wx.Dialog):
         self.sizeCtrl.SetMinSize ((100, -1))
         sizeLabel = wx.StaticText (self, label=_(u"0 - default size"))
 
+        # Элемент для установки soft-режима
+        self.softmodeCheckBox = wx.CheckBox (self, label=_(u"Soft Mode"))
+
         okCancel = self.CreateButtonSizer (wx.OK | wx.CANCEL)
 
         # Расстановка элементов
         mainSizer = wx.FlexGridSizer (rows=0, cols=2)
         mainSizer.AddGrowableCol (0)
         mainSizer.AddGrowableCol (1)
-        mainSizer.AddGrowableRow (4)
+        mainSizer.AddGrowableRow (6)
 
         mainSizer.Add (filenameLabel, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=4)
         mainSizer.Add (self.filesListCombo, 0, flag = wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
@@ -87,6 +100,12 @@ class ThumbDialog (wx.Dialog):
 
         mainSizer.AddStretchSpacer()
         mainSizer.Add (sizeLabel, 0, flag=wx.ALL | wx.EXPAND, border=4)
+
+        mainSizer.AddStretchSpacer()
+        mainSizer.AddStretchSpacer()
+
+        mainSizer.Add (self.softmodeCheckBox, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
+        mainSizer.AddStretchSpacer()
 
         mainSizer.AddStretchSpacer()
         mainSizer.Add (okCancel, 0, flag=wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, border=4)
