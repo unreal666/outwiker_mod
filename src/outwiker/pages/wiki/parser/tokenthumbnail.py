@@ -49,7 +49,8 @@ class ThumbnailToken (object):
 
     def __convertThumb (self, s, l, t):
         if t["mode"] == u"soft":
-            template = u'<a href="%s/%s"><img src="%s/%s" %s="%s" /></a>'
+            template = u'<a href="{0}/{1}"><img src="{0}/{1}" style="{2}:{3}px"/></a>'
+            template2 = u'<a href="{0}/{1}"><img src="{0}/{1}" style="max-width:{2}px;max-height:{2}px"/></a>'
 
         fname = t["fname"]
 
@@ -57,7 +58,7 @@ class ThumbnailToken (object):
             size = int (t["width"])
 
             if t["mode"] == u"soft":
-                return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"width", size)
+                return template.format (Attachment.attachDir, fname, u"width", size)
 
             func = self.thumbmaker.createThumbByWidth
 
@@ -65,17 +66,25 @@ class ThumbnailToken (object):
             size = int (t["height"])
 
             if t["mode"] == u"soft":
-                return template % (Attachment.attachDir, fname, Attachment.attachDir, fname, u"height", size)
+                return template.format (Attachment.attachDir, fname, u"height", size)
 
             func = self.thumbmaker.createThumbByHeight
 
         elif t["maxsize"] is not None:
             size = int (t["maxsize"])
+
+            if t["mode"] == u"soft":
+                return template2.format (Attachment.attachDir, fname, size)
+
             func = self.thumbmaker.createThumbByMaxSize
 
         else:
             config = WikiConfig (self.parser.config)
             size = config.thumbSizeOptions.value
+
+            if t["mode"] == u"soft":
+                return template2.format (Attachment.attachDir, fname, size)
+
             func = self.thumbmaker.createThumbByMaxSize
 
         try:
