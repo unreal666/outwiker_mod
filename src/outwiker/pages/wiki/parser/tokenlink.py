@@ -23,8 +23,8 @@ class LinkToken (object):
 
     def __init__ (self, parser):
         self.parser = parser
-        if hasattr(parser, 'customProps'):
-            parser.customProps.setdefault('outwiker', {})['escapeLinkComments'] = True
+        if hasattr(parser, "customProps"):
+            parser.customProps.setdefault("outwiker", {})["escapeLinkComments"] = True
 
 
     def getToken (self):
@@ -54,7 +54,21 @@ class LinkToken (object):
         """
         comment, url = text.rsplit ("->", 1)
 
-        return self.__getUrlTag (url, comment)
+        if " => " in url or " | " in url:
+            # " | " сделал с более высшим приоритетом
+            if " | " in url:
+                url, attrs = url.split (" | ", 1)
+            else:
+                url, attrs = url.split (" => ", 1)
+
+            attrs = attrs.strip()
+
+            if attrs:
+                attrs = " " + attrs
+        else:
+            attrs = ""
+
+        return self.__getUrlTag (url, comment, attrs)
 
 
     def __convertLinkLine (self, text):
@@ -75,29 +89,19 @@ class LinkToken (object):
         """
         Подготовить адрес для ссылки. Если ссылка - прикрепленный файл, то создать путь до него
         """
-        if url.strip().startswith (AttachToken.attachString):
-            return url.strip().replace (AttachToken.attachString, Attachment.attachDir + "/", 1)
+        if url.startswith (AttachToken.attachString):
+            return url.replace (AttachToken.attachString, Attachment.attachDir + "/", 1)
 
         return url
 
 
-    def __getUrlTag (self, url, comment):
-        attrs = ''
+    def __getUrlTag (self, url, comment, attrs=""):
+        realurl = self.__prepareUrl (url.strip())
 
-        if "=>" in url:
-            url, attrs = url.split ("=>", 1)
-
-            attrs = attrs.strip()
-
-            if attrs:
-                attrs = ' ' + attrs
-
-        realurl = self.__prepareUrl (url)
-
-        if self.parser.customProps['outwiker']['escapeLinkComments']:
+        if self.parser.customProps["outwiker"]["escapeLinkComments"]:
             comment = cgi.escape (comment)
 
-        return '<a href="%s"%s>%s</a>' % (realurl.strip(), attrs, self.parser.parseLinkMarkup (comment.strip()))
+        return '<a href="%s"%s>%s</a>' % (realurl, attrs, self.parser.parseLinkMarkup (comment.strip()))
 
 
     def __convertEmptyLink (self, text):
