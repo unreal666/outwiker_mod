@@ -5,6 +5,14 @@
     <requirements>
         <outwiker>1.6.0.632 dev</outwiker>
         <os>Windows, Linux</os>
+		<packages>
+			<core>1.0</core>
+			<actions>1.0</actions>
+			<gui>1.0</gui>
+			<pages>1.0, 2.0</pages>
+			<utilites>1.0</utilites>
+			<libs>1.0</libs>
+		</packages>
     </requirements>
 
 	<data lang="en">
@@ -18,6 +26,11 @@
 		</author>
 
 		<changelog>
+			<version number="1.2.3">
+                <download os="all">http://jenyay.net/uploads/Outwiker/StylePlugin/style-1.2.3.zip</download>
+				<change>Added OutWiker 2.0 supporting.</change>
+			</version>
+
 			<version number="1.2.2" date="August 20, 2016">
                 <download os="all">http://jenyay.net/uploads/Outwiker/StylePlugin/style-1.2.2.zip</download>
 				<change>Added the Swedish translation.</change>
@@ -56,6 +69,11 @@
 		</author>
 
 		<changelog>
+			<version number="1.2.3">
+                <download os="all">http://jenyay.net/uploads/Outwiker/StylePlugin/style-1.2.3.zip</download>
+				<change>Добавлена поддержка OutWiker 2.0.</change>
+			</version>
+
 			<version number="1.2.2" date="20.08.2016">
                 <download os="all">http://jenyay.net/uploads/Outwiker/StylePlugin/style-1.2.2.zip</download>
 				<change>Добавлена поддержка шведского языка.</change>

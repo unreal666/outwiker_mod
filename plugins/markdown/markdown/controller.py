@@ -1,11 +1,18 @@
 # -*- coding: UTF-8 -*-
 
+import os
+
+from outwiker.core.event import pagetype
 from outwiker.core.factoryselector import FactorySelector
+from outwiker.core.style import Style
 from outwiker.gui.pagedialogpanels.appearancepanel import(AppearancePanel,
                                                           AppearanceController)
+from outwiker.pages.wiki.htmlcache import HtmlCache
+from outwiker.utilites.textfile import writeTextFile
 
-from .markdownpage import MarkdownPageFactory, MarkdownPage
 from .colorizercontroller import ColorizerController
+from .markdownhtmlgenerator import MarkdownHtmlGenerator
+from .markdownpage import MarkdownPageFactory, MarkdownPage
 from .i18n import get_
 
 
@@ -39,6 +46,7 @@ class Controller (object):
         self._application.onPageViewDestroy += self.__onPageViewDestroy
         self._application.onPageDialogPageTypeChanged += self.__onPageDialogPageTypeChanged
         self._application.onPageDialogDestroy += self.__onPageDialogDestroy
+        self._application.onPageUpdateNeeded += self.__onPageUpdateNeeded
 
     def clear (self):
         """
@@ -50,19 +58,18 @@ class Controller (object):
         self._application.onPageViewDestroy -= self.__onPageViewDestroy
         self._application.onPageDialogPageTypeChanged -= self.__onPageDialogPageTypeChanged
         self._application.onPageDialogDestroy -= self.__onPageDialogDestroy
+        self._application.onPageUpdateNeeded -= self.__onPageUpdateNeeded
 
     def __onPageDialogPageFactoriesNeeded (self, page, params):
         params.addPageFactory (MarkdownPageFactory())
 
+    @pagetype(MarkdownPage)
     def __onPageViewCreate(self, page):
-        assert page is not None
-        if page.getTypeString() == MarkdownPage.getTypeString():
-            self._colorizerController.initialize(page)
+        self._colorizerController.initialize(page)
 
+    @pagetype(MarkdownPage)
     def __onPageViewDestroy(self, page):
-        assert page is not None
-        if page.getTypeString() == MarkdownPage.getTypeString():
-            self._colorizerController.clear()
+        self._colorizerController.clear()
 
     def __onPageDialogPageTypeChanged(self, page, params):
         if params.pageType == MarkdownPage.getTypeString():
@@ -88,3 +95,28 @@ class Controller (object):
     def __onPageDialogDestroy(self, page, params):
         self._appearancePanel = None
         self._appearanceController = None
+
+    @pagetype(MarkdownPage)
+    def __onPageUpdateNeeded(self, page, params):
+        if page.readonly:
+            return
+
+        if not params.allowCache:
+            HtmlCache(page, self._application).resetHash()
+        self._updatePage(page)
+
+    def _updatePage(self, page):
+        path = page.getHtmlPath()
+        cache = HtmlCache(page, self._application)
+
+        # Проверим, можно ли прочитать уже готовый HTML
+        if cache.canReadFromCache() and os.path.exists(path):
+            return
+
+        style = Style()
+        stylepath = style.getPageStyle(page)
+        generator = MarkdownHtmlGenerator(page)
+
+        html = generator.makeHtml(stylepath)
+        writeTextFile(path, html)
+        cache.saveHash()

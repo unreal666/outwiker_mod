@@ -5,6 +5,14 @@
     <requirements>
         <outwiker>1.9.0.777 dev</outwiker>
         <os>Windows, Linux</os>
+		<packages>
+			<core>1.0</core>
+			<actions>1.0</actions>
+			<gui>1.0</gui>
+			<pages>1.0, 2.0</pages>
+			<utilites>1.0</utilites>
+			<libs>1.0</libs>
+		</packages>
     </requirements>
 
 	<data lang="en">
@@ -19,6 +27,7 @@
 		<changelog>
 			<version number="1.0.3">
                 <download os="all">http://jenyay.net/uploads/Outwiker/TexEquation/texequation-1.0.3.zip</download>
+				<change>Added OutWiker 2.0 supporting.</change>
 				<change>Bug fixes.</change>
 			</version>
 
@@ -53,6 +62,7 @@
 			<version number="1.0.3">
                 <download os="all">http://jenyay.net/uploads/Outwiker/TexEquation/texequation-1.0.3.zip</download>
 				<change>Исправление ошибок.</change>
+				<change>Добавлена поддержка OutWiker 2.0.</change>
 			</version>
 
 			<version number="1.0.2" date="20.08.2016">

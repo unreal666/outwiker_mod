@@ -1,8 +1,15 @@
 # -*- coding: UTF-8 -*-
 
+import os
+
+from outwiker.core.style import Style
+from outwiker.core.event import pagetype
 from outwiker.gui.pagedialogpanels.appearancepanel import(AppearancePanel,
                                                           AppearanceController)
 from outwiker.gui.preferences.preferencepanelinfo import PreferencePanelInfo
+from outwiker.pages.wiki.htmlcache import HtmlCache
+from outwiker.pages.wiki.htmlgenerator import HtmlGenerator
+from outwiker.utilites.textfile import writeTextFile
 
 from wikipage import WikiWikiPage, WikiPageFactory
 from wikipreferences import WikiPrefGeneralPanel
@@ -69,21 +76,40 @@ class WikiPageController(object):
 
         dialog.appendPreferenceGroup(_(u'Wiki Page'), [prefPanelInfo])
 
+    @pagetype(WikiWikiPage)
     def __onPageViewCreate(self, page):
-        assert page is not None
-        if page.getTypeString() == WikiWikiPage.getTypeString():
-            self._colorizerController.initialize(page)
+        self._colorizerController.initialize(page)
+        self._application.mainWindow.pagePanel.pageView.SetFocus()
 
+    @pagetype(WikiWikiPage)
     def __onPageViewDestroy(self, page):
-        assert page is not None
-        if page.getTypeString() == WikiWikiPage.getTypeString():
-            self._colorizerController.clear()
+        self._colorizerController.clear()
 
     def __onPageDialogPageFactoriesNeeded(self, page, params):
         params.addPageFactory(WikiPageFactory())
 
     def __onPageUpdateNeeded(self, page, params):
-        selectedPage = self._application.selectedPage
-        if (selectedPage is not None and
-                selectedPage.getTypeString() == WikiWikiPage.getTypeString()):
-            self._application.mainWindow.pagePanel.pageView.updateHtml()
+        if (page is None or
+                page.getTypeString() != WikiWikiPage.getTypeString() or
+                page.readonly):
+            return
+
+        if not params.allowCache:
+            HtmlCache(page, self._application).resetHash()
+        self._updatePage(page)
+
+    def _updatePage(self, page):
+        path = page.getHtmlPath()
+        cache = HtmlCache(page, self._application)
+
+        # Проверим, можно ли прочитать уже готовый HTML
+        if cache.canReadFromCache() and os.path.exists(path):
+            return
+
+        style = Style()
+        stylepath = style.getPageStyle(page)
+        generator = HtmlGenerator(page)
+
+        html = generator.makeHtml(stylepath)
+        writeTextFile(path, html)
+        cache.saveHash()

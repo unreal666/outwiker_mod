@@ -7,7 +7,6 @@ import wx
 
 from outwiker.core.event import Event
 from outwiker.gui.toolsinfo import ToolsInfo
-from outwiker.core.application import Application
 
 
 class BasePagePanel (wx.Panel):
@@ -16,11 +15,12 @@ class BasePagePanel (wx.Panel):
     """
     __metaclass__ = ABCMeta
 
-    def __init__ (self, parent):
+    def __init__ (self, parent, application):
         super (BasePagePanel, self).__init__ (parent, style=wx.TAB_TRAVERSAL)
 
         self._currentpage = None
-        self.mainWindow = Application.mainWindow
+        self._application = application
+        self.mainWindow = self._application.mainWindow
 
         # Событие, срабатывающее, когда устанавливается новая страница
         # Параметр: новая страница
@@ -156,26 +156,6 @@ class BasePagePanel (wx.Panel):
         Убрать за собой. Удалить добавленные элементы интерфейса и отписаться от событий
         """
         pass
-
-
-    #############################################################################################
-    # Методы, которые в базовом классе ничего не делают, но которые может понадобиться перегрузить
-    #############################################################################################
-
-    def onAttachmentPaste (self, fnames):
-        """
-        Пользователь хочет вставить ссылки на приаттаченные файлы
-        """
-        pass
-
-
-    def removeGui (self):
-        """
-        Убрать за собой элементы управления
-        """
-        pass
-
-    ###################################################
 
     @property
     def page (self):

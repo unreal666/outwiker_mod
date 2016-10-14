@@ -5,6 +5,14 @@
     <requirements>
         <outwiker>1.8.0.730 dev</outwiker>
         <os>Windows, Linux</os>
+		<packages>
+			<core>1.0</core>
+			<actions>1.0</actions>
+			<gui>1.0</gui>
+			<pages>1.0, 2.0</pages>
+			<utilites>1.0</utilites>
+			<libs>1.0</libs>
+		</packages>
     </requirements>
 
 	<data lang="en">
@@ -17,6 +25,11 @@
 			<site>http://jenyay.net</site>
 		</author>
 		<changelog>
+			<version number="1.0.6">
+                <download os="all">http://jenyay.net/uploads/Outwiker/Counter/counter-1.0.6.zip</download>
+				<change>Added OutWiker 2.0 supporting.</change>
+			</version>
+
 			<version number="1.0.5" date="August 20, 2016">
                 <download os="all">http://jenyay.net/uploads/Outwiker/Counter/counter-1.0.5.zip</download>
 				<change>Added the Swedish translation.</change>
@@ -62,6 +75,11 @@
 		</author>
 
 		<changelog>
+			<version number="1.0.6">
+                <download os="all">http://jenyay.net/uploads/Outwiker/Counter/counter-1.0.6.zip</download>
+				<change>Добавлена поддержка OutWiker 2.0.</change>
+			</version>
+
 			<version number="1.0.5" date="20.08.2016">
                 <download os="all">http://jenyay.net/uploads/Outwiker/Counter/counter-1.0.5.zip</download>
 				<change>Добавлена поддержка шведского языка.</change>

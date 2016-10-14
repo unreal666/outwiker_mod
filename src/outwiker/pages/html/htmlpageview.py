@@ -4,24 +4,15 @@ import os
 
 import wx
 
-from outwiker.core.commands import MessageBox, insertCurrentDate
-from outwiker.core.application import Application
-from outwiker.core.htmlimproverfactory import HtmlImproverFactory
-from outwiker.core.htmltemplate import HtmlTemplate
-from outwiker.core.style import Style
-from outwiker.utilites.textfile import readTextFile
-from outwiker.core.events import (PreprocessingParams,
-                                  PreHtmlImprovingParams,
-                                  PostprocessingParams
-                                  )
+from outwiker.core.commands import insertCurrentDate
 
 from outwiker.gui.htmltexteditor import HtmlTextEditor
-from outwiker.gui.guiconfig import HtmlRenderConfig
 from outwiker.gui.tabledialog import TableDialog
 from outwiker.gui.tablerowsdialog import TableRowsDialog
 
 from outwiker.pages.html.htmltoolbar import HtmlToolBar
-from outwiker.pages.html.basehtmlpanel import BaseHtmlPanel, EVT_PAGE_TAB_CHANGED
+from outwiker.pages.html.basehtmlpanel import (BaseHtmlPanel,
+                                               EVT_PAGE_TAB_CHANGED)
 from outwiker.pages.html.tabledialogcontroller import (
     TableDialogController,
     TableRowsDialogController
@@ -35,16 +26,16 @@ from outwiker.actions.polyactionsid import *
 
 
 class HtmlPageView (BaseHtmlPanel):
-    def __init__ (self, parent, *args, **kwds):
-        super (HtmlPageView, self).__init__ (parent, *args, **kwds)
-        self._application = Application
+    def __init__ (self, parent, application):
+        super (HtmlPageView, self).__init__ (parent, application)
 
         self.__HTML_MENU_INDEX = 7
         self._htmlPanelName = "html"
         self._menuName = _(u"HTML")
 
-        self.mainWindow.toolbars[self._htmlPanelName] = HtmlToolBar(self.mainWindow,
-                                                                    self.mainWindow.auiManager)
+        self.mainWindow.toolbars[self._htmlPanelName] = HtmlToolBar(
+            self.mainWindow,
+            self.mainWindow.auiManager)
 
         # Список используемых полиморфных действий
         self.__polyActions = [
@@ -86,8 +77,8 @@ class HtmlPageView (BaseHtmlPanel):
 
         # Список действий, которые нужно удалять с панелей и из меню.
         # А еще их надо дизаблить при переходе на вкладку просмотра результата
-        # Не убираю пустой список, поскольку в будущем могут появиться нестандартные
-        # действия, специфические только для HTML-страниц
+        # Не убираю пустой список, поскольку в будущем могут появиться
+        # нестандартные действия, специфические только для HTML-страниц
         self.__htmlNotationActions = [
         ]
 
@@ -175,9 +166,10 @@ class HtmlPageView (BaseHtmlPanel):
 
 
     def __onPageUpdate (self, sender, **kwargs):
-        if sender == self._currentpage:
-            if self.notebook.GetSelection() == self.RESULT_PAGE_INDEX:
-                self._updateResult()
+        if (sender == self._currentpage and
+                self.notebook.GetSelection() == self.RESULT_PAGE_INDEX):
+            self._updatePage()
+            self._updateHtmlWindow()
 
 
     def UpdateView (self, page):
@@ -637,50 +629,6 @@ class HtmlPageView (BaseHtmlPanel):
         toolbar.AddSeparator()
 
 
-    def generateHtml (self, page):
-        path = self.getHtmlPath ()
-
-        if page.readonly and os.path.exists (path):
-            # Если страница открыта только для чтения и html-файл уже существует, то покажем его
-            return readTextFile (path)
-
-        style = Style()
-        stylepath = style.getPageStyle (page)
-
-        try:
-            tpl = HtmlTemplate (readTextFile (stylepath))
-        except:
-            MessageBox (_(u"Page style Error. Style by default is used"),
-                        _(u"Error"),
-                        wx.ICON_ERROR | wx.OK)
-
-            tpl = HtmlTemplate (readTextFile (style.getDefaultStyle()))
-
-        content = self._changeContentByEvent (self.page,
-                                              PreprocessingParams (page.content),
-                                              Application.onPreprocessing)
-
-        if page.autoLineWrap:
-            content = self._changeContentByEvent (self.page,
-                                                  PreHtmlImprovingParams (content),
-                                                  Application.onPreHtmlImproving)
-
-            config = HtmlRenderConfig (Application.config)
-            improverFactory = HtmlImproverFactory (Application)
-            text = improverFactory[config.HTMLImprover.value].run (content)
-        else:
-            text = content
-
-        userhead = u"<title>{}</title>".format (page.title)
-        result = tpl.substitute (content = text,
-                                 userhead = userhead)
-
-        result = self._changeContentByEvent (self.page,
-                                             PostprocessingParams (result),
-                                             Application.onPostprocessing)
-        return result
-
-
     def removeGui (self):
         super (HtmlPageView, self).removeGui ()
         mainMenu = self._application.mainWindow.mainMenu
@@ -708,17 +656,12 @@ class HtmlPageView (BaseHtmlPanel):
         editor.SetSelection (newpos, newpos)
 
 
-    def _changeContentByEvent (self, page, params, event):
-        event (page, params)
-        return params.result
-
-
     def _insertTable (self, param):
         editor = self.codeEditor
-        parent = Application.mainWindow
+        parent = self._application.mainWindow
 
         with TableDialog (parent) as dlg:
-            controller = TableDialogController (dlg, Application.config)
+            controller = TableDialogController (dlg, self._application.config)
             if controller.showDialog() == wx.ID_OK:
                 result = controller.getResult()
                 editor.replaceText (result)
@@ -726,10 +669,10 @@ class HtmlPageView (BaseHtmlPanel):
 
     def _insertTableRows (self, param):
         editor = self.codeEditor
-        parent = Application.mainWindow
+        parent = self._application.mainWindow
 
         with TableRowsDialog (parent) as dlg:
-            controller = TableRowsDialogController (dlg, Application.config)
+            controller = TableRowsDialogController (dlg, self._application.config)
             if controller.showDialog() == wx.ID_OK:
                 result = controller.getResult()
                 editor.replaceText (result)

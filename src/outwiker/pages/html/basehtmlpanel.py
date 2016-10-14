@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import os
+from __future__ import print_function
 from abc import ABCMeta, abstractmethod
+import os
 
 import wx
 import wx.lib.newevent
@@ -13,9 +14,9 @@ from outwiker.core.commands import MessageBox, setStatusText
 from outwiker.core.system import getImagesDir
 from outwiker.core.attachment import Attachment
 from outwiker.core.config import IntegerOption
-from outwiker.core.defines import PAGE_RESULT_HTML
+from outwiker.core.events import PageUpdateNeededParams
 from outwiker.core.system import getOS
-from outwiker.utilites.textfile import writeTextFile
+from outwiker.utilites.textfile import readTextFile
 from outwiker.gui.basetextpanel import BaseTextPanel
 from outwiker.gui.guiconfig import GeneralGuiConfig
 
@@ -31,8 +32,8 @@ class BaseHtmlPanel(BaseTextPanel):
     RESULT_PAGE_INDEX = 1
 
 
-    def __init__(self, parent, *args, **kwds):
-        super (BaseHtmlPanel, self).__init__ (parent, *args, **kwds)
+    def __init__(self, parent, application):
+        super (BaseHtmlPanel, self).__init__ (parent, application)
 
         # Предыдущее содержимое результирующего HTML, чтобы не переписывать
         # его каждый раз
@@ -45,12 +46,13 @@ class BaseHtmlPanel(BaseTextPanel):
         self.tabSectionName = u"Misc"
         self.tabParamName = u"PageIndex"
 
+        self._statusbar_item = 0
+
         self.imagesDir = getImagesDir()
 
         self.notebook = wx.Notebook(self, -1, style=wx.NB_BOTTOM)
         self._codeEditor = self.getTextEditor()(self.notebook)
 
-        # self.htmlWindowPanel = HtmlWindowPanel (self.notebook)
         self.htmlWindow = getOS().getHtmlRender (self.notebook)
 
         self.__do_layout()
@@ -96,7 +98,9 @@ class BaseHtmlPanel(BaseTextPanel):
                  fullUpdate=True,
                  panelname="plugins"):
         """
-        !!! Внимание. Это устаревший способ добавления элементов интерфейса. Сохраняется только для совместимости со старыми версиями плагинов и в будущих версиях программы может быть убран.
+        !!! Внимание. Это устаревший способ добавления элементов интерфейса.
+        Сохраняется только для совместимости со старыми версиями плагинов
+        и в будущих версиях программы может быть убран.
 
         Добавить пункт меню и кнопку на панель
         menu -- меню для добавления элемента
@@ -179,14 +183,15 @@ class BaseHtmlPanel(BaseTextPanel):
             self.codeEditor.EmptyUndoBuffer()
             self.codeEditor.SetReadOnly (page.readonly)
             self.SetCursorPosition(self._getCursorPositionOption(page).value)
+            self.codeEditor.ScrollToLine(self.codeEditor.GetCurrentLine())
+            self.codeEditor.SetFocus()
 
-            self._updateResult()
+            self._updateHtmlWindow()
             tabIndex = self.loadPageTab (self._currentpage)
             if tabIndex < 0:
                 tabIndex = self._getDefaultPage()
 
             self.selectedPageIndex = tabIndex
-
         finally:
             self.Thaw()
 
@@ -207,23 +212,9 @@ class BaseHtmlPanel(BaseTextPanel):
         self.SetSizer(mainSizer)
         self.Layout()
 
-
-    @abstractmethod
-    def generateHtml (self, page):
-        pass
-
-
     @abstractmethod
     def _enableActions (self, enabled):
         pass
-
-
-    def getHtmlPath (self):
-        """
-        Получить путь до результирующего файла HTML
-        """
-        path = os.path.join (self._currentpage.path, PAGE_RESULT_HTML)
-        return path
 
 
     def _getDefaultPage(self):
@@ -237,7 +228,7 @@ class BaseHtmlPanel(BaseTextPanel):
 
 
     def _onTabChanged (self, event):
-        newevent = PageTabChangedEvent (tab = self.selectedPageIndex)
+        newevent = PageTabChangedEvent (tab=self.selectedPageIndex)
         wx.PostEvent(self, newevent)
 
 
@@ -246,7 +237,10 @@ class BaseHtmlPanel(BaseTextPanel):
         Соханить текущую вкладку (код, просмотр и т.п.) в настройки страницы
         """
         assert page is not None
-        tabOption = IntegerOption (page.params, self.tabSectionName, self.tabParamName, -1)
+        tabOption = IntegerOption (page.params,
+                                   self.tabSectionName,
+                                   self.tabParamName,
+                                   -1)
         tabOption.value = self.selectedPageIndex
 
 
@@ -266,7 +260,10 @@ class BaseHtmlPanel(BaseTextPanel):
             return self.RESULT_PAGE_INDEX
 
         # Get tab option from page
-        tabOption = IntegerOption (page.params, self.tabSectionName, self.tabParamName, -1)
+        tabOption = IntegerOption (page.params,
+                                   self.tabSectionName,
+                                   self.tabParamName,
+                                   -1)
         return tabOption.value
 
 
@@ -289,46 +286,58 @@ class BaseHtmlPanel(BaseTextPanel):
         self._enableAllTools ()
         self.htmlWindow.SetFocus()
         self.htmlWindow.Update()
-        self._updateResult()
+        self._updatePage()
+        self._updateHtmlWindow()
 
 
-    def _updateResult (self):
+    def _updatePage(self):
+        assert self._currentpage is not None
+
+        setStatusText (_(u"Page rendered. Please wait…"), self._statusbar_item)
+        self._application.onHtmlRenderingBegin(self._currentpage,
+                                               self.htmlWindow)
+
+        self._application.onPageUpdateNeeded(self._currentpage,
+                                             PageUpdateNeededParams(True))
+
+        setStatusText (u"", self._statusbar_item)
+        self._application.onHtmlRenderingEnd (self._currentpage,
+                                              self.htmlWindow)
+
+
+    def _updateHtmlWindow (self):
         """
         Подготовить и показать HTML текущей страницы
         """
         assert self._currentpage is not None
 
-        status_item = 0
-
-        setStatusText (_(u"Page rendered. Please wait…"), status_item)
-        self._application.onHtmlRenderingBegin (self._currentpage, self.htmlWindow)
+        setStatusText (_(u"Page loading. Please wait…"), self._statusbar_item)
 
         try:
-            html = self.generateHtml (self._currentpage)
+            path = self._currentpage.getHtmlPath()
+            if not os.path.exists(path):
+                self._updatePage()
+
+            html = readTextFile(path)
 
             if (self._oldPage != self._currentpage or
                     self._oldHtmlResult != html):
-                path = self.getHtmlPath()
-
-                if not self._currentpage.readonly:
-                    writeTextFile (path, html)
-
                 self.htmlWindow.LoadPage (path)
                 self._oldHtmlResult = html
                 self._oldPage = self._currentpage
         except EnvironmentError as e:
-            # TODO: Проверить под Windows
-            MessageBox (_(u"Can't save file\n\n{}").format (unicode (e.filename, getOS().filesEncoding)),
-                        _(u"Error"),
-                        wx.ICON_ERROR | wx.OK)
+            print(e)
+            MessageBox (_(u'Page loading error: {}').format(
+                self._currentpage.title),
+                _(u'Error'), wx.ICON_ERROR | wx.OK)
 
-        setStatusText (u"", status_item)
-        self._application.onHtmlRenderingEnd (self._currentpage, self.htmlWindow)
+        setStatusText (u"", self._statusbar_item)
 
 
     def _enableAllTools (self):
         """
-        Активировать или дезактивировать инструменты (пункты меню и кнопки) в зависимости от текущей выбранной вкладки
+        Активировать или дезактивировать инструменты (пункты меню и кнопки)
+        в зависимости от текущей выбранной вкладки
         """
         for tool in self.allTools:
             self.enableTool (tool, self._isEnabledTool (tool))
@@ -391,26 +400,35 @@ class BaseHtmlPanel(BaseTextPanel):
     def turnText (self, left, right):
         """
         Обернуть выделенный текст строками left и right.
-        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        Метод предназначен в первую очередь для упрощения доступа к
+        одноименному методу из codeEditor
         """
-        self._application.mainWindow.pagePanel.pageView.codeEditor.turnText (left, right)
+        self._application.mainWindow.pagePanel.pageView.codeEditor.turnText(left, right)
 
 
     def replaceText (self, text):
         """
         Заменить выделенный текст строкой text
-        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        Метод предназначен в первую очередь для упрощения доступа к
+        одноименному методу из codeEditor
         """
-        self._application.mainWindow.pagePanel.pageView.codeEditor.replaceText (text)
+        self._application.mainWindow.pagePanel.pageView.codeEditor.replaceText(text)
 
 
     def escapeHtml (self):
         """
         Заменить символы на их HTML-представление
-        Метод предназначен в первую очередь для упрощения доступа к одноименному методу из codeEditor
+        Метод предназначен в первую очередь для упрощения доступа к
+        одноименному методу из codeEditor
         """
-        self._application.mainWindow.pagePanel.pageView.codeEditor.escapeHtml ()
+        self._application.mainWindow.pagePanel.pageView.codeEditor.escapeHtml()
 
 
     def _onSpellOnOff (self, event):
         self._codeEditor.setDefaultSettings()
+
+    def SetFocus(self):
+        if self.selectedPageIndex == self.CODE_PAGE_INDEX:
+            return self.codeEditor.SetFocus()
+        elif self.selectedPageIndex == self.RESULT_PAGE_INDEX:
+            return self.htmlWindow.SetFocus()

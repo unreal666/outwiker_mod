@@ -5,7 +5,6 @@ import os
 from abc import ABCMeta, abstractmethod
 
 from outwiker.core.commands import MessageBox
-from outwiker.core.style import Style
 
 from outwiker.gui.htmltexteditor import HtmlTextEditor
 from outwiker.pages.html.basehtmlpanel import BaseHtmlPanel, EVT_PAGE_TAB_CHANGED
@@ -21,8 +20,8 @@ class BaseWikiPageView (BaseHtmlPanel):
 
     HTML_RESULT_PAGE_INDEX = BaseHtmlPanel.RESULT_PAGE_INDEX + 1
 
-    def __init__ (self, parent, *args, **kwds):
-        super (BaseWikiPageView, self).__init__ (parent, *args, **kwds)
+    def __init__ (self, parent, application):
+        super (BaseWikiPageView, self).__init__ (parent, application)
 
         # Редактор с просмотром получившегося HTML (если есть)
         self.htmlCodeWindow = None
@@ -118,22 +117,6 @@ class BaseWikiPageView (BaseHtmlPanel):
 
 
     @abstractmethod
-    def _getHtmlGenerator (self, page):
-        """
-        Метод должен возвращать экземпляр генератора, создающий код HTML для страницы
-        """
-        pass
-
-
-    @abstractmethod
-    def _getCacher (self, page, application):
-        """
-        Метод должен возвращать экземпляр класса, отвечающий за кэширование созданного HTML
-        """
-        pass
-
-
-    @abstractmethod
     def _isHtmlCodeShown (self):
         """
         Возвращает True, если нужно показывать вкладку с кодом HTML, и False в противном случае
@@ -205,6 +188,12 @@ class BaseWikiPageView (BaseHtmlPanel):
         self.addPage (self.htmlCodeWindow, _("HTML"))
         return self.pageCount - 1
 
+    def SetFocus(self):
+        if self.selectedPageIndex == self.htmlcodePageIndex:
+            self.htmlCodeWindow.SetFocus()
+        else:
+            super(BaseWikiPageView, self).SetFocus()
+
 
     def GetSearchPanel (self):
         if self.selectedPageIndex == self.CODE_PAGE_INDEX:
@@ -246,15 +235,11 @@ class BaseWikiPageView (BaseHtmlPanel):
 
         self.Save()
         self._enableActions (False)
-        self._updateResult ()
+        self._updatePage()
+        self._updateHtmlCode()
         self._enableAllTools ()
         self.htmlCodeWindow.SetFocus()
         self.htmlCodeWindow.Update()
-
-
-    def _updateResult (self):
-        super (BaseWikiPageView, self)._updateResult ()
-        self._updateHtmlCode()
 
 
     def _updateHtmlCode (self):
@@ -263,7 +248,8 @@ class BaseWikiPageView (BaseHtmlPanel):
             return
 
         try:
-            html = readTextFile (self.getHtmlPath())
+            path = self._currentpage.getHtmlPath()
+            html = readTextFile (path)
 
             self.htmlCodeWindow.SetReadOnly (False)
             self.htmlCodeWindow.SetText (html)
@@ -292,35 +278,6 @@ class BaseWikiPageView (BaseHtmlPanel):
         self.selectedPageIndex = self.HTML_RESULT_PAGE_INDEX
 
 
-    def generateHtml (self, page):
-        resultFileName = self.getHtmlPath()
-
-        cache = self._getCacher (page, self._application)
-        # Проверим, можно ли прочитать уже готовый HTML
-        if (cache.canReadFromCache() and os.path.exists (resultFileName)) or page.readonly:
-            try:
-                return readTextFile (resultFileName)
-            except IOError:
-                MessageBox (_(u"Can't read file {}".format (resultFileName)),
-                            _(u"Error"),
-                            wx.ICON_ERROR | wx.OK)
-                return u""
-
-        style = Style()
-        stylepath = style.getPageStyle (page)
-        generator = self._getHtmlGenerator (page)
-
-        try:
-            html = generator.makeHtml(stylepath)
-            cache.saveHash()
-        except IOError:
-            MessageBox (_(u"Can't create HTML file"),
-                        _(u"Error"),
-                        wx.ICON_ERROR | wx.OK)
-
-        return html
-
-
     def removeMenu (self):
         mainMenu = self._application.mainWindow.mainMenu
         index = mainMenu.FindMenu (self._getMenuTitle())
@@ -335,11 +292,6 @@ class BaseWikiPageView (BaseHtmlPanel):
 
 
     def updateHtml (self):
-        """
-        Сбросить кэш для того, чтобы заново сделать HTML
-        """
-        self._getCacher (self._currentpage, self._application).resetHash()
-
         if self.selectedPageIndex == self.RESULT_PAGE_INDEX:
             self._onSwitchToPreview()
         elif self.selectedPageIndex == self.HTML_RESULT_PAGE_INDEX:

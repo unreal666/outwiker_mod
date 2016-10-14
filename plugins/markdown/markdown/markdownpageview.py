@@ -13,21 +13,17 @@ from outwiker.pages.wiki.wikieditor import WikiEditor
 from outwiker.actions.polyactionsid import *
 
 from .toolbar import MarkdownToolBar
-from .markdownhtmlgenerator import MarkdownHtmlGenerator
 from .links.linkdialog import LinkDialog
 from .links.linkdialogcontroller import LinkDialogController
 
 
 class MarkdownPageView(BaseWikiPageView):
-    def __init__(self, parent, *args, **kwds):
-        super(MarkdownPageView, self).__init__(parent, *args, **kwds)
+    def __init__(self, parent, application):
+        super(MarkdownPageView, self).__init__(parent, application)
         self.imagesDir = getImagesDir()
 
     def _isHtmlCodeShown(self):
         return True
-
-    def _getHtmlGenerator(self, page):
-        return MarkdownHtmlGenerator(page)
 
     def getTextEditor(self):
         return WikiEditor
