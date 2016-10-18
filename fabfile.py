@@ -431,6 +431,9 @@ def upload_plugin(*args):
     """
     Upload plugin to site
     """
+    if len(args) == 0:
+        args = PLUGINS_LIST
+
     for pluginname in args:
         path_to_plugin_local = os.path.join(BUILD_DIR, PLUGINS_DIR, pluginname)
         path_to_xml_local = os.path.join(path_to_plugin_local, PLUGIN_VERSIONS_FILENAME)
@@ -439,12 +442,17 @@ def upload_plugin(*args):
         appinfo_local = XmlVersionParser().parse(xml_content_local)
 
         url = appinfo_local.updatesUrl
-        appinfo_remote = downloadAppInfo(url)
+        try:
+            appinfo_remote = downloadAppInfo(url)
+        except:
+            appinfo_remote = None
 
-        if appinfo_local.currentVersion < appinfo_remote.currentVersion:
+        if (appinfo_remote is not None and
+                appinfo_local.currentVersion < appinfo_remote.currentVersion):
             print(Fore.RED + 'Error. New version < Prev version')
             sys.exit(1)
-        elif appinfo_local.currentVersion == appinfo_remote.currentVersion:
+        elif (appinfo_remote is not None and
+                appinfo_local.currentVersion == appinfo_remote.currentVersion):
             print(Fore.RED + 'Warning: Uploaded the same version')
         print(Fore.GREEN + 'Uploading...')
 
@@ -456,6 +464,7 @@ def upload_plugin(*args):
         with cd(path_to_upload):
             put(path_to_archive_local, archive_name)
             put(path_to_xml_local, PLUGIN_VERSIONS_FILENAME)
+    site_versions()
 
 
 @hosts(DEPLOY_SERVER_NAME)
