@@ -53,6 +53,8 @@ else:
 
 &lt;meta name='robots' content='index,follow' /&gt;
 (:htmlheadend:)
+
+(:htmlattrs attr1="value" attr2="value":)
 ''')
 
             return u"""{description}

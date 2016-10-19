@@ -108,3 +108,24 @@ class CustomHeadsAction (BaseHeadAction):
 
     def run (self, params):
         self._getEditor().turnText (u"(:htmlhead:)\n", u"\n(:htmlheadend:)")
+
+
+class HtmlAttrsAction (BaseHeadAction):
+    """
+    Вставить команду (:keywords:)
+    """
+    stringId = u"HtmlHeads_InsertHtmlAttrs"
+
+
+    @property
+    def title (self):
+        return _(u"<html> tag attributes (:htmlattrs ...:)")
+
+
+    @property
+    def description (self):
+        return _(u"HtmlHeads plugin. Insert (:htmlattrs... :) command")
+
+
+    def run (self, params):
+        self._getEditor().turnText (u"(:htmlattrs ", u":)")

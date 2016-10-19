@@ -5,7 +5,7 @@
 import wx
 
 from outwiker.pages.html.basehtmlpanel import EVT_PAGE_TAB_CHANGED
-from .actions import TitleAction, DescriptionAction, KeywordsAction, CustomHeadsAction
+from .actions import TitleAction, DescriptionAction, KeywordsAction, CustomHeadsAction, HtmlAttrsAction
 from .i18n import get_
 
 
@@ -20,7 +20,8 @@ class GuiCreator (object):
         self._actions = [TitleAction,
                          DescriptionAction,
                          KeywordsAction,
-                         CustomHeadsAction]
+                         CustomHeadsAction,
+                         HtmlAttrsAction]
 
         # MenuItem создаваемого подменю
         self._submenuItem = None

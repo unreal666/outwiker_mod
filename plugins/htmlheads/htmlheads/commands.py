@@ -118,3 +118,31 @@ class CustomHeadsCommand (Command):
              content.split ("\n"))
 
         return u""
+
+
+class HtmlAttrsCommand (Command):
+    """
+    Команда для вставки любых атрибутов в тег <html>.
+    """
+    def __init__ (self, parser):
+        """
+        parser - экземпляр парсера
+        """
+        Command.__init__ (self, parser)
+
+
+    @property
+    def name (self):
+        """
+        Возвращает имя команды, которую обрабатывает класс
+        """
+        return u"htmlattrs"
+
+
+    def execute (self, params, content):
+        """
+        Запустить команду на выполнение.
+        Метод возвращает текст, который будет вставлен на место команды в вики-нотации
+        """
+        self.parser.appendToHtmlTag (params.strip())
+        return u""

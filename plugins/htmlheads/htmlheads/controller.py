@@ -2,7 +2,7 @@
 
 from .i18n import get_
 from .guicreator import GuiCreator
-from .commands import TitleCommand, DescriptionCommand, KeywordsCommand, CustomHeadsCommand
+from .commands import TitleCommand, DescriptionCommand, KeywordsCommand, CustomHeadsCommand, HtmlAttrsCommand
 
 
 class Controller (object):
@@ -21,7 +21,8 @@ class Controller (object):
         self._commands = [TitleCommand,
                           DescriptionCommand,
                           KeywordsCommand,
-                          CustomHeadsCommand]
+                          CustomHeadsCommand,
+                          HtmlAttrsCommand]
 
 
     def initialize (self):
