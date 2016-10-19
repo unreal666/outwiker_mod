@@ -34,11 +34,14 @@ class Parser (object):
         self.config = config
         self.error_template = u"<b>{error}</b>"
 
-        # Dictionary with nonstandard parameters (for plugins for example)
+        # Словарь с нестандартными параметрами (например, для плагинов)
         self.customProps = {}
 
         # Массив строк, которые надо добавить в заголовок страницы
         self.__headers = []
+
+        # Массив строк-атрибутов, которые надо добавить в тег <html>
+        self.__htmlAttrs = ['']
 
         # Команды, которые обрабатывает парсер.
         # Формат команд: (:name params... :) content... (:nameend:)
@@ -247,6 +250,21 @@ class Parser (object):
         Добавить строку в заголовок
         """
         self.__headers.append (header)
+
+
+    @property
+    def htmlAttrs (self):
+        """
+        Свойство возвращает строку из добавленных атрибутов для тега <html>
+        """
+        return u" ".join (self.__htmlAttrs)
+
+
+    def appendToHtmlTag (self, attr):
+        """
+        Добавить строку-атрибуты в тег <html>
+        """
+        self.__htmlAttrs.append (attr)
 
 
     def toHtml (self, text):

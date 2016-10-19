@@ -51,10 +51,11 @@ class HtmlGenerator (object):
         improverFactory = HtmlImproverFactory (Application)
         text = improverFactory[config.HTMLImprover.value].run (html)
         head = parser.head
+        htmlAttrs = parser.htmlAttrs
 
         # Create final HTML file
         tpl = HtmlTemplate (readTextFile (stylepath))
-        result = tpl.substitute (content=text, userhead=head)
+        result = tpl.substitute (content=text, userhead=head, userhtmlattrs=htmlAttrs)
 
         result = self._changeContentByEvent (self.page,
                                              PostprocessingParams (result),

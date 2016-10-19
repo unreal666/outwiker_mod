@@ -43,9 +43,10 @@ class HtmlTemplate (object):
         self.template = MyTemplate (template)
 
 
-    def substitute (self, content, userhead=u""):
+    def substitute (self, content, userhead=u"", userhtmlattrs=u""):
         return self.template.safe_substitute (content = content,
                                               fontsize = self.fontsize,
                                               fontfamily = self.fontfamily,
                                               userstyle = self.userStyle,
-                                              userhead = userhead)
+                                              userhead = userhead,
+                                              userhtmlattrs = userhtmlattrs)
