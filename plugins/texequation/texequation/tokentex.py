@@ -60,6 +60,6 @@ class TexToken (object):
             return u"<b>{}</b>".format(_(u"Can't create image file"))
 
         image_path = os.path.join (Thumbnails.getRelativeThumbDir(), image_fname)
-        result = u'<img src="{image}"/>'.format (image=image_path.replace ("\\", "/"))
+        result = u'<img class="math" src="{image}"/>'.format (image=image_path.replace ("\\", "/"))
 
         return result
