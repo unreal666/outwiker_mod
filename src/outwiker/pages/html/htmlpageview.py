@@ -85,7 +85,7 @@ class HtmlPageView (BaseHtmlPanel):
         self.__createCustomTools()
         self.mainWindow.UpdateAuiManager()
 
-        self._application.onPageUpdate += self.__onPageUpdate
+        # self._application.onPageUpdate += self._onPageUpdate
 
         self.Bind (EVT_PAGE_TAB_CHANGED, handler=self.onTabChanged)
 
@@ -112,7 +112,7 @@ class HtmlPageView (BaseHtmlPanel):
 
 
     def Clear (self):
-        self._application.onPageUpdate -= self.__onPageUpdate
+        # self._application.onPageUpdate -= self._onPageUpdate
         self.Unbind (EVT_PAGE_TAB_CHANGED, handler=self.onTabChanged)
 
         self._removeActionTools()
@@ -165,11 +165,11 @@ class HtmlPageView (BaseHtmlPanel):
              self.__polyActions)
 
 
-    def __onPageUpdate (self, sender, **kwargs):
-        if (sender == self._currentpage and
-                self.notebook.GetSelection() == self.RESULT_PAGE_INDEX):
-            self._updatePage()
-            self._updateHtmlWindow()
+    # def _onPageUpdate (self, sender, **kwargs):
+    #     if (sender == self._currentpage and
+    #             self.notebook.GetSelection() == self.RESULT_PAGE_INDEX):
+    #         self._updatePage()
+    #         self._updateHtmlWindow()
 
 
     def UpdateView (self, page):

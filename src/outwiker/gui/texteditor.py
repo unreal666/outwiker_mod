@@ -238,12 +238,12 @@ class TextEditor(wx.Panel):
             (ord(']'),            wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_PARADOWNEXTEND),
             (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_NORM,    wx.stc.STC_CMD_CHARLEFT),
             (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_SHIFT,    wx.stc.STC_CMD_CHARLEFTEXTEND),
-            (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDLEFT),
-            (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDLEFTEXTEND),
+            # (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDLEFT),
+            # (wx.stc.STC_KEY_LEFT,        wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDLEFTEXTEND),
             (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_NORM,    wx.stc.STC_CMD_CHARRIGHT),
             (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_SHIFT,    wx.stc.STC_CMD_CHARRIGHTEXTEND),
-            (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDRIGHT),
-            (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDRIGHTEXTEND),
+            # (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDRIGHT),
+            # (wx.stc.STC_KEY_RIGHT,        wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDRIGHTEXTEND),
             (ord('/'),        wx.stc.STC_SCMOD_CTRL,        wx.stc.STC_CMD_WORDPARTLEFT),
             (ord('/'),        wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_WORDPARTLEFTEXTEND),
             (ord('\\'),        wx.stc.STC_SCMOD_CTRL,        wx.stc.STC_CMD_WORDPARTRIGHT),
@@ -657,6 +657,92 @@ class TextEditor(wx.Panel):
         Added in OutWiker 2.0.0.797
         """
         self.textCtrl.DelLineRight()
+
+    def WordLeft(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordLeft()
+
+    def WordRight(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordRight()
+
+    def WordLeftEnd(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordLeftEnd()
+
+    def WordRightEnd(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordRightEnd()
+
+    def WordLeftExtend(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordLeftExtend()
+
+    def WordRightExtend(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.textCtrl.WordRightExtend()
+
+    def GotoWordStart(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.WordRight()
+        self.WordLeft()
+
+    def GotoWordEnd(self):
+        """
+        Added in outwiker.gui 1.2
+        """
+        self.WordLeftEnd()
+        self.WordRightEnd()
+
+    def ScrollLineToCursor(self):
+        """
+        Added in outwiker.gui 1.1
+        """
+        maxlines = self.textCtrl.LinesOnScreen()
+        line = self.GetCurrentLine()
+        if line >= maxlines:
+            delta = min(10, maxlines / 3)
+            line -= delta
+            if line < 0:
+                line = 0
+            self.ScrollToLine(line)
+
+    def WordStartPosition(self, pos):
+        """
+        Added in outwiker.gui 1.2
+        """
+        pos_bytes = self._helper.calcBytePos(self.GetText(), pos)
+        result_bytes = self.textCtrl.WordStartPosition(pos_bytes, True)
+        return self.getPosChar(result_bytes)
+
+    def WordEndPosition(self, pos):
+        """
+        Added in outwiker.gui 1.2
+        """
+        pos_bytes = self._helper.calcBytePos(self.GetText(), pos)
+        result_bytes = self.textCtrl.WordEndPosition(pos_bytes, True)
+        return self.getPosChar(result_bytes)
+
+    def GetWord(self, pos):
+        pos_bytes = self._helper.calcBytePos(self.GetText(), pos)
+        word_start_bytes = self.textCtrl.WordStartPosition(pos_bytes, True)
+        word_end_bytes = self.textCtrl.WordEndPosition(pos_bytes, True)
+        word = self.textCtrl.GetTextRange(word_start_bytes, word_end_bytes)
+        return word
 
     def __calcCharPos(self, pos_bytes):
         """
