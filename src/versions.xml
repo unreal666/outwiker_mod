@@ -7,7 +7,11 @@
 		<website>http://jenyay.net/Outwiker/UnstableEn</website>
 
 		<changelog>
-			<version number="2.0.0.805" status="dev">
+			<version number="2.0.0.807" status="beta">
+				<change>Changed GUI to set hot keys.</change>
+			</version>
+
+			<version number="2.0.0.806" status="beta" date="November 14, 2016">
 				<change>Added the menu items to move cursor in text.</change>
 				<change>Added the menu items to copy / cut the current line to clipboard.</change>
 				<change>Bug fixes.</change>
@@ -61,7 +65,11 @@
 		<website>http://jenyay.net/Outwiker/Unstable</website>
 
 		<changelog>
-			<version number="2.0.0.805" status="dev">
+			<version number="2.0.0.807" status="beta">
+				<change>Переделан интерфейс для установки горячих клавиш.</change>
+			</version>
+
+			<version number="2.0.0.806" status="beta" date="14.11.2016">
 				<change>Добавлены пункты меню и горячие клавиши для перемещения по тексту.</change>
 				<change>Добавлены пункты меню и горячие клавиши для копирования / вырезания текущей строки в буфер обмена.</change>
 				<change>Исправление ошибок.</change>
