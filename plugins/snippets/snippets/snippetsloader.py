@@ -2,15 +2,17 @@
 
 import os
 
+from snippets.defines import EXTENSION
+
 
 class SnippetsCollection(object):
-    def __init__(self, name):
+    def __init__(self, path):
         # List of SnippetsCollection
         self._dirs = []
 
         # List of paths
         self._snippets = []
-        self._name = name
+        self._path = path
 
     @property
     def dirs(self):
@@ -22,7 +24,11 @@ class SnippetsCollection(object):
 
     @property
     def name(self):
-        return self._name
+        return os.path.basename(self._path)
+
+    @property
+    def path(self):
+        return self._path
 
     def addSnippet(self, fname):
         self._snippets.append(fname)
@@ -35,24 +41,23 @@ class SnippetsCollection(object):
 
 
 class SnippetsLoader(object):
-    def __init__(self, dirlist):
-        self._ext = u'.tpl'
-        self._snippets = SnippetsCollection(None)
-        self._findSnippets(self._snippets, dirlist)
+    def __init__(self, dirname):
+        self._snippets = SnippetsCollection(dirname)
+        self._findSnippets(self._snippets, dirname)
+        self.rootdir = dirname
 
-    def _findSnippets(self, snippets, dirlist):
-        for dirname in dirlist:
-            if not os.path.exists(dirname) or not os.path.isdir(dirname):
-                continue
+    def _findSnippets(self, snippets, dirname):
+        if not os.path.exists(dirname):
+            return
 
-            for fname in os.listdir(dirname):
-                fullname = os.path.join(dirname, fname)
-                if os.path.isdir(fullname):
-                    subdir = SnippetsCollection(fname)
-                    self._findSnippets(subdir, [fullname])
-                    snippets.addDir(subdir)
-                elif fullname.endswith(self._ext):
-                    snippets.addSnippet(fullname)
+        for fname in os.listdir(dirname):
+            fullname = os.path.join(dirname, fname)
+            if os.path.isdir(fullname):
+                subdir = SnippetsCollection(fullname)
+                self._findSnippets(subdir, fullname)
+                snippets.addDir(subdir)
+            elif fullname.endswith(EXTENSION):
+                snippets.addSnippet(fullname)
 
     def getSnippets(self):
         return self._snippets

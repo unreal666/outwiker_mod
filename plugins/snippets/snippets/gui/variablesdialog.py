@@ -7,10 +7,11 @@ from wx.lib.newevent import NewEvent
 
 from outwiker.core.event import Event
 from outwiker.gui.testeddialog import TestedDialog
-from outwiker.gui.texteditor import TextEditor
+from outwiker.gui.controls.texteditorbase import TextEditorBase
 
 from snippets.snippetparser import SnippetParser
 from snippets.gui.snippeteditor import SnippetEditor
+from snippets.i18n import get_
 
 
 FinishDialogParams = namedtuple('FinishDialogParams', ['text'])
@@ -22,12 +23,14 @@ class VariablesDialog(TestedDialog):
     '''
     Dialog to enter variables and preview result
     '''
-    def __init__(self, parent, application):
-        super(TestedDialog, self).__init__(
+    def __init__(self, parent):
+        super(VariablesDialog, self).__init__(
             parent,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
-        self._application = application
+        global _
+        _ = get_()
+
         self._width = 700
         self._height = 400
         self._createGUI()
@@ -40,13 +43,13 @@ class VariablesDialog(TestedDialog):
 
         self._notebook = wx.Notebook(self)
 
-        # Snippet panel
-        self._snippetEditor = SnippetEditor(self._notebook, self._application)
-        self._notebook.AddPage(self._snippetEditor, _(u'Snippet'))
-
         # Result panel
-        self._resultEditor = TextEditor(self._notebook)
-        self._notebook.AddPage(self._resultEditor, _(u'Result'))
+        self._resultEditor = TextEditorBase(self._notebook)
+        self._notebook.AddPage(self._resultEditor, _(u'Preview'))
+
+        # Snippet panel
+        self._snippetEditor = SnippetEditor(self._notebook)
+        self._notebook.AddPage(self._snippetEditor, _(u'Snippet'))
 
         # Panel with variables
         self._varPanel = VaraiblesPanel(self)
@@ -99,56 +102,56 @@ class VariablesDialogController(object):
     def __init__(self, application):
         self._application = application
 
-        self.onFinishDialog = Event()
-        self._dialog = None
+        self.onFinishDialogEvent = Event()
         self._parser = None
         self._selectedText = u''
 
-    def ShowDialog(self, selectedText, template):
+        self._dialog = VariablesDialog(self._application.mainWindow)
+        self._dialog.ok_button.Bind(wx.EVT_BUTTON, handler=self._onOk)
+        self._dialog.Bind(EVT_VAR_CHANGE, handler=self._onVarChange)
+
+    def ShowDialog(self, selectedText, template, dirname):
         if self._application.selectedPage is None:
             return
 
-        if self._dialog is None:
-            self._dialog = VariablesDialog(self._application.mainWindow,
-                                           self._application)
-            self._dialog.ok_button.Bind(wx.EVT_BUTTON, handler=self._onOk)
-            self._dialog.Bind(EVT_VAR_CHANGE, handler=self._onVarChange)
-
         self._selectedText = selectedText
-        self._parser = SnippetParser(template, self._application)
+        self._parser = SnippetParser(template, dirname, self._application)
+        variables_list = self._parser.getVariables()
 
         # Get non builtin variables
         variables = sorted([var for var
-                            in self._parser.getVariables()
+                            in variables_list
                             if not var.startswith('__')])
 
         self._dialog.setSnippetText(template)
         map(lambda var: self._dialog.addStringVariable(var), variables)
 
         # Show dialog if user must enter variable's values
+        self._updateResult()
         if variables:
-            self._updateResult()
             self._dialog.Show()
         else:
-            self._finishDialog()
+            self.FinishDialog()
 
     def destroy(self):
-        self.onFinishDialog.clear()
-        if self._dialog is not None:
-            self._dialog.ok_button.Unbind(wx.EVT_BUTTON, handler=self._onOk)
-            self._dialog.Unbind(EVT_VAR_CHANGE, handle=self._onVarChange)
-            self._dialog.Close()
-            self._dialog = None
+        self.onFinishDialogEvent.clear()
+        self._dialog.ok_button.Unbind(wx.EVT_BUTTON, handler=self._onOk)
+        self._dialog.Unbind(EVT_VAR_CHANGE, handler=self._onVarChange)
+        self._dialog.Close()
+        self._dialog.Destroy()
 
-    def _finishDialog(self):
+    def FinishDialog(self):
         if self._application.selectedPage is not None:
             text = self._dialog.getResult()
-            self.onFinishDialog(FinishDialogParams(text))
+            self.onFinishDialogEvent(FinishDialogParams(text))
+
         self._dialog.Close()
-        self._dialog = None
+
+    def CloseDialog(self):
+        self._dialog.Close()
 
     def _onOk(self, event):
-        self._finishDialog()
+        self.FinishDialog()
 
     def _onVarChange(self, event):
         self._updateResult()

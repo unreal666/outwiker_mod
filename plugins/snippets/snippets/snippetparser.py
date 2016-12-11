@@ -1,43 +1,92 @@
 # -*- coding: UTF-8 -*-
 
-from outwiker.core.attachment import Attachment
+from datetime import datetime
+import os
 
-from jinja2 import Environment, meta, TemplateError
+from outwiker.core.attachment import Attachment
+from outwiker.utilites.textfile import readTextFile
+
+from jinja2 import Environment, meta, FileSystemLoader
 import snippets.defines as defines
 
 
 class SnippetParser(object):
-    def __init__(self, template, application):
+    def __init__(self, template, dirname, application):
         self._template = template
         self._application = application
+        self._dirname = dirname
+        self._jinja_env = Environment(loader=FileSystemLoader(self._dirname))
 
     def process(self, selectedText, page, **kwargs):
         assert self._application.selectedPage is not None
         params = self._getGlobalVariables(selectedText, page)
         params.update(kwargs)
-
-        env = Environment()
-        tpl = env.from_string(self._template, globals=params)
+        tpl = self._jinja_env.from_string(self._template, globals=params)
         result = tpl.render()
-
         return result
 
     def getVariables(self):
-        env = Environment()
-        ast = env.parse(self._template)
-        variables = meta.find_undeclared_variables(ast)
+        variables = set()
+        self._getVariables(self._template, variables)
         return variables
+
+    def _getVariables(self, text, var_set):
+        ast = self._jinja_env.parse(text)
+        var_set.update(meta.find_undeclared_variables(ast))
+
+        for tpl_fname in meta.find_referenced_templates(ast):
+            fname = os.path.join(self._dirname, tpl_fname)
+            try:
+                text = readTextFile(fname)
+                self._getVariables(text, var_set)
+            except EnvironmentError:
+                pass
 
     def _getGlobalVariables(self, selectedText, page):
         assert page is not None
+
+        attach = Attachment(page)
+        atatchList = VarList([fname
+                              for fname
+                              in attach.getAttachRelative()
+                              if not fname.startswith(u'__')])
 
         globals = {
             defines.VAR_SEL_TEXT: selectedText,
             defines.VAR_TITLE: page.title,
             defines.VAR_SUBPATH: page.subpath,
-            defines.VAR_ATTACH: Attachment(page).getAttachPath(True),
+            defines.VAR_ATTACH: attach.getAttachPath(True),
             defines.VAR_FOLDER: page.path,
-            defines.VAR_PAGE_ID: self._application.pageUidDepot.createUid(page)
+            defines.VAR_PAGE_ID: self._application.pageUidDepot.createUid(page),
+            defines.VAR_DATE: datetime.now(),
+            defines.VAR_DATE_CREATING: page.creationdatetime,
+            defines.VAR_DATE_EDITIND: page.datetime,
+            defines.VAR_TAGS: VarList(sorted(page.tags)),
+            defines.VAR_PAGE_TYPE: page.getTypeString(),
+            defines.VAR_CHILDLIST: VarList([subpage.title
+                                            for subpage
+                                            in page.children]),
+            defines.VAR_ATTACHLIST: atatchList,
         }
 
         return globals
+
+
+class VarList(object):
+    def __init__(self, data):
+        self._data = tuple(data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, i):
+        return self._data[i]
+
+    def __str__(self):
+        return ', '.join(self._data)
+
+    def __unicode__(self):
+        return u', '.join(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
