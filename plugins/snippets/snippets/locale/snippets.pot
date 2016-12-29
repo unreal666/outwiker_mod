@@ -1,0 +1,282 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-12-21 21:32+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: guicontroller.py:50 gui/editdialog.py:385
+msgid "Snippets"
+msgstr ""
+
+#: guicontroller.py:154 gui/editdialog.py:583
+msgid ""
+"Can't read the snippet\n"
+"{}"
+msgstr ""
+
+#: guicontroller.py:155 gui/editdialog.py:450 gui/editdialog.py:470
+#: gui/editdialog.py:497 gui/editdialog.py:584 gui/editdialog.py:628
+#: gui/editdialog.py:643 gui/editdialog.py:707
+msgid "Error"
+msgstr ""
+
+#: guicontroller.py:166
+msgid "Snippet error"
+msgstr ""
+
+#: actions/editsnippets.py:24
+msgid "Snippets management..."
+msgstr ""
+
+#: actions/editsnippets.py:28
+msgid "Snippets. Open dialog to edit, create or remove snippets."
+msgstr ""
+
+#: actions/runrecentsnippet.py:30
+msgid "Run recent used snippet..."
+msgstr ""
+
+#: actions/runrecentsnippet.py:34
+msgid "Snippets. Run recent used snippet."
+msgstr ""
+
+#: defines.py:20
+msgid "snippets"
+msgstr ""
+
+#: defines.py:21
+msgid "snippet"
+msgstr ""
+
+#: wikicommand.py:67 wikicommand.py:82
+msgid "Snippet error: \n"
+msgstr ""
+
+#: wikicommand.py:83
+msgid "Can't read file '{}'"
+msgstr ""
+
+#: snippetparser.py:29
+#, python-brace-format
+msgid "Snippet \"{name}\" not found"
+msgstr ""
+
+#: snippetparser.py:34
+#, python-brace-format
+msgid ""
+"Snippet error at line {line}:\n"
+"{text}"
+msgstr ""
+
+#: snippetparser.py:40
+#, python-brace-format
+msgid ""
+"Snippet reading error:\n"
+"{text}"
+msgstr ""
+
+#: snippetparser.py:45
+#, python-brace-format
+msgid ""
+"Snippet processing error:\n"
+"{text}"
+msgstr ""
+
+#: plugin.py:44
+msgid "Plugin to store text snippets"
+msgstr ""
+
+#: plugin.py:48
+msgid "http://jenyay.net/Outwiker/SnippetsEn"
+msgstr ""
+
+#: gui/variablesdialog.py:52
+msgid "Preview"
+msgstr ""
+
+#: gui/variablesdialog.py:56
+msgid "Snippet"
+msgstr ""
+
+#: gui/variablesdialog.py:64
+msgid "Insert as wiki command"
+msgstr ""
+
+#: gui/variablesdialog.py:131
+msgid "{} | Snippet variables"
+msgstr ""
+
+#: gui/editdialog.py:65
+msgid "Selected text"
+msgstr ""
+
+#: gui/editdialog.py:66
+msgid "Page title"
+msgstr ""
+
+#: gui/editdialog.py:67
+msgid "Page tags list"
+msgstr ""
+
+#: gui/editdialog.py:68
+msgid "Attachments path"
+msgstr ""
+
+#: gui/editdialog.py:69
+msgid "Path to page"
+msgstr ""
+
+#: gui/editdialog.py:70
+msgid "Page Id"
+msgstr ""
+
+#: gui/editdialog.py:71
+msgid "Relative page path"
+msgstr ""
+
+#: gui/editdialog.py:72
+msgid "Current date"
+msgstr ""
+
+#: gui/editdialog.py:73
+msgid "Page creation date"
+msgstr ""
+
+#: gui/editdialog.py:74
+msgid "Page modification date"
+msgstr ""
+
+#: gui/editdialog.py:75
+msgid "Page type"
+msgstr ""
+
+#: gui/editdialog.py:76
+msgid "Attachments list"
+msgstr ""
+
+#: gui/editdialog.py:77
+msgid "Child pages"
+msgstr ""
+
+#: gui/editdialog.py:81
+msgid "{% if %}"
+msgstr ""
+
+#: gui/editdialog.py:82
+msgid "{% include %}"
+msgstr ""
+
+#: gui/editdialog.py:83
+msgid "{# comment #}"
+msgstr ""
+
+#: gui/editdialog.py:87
+msgid "Snippets management"
+msgstr ""
+
+#: gui/editdialog.py:127
+msgid "Add new snippets group"
+msgstr ""
+
+#: gui/editdialog.py:136
+msgid "Create new snippet"
+msgstr ""
+
+#: gui/editdialog.py:145
+msgid "Rename"
+msgstr ""
+
+#: gui/editdialog.py:154
+msgid "Remove"
+msgstr ""
+
+#: gui/editdialog.py:163
+msgid "Run snippet"
+msgstr ""
+
+#: gui/editdialog.py:207
+msgid "Insert variable"
+msgstr ""
+
+#: gui/editdialog.py:214
+msgid "Other variable..."
+msgstr ""
+
+#: gui/editdialog.py:223
+msgid "Insert block"
+msgstr ""
+
+#: gui/editdialog.py:263
+msgid "Close"
+msgstr ""
+
+#: gui/editdialog.py:366
+msgid "No snippet errors"
+msgstr ""
+
+#: gui/editdialog.py:438
+msgid "Remove directory \"{}\" and all snippets inside?"
+msgstr ""
+
+#: gui/editdialog.py:439
+msgid "Remove snippets directory"
+msgstr ""
+
+#: gui/editdialog.py:449
+msgid "Can't remove directory \"{}\""
+msgstr ""
+
+#: gui/editdialog.py:458
+msgid "Remove snippet \"{}\"?"
+msgstr ""
+
+#: gui/editdialog.py:459
+msgid "Remove snippet"
+msgstr ""
+
+#: gui/editdialog.py:469
+msgid "Can't remove snippet \"{}\""
+msgstr ""
+
+#: gui/editdialog.py:496
+msgid ""
+"Can't create directory\n"
+"{}"
+msgstr ""
+
+#: gui/editdialog.py:627
+msgid ""
+"Can't create snippet\n"
+"{}"
+msgstr ""
+
+#: gui/editdialog.py:642
+msgid ""
+"Can't save snippet\n"
+"{}"
+msgstr ""
+
+#: gui/editdialog.py:694
+msgid "Enter variable name (English leters, numbers and _ only)"
+msgstr ""
+
+#: gui/editdialog.py:695
+msgid "Variable name"
+msgstr ""
+
+#: gui/editdialog.py:706
+msgid "Invalid variable name \"{}\""
+msgstr ""

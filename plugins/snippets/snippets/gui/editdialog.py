@@ -14,13 +14,17 @@ from outwiker.core.commands import MessageBox
 from outwiker.core.system import getSpecialDirList
 from outwiker.utilites.textfile import readTextFile, writeTextFile
 
-from snippets.actions.updatemenu import UpdateMenuAction
 from snippets.events import RunSnippetParams
 from snippets.gui.snippeteditor import SnippetEditor
 from snippets.i18n import get_
 from snippets.snippetsloader import SnippetsLoader
-from snippets.utils import getImagesPath
+from snippets.utils import (getImagesPath,
+                            findUniquePath,
+                            createFile,
+                            moveSnippetsTo)
 import snippets.defines as defines
+from snippets.snippetparser import SnippetParser, SnippetException
+from snippets.config import SnippetsConfig
 
 
 class TreeItemInfo(object):
@@ -41,8 +45,6 @@ class EditSnippetsDialog(TestedDialog):
         global _
         _ = get_()
 
-        self._width = 800
-        self._height = 500
         self.ICON_WIDTH = 16
         self.ICON_HEIGHT = 16
 
@@ -82,7 +84,7 @@ class EditSnippetsDialog(TestedDialog):
         ]
 
         self._createGUI()
-        self.SetTitle(_(u'Snippets'))
+        self.SetTitle(_(u'Snippets management'))
         self.disableSnippetEditor()
 
     def disableSnippetEditor(self):
@@ -237,6 +239,13 @@ class EditSnippetsDialog(TestedDialog):
         snippetButtonsSizer = wx.BoxSizer(wx.HORIZONTAL)
         self._createSnippetButtons(snippetButtonsSizer, self._snippetPanel)
 
+        # Errors messages
+        self.errorsTextCtrl = wx.TextCtrl(
+            self._snippetPanel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        self.errorsTextCtrl.SetMinSize((-1, 100))
+
         # SnippetSizer
         snippetSizer = wx.FlexGridSizer(cols=1)
         snippetSizer.AddGrowableRow(1)
@@ -244,13 +253,14 @@ class EditSnippetsDialog(TestedDialog):
 
         snippetSizer.Add(snippetButtonsSizer, 1, wx.EXPAND, border=2)
         snippetSizer.Add(self.snippetEditor, 1, wx.EXPAND, border=2)
+        snippetSizer.Add(self.errorsTextCtrl, 1, wx.EXPAND, border=2)
 
         self._snippetPanel.SetSizer(snippetSizer)
         mainSizer.Add(self._snippetPanel, 1, wx.ALL | wx.EXPAND, border=2)
 
     def _createBottomButtons(self, mainSizer):
         mainSizer.AddStretchSpacer()
-        self.closeBtn = wx.Button(self, id=wx.ID_CLOSE)
+        self.closeBtn = wx.Button(self, id=wx.ID_CLOSE, label=_(u'Close'))
         mainSizer.Add(self.closeBtn, flag=wx.ALL | wx.ALIGN_RIGHT, border=2)
         self.SetEscapeId(wx.ID_CLOSE)
 
@@ -266,8 +276,14 @@ class EditSnippetsDialog(TestedDialog):
         self._createBottomButtons(mainSizer)
 
         self.SetSizer(mainSizer)
-        self.SetClientSize((self._width, self._height))
         self.Layout()
+
+    @property
+    def currentSnippet(self):
+        return self.snippetEditor.GetText()
+
+    def setError(self, text):
+        self.errorsTextCtrl.SetValue(text)
 
 
 class EditSnippetsDialogController(object):
@@ -278,11 +294,17 @@ class EditSnippetsDialogController(object):
         global _
         _ = get_()
         self._application = application
+        self._snippetChanged = False
         self._dialog = EditSnippetsDialog(self._application.mainWindow)
+        self._config = SnippetsConfig(self._application.config)
+        self._dialog.SetClientSize((self._config.editDialogWidth,
+                                    self._config.editDialogHeight))
         self._bind()
 
     def _bind(self):
         self._dialog.Bind(wx.EVT_CLOSE, handler=self._onClose)
+
+        # Buttons
         self._dialog.closeBtn.Bind(wx.EVT_BUTTON, handler=self._onCloseBtn)
         self._dialog.addGroupBtn.Bind(wx.EVT_BUTTON, handler=self._onAddGroup)
         self._dialog.addSnippetBtn.Bind(wx.EVT_BUTTON,
@@ -297,6 +319,7 @@ class EditSnippetsDialogController(object):
         self._dialog.insertBlockBtn.Bind(EVT_POPUP_BUTTON_MENU_CLICK,
                                          handler=self._onInsertBlock)
 
+        # Snippets tree
         self.snippetsTree.Bind(wx.EVT_TREE_SEL_CHANGED,
                                handler=self._onTreeItemChanged)
         self.snippetsTree.Bind(wx.EVT_TREE_SEL_CHANGING,
@@ -305,11 +328,50 @@ class EditSnippetsDialogController(object):
                                handler=self._onRenameEnd)
         self.snippetsTree.Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT,
                                handler=self._onRenameBegin)
+        self.snippetsTree.Bind(wx.EVT_TREE_BEGIN_DRAG,
+                               handler=self._onTreeItemDragBegin)
+        self.snippetsTree.Bind(wx.EVT_TREE_END_DRAG,
+                               handler=self._onTreeItemDragEnd)
+
+        # Snippet editor
+        self._dialog.snippetEditor.Bind(wx.stc.EVT_STC_CHANGE,
+                                        handler=self._onSnippetEdit)
+        self._dialog.snippetEditor.Bind(wx.EVT_IDLE,
+                                        handler=self._onSnippetEditIdle)
 
     def ShowDialog(self):
-        snippets_tree = self._loadSnippetsTree()
-        self._fillSnippetsTree(snippets_tree, snippets_tree.path)
+        self._updateSnippetsTree()
         self._dialog.Show()
+
+    def _onSnippetEdit(self, event):
+        self._snippetChanged = True
+
+    def _onSnippetEditIdle(self, event):
+        if not self._snippetChanged:
+            return
+
+        path = self._getSelectedItemData().path
+        if os.path.isdir(path):
+            return
+
+        snippet_text = self._dialog.currentSnippet
+        parser = SnippetParser(snippet_text,
+                               os.path.dirname(path),
+                               self._application)
+        try:
+            parser.getVariables()
+        except SnippetException as e:
+            self._dialog.setError(e.message)
+        else:
+            self._dialog.setError(_(u'No snippet errors'))
+
+        self._snippetChanged = False
+
+    def _updateSnippetsTree(self, selectedPath=None):
+        snippets_tree = self._loadSnippetsTree()
+        if selectedPath is None:
+            selectedPath = snippets_tree.path
+        self._fillSnippetsTree(snippets_tree, selectedPath)
 
     def _loadSnippetsTree(self):
         rootdir = getSpecialDirList(defines.SNIPPETS_DIR)[-1]
@@ -420,9 +482,7 @@ class EditSnippetsDialogController(object):
             rootdir = os.path.dirname(rootdir)
 
         # Find unique directory for snippets
-        newpath = self._findUniquePath(
-            os.path.join(rootdir, _(defines.NEW_DIR_NAME))
-        )
+        newpath = findUniquePath(rootdir, _(defines.NEW_DIR_NAME))
 
         try:
             os.mkdir(newpath)
@@ -471,29 +531,21 @@ class EditSnippetsDialogController(object):
 
         if isdir:
             # Rename directory
-            newpath = self._findUniquePath(
-                os.path.join(os.path.dirname(oldpath), newlabel)
-            )
+            newpath = findUniquePath(os.path.dirname(oldpath), newlabel)
         else:
             # Rename snippet
-            newpath = self._findUniquePath(
-                os.path.join(os.path.dirname(oldpath),
-                             newlabel + defines.EXTENSION)
-            )
+            newpath = findUniquePath(os.path.dirname(oldpath),
+                                     newlabel + defines.EXTENSION,
+                                     defines.EXTENSION)
 
         try:
             self._getItemData(item).path = newpath
             os.rename(oldpath, newpath)
-            if isdir:
-                self.snippetsTree.DeleteChildren(item)
-                sl = SnippetsLoader(newpath)
-                snippets_tree = sl.getSnippets()
-                self._buildSnippetsTree(item, snippets_tree, newpath)
-                self.snippetsTree.ExpandAll()
+            self._updateSnippetsTree(newpath)
         except EnvironmentError as e:
             print(e)
-            event.Veto()
 
+        event.Veto()
         self._updateMenu()
 
     def _onTreeItemChanged(self, event):
@@ -532,17 +584,6 @@ class EditSnippetsDialogController(object):
                 _(u"Error"),
                 wx.ICON_ERROR | wx.OK)
 
-    def _findUniquePath(self, path, extension=u''):
-        index = 1
-        result = path
-
-        while os.path.exists(result):
-            suffix = u' ({}){}'.format(index, extension)
-            result = path + suffix
-            index += 1
-
-        return result
-
     def _getItemData(self, item):
         if not item.IsOk():
             return None
@@ -557,8 +598,7 @@ class EditSnippetsDialogController(object):
         '''
         Update 'Snippets' menu in main menu.
         '''
-        actionController = self._application.actionController
-        actionController.getAction(UpdateMenuAction.stringId).run(None)
+        self._application.customEvents(defines.EVENT_UPDATE_MENU, None)
 
     def _onAddSnippet(self, event):
         selectedItem = self._getSelectedItemData()
@@ -568,15 +608,15 @@ class EditSnippetsDialogController(object):
         if not os.path.isdir(rootdir):
             rootdir = os.path.dirname(rootdir)
 
-        # Find unique directory for snippets
-        newpath = self._findUniquePath(
-            os.path.join(rootdir,
-                         _(defines.NEW_SNIPPET_NAME) + defines.EXTENSION),
-            defines.EXTENSION)
+        # Find unique file name for snippets
+        newpath = findUniquePath(
+            rootdir,
+            _(defines.NEW_SNIPPET_NAME) + defines.EXTENSION,
+            defines.EXTENSION
+        )
 
         try:
-            with open(newpath, 'w'):
-                pass
+            createFile(newpath)
             snippets_tree = self._loadSnippetsTree()
             self._fillSnippetsTree(snippets_tree, newpath)
             newitem = self.snippetsTree.GetSelection()
@@ -619,6 +659,14 @@ class EditSnippetsDialogController(object):
         except EnvironmentError:
             if event.CanVeto():
                 event.Veto()
+                return
+
+        try:
+            w, h = self._dialog.GetClientSize()
+            self._config.editDialogWidth = w
+            self._config.editDialogHeight = h
+        except EnvironmentError:
+            pass
 
     def _onCloseBtn(self, event):
         self._dialog.Close()
@@ -669,3 +717,30 @@ class EditSnippetsDialogController(object):
                   len(name) > 0 and
                   regex.match(name) is not None)
         return result
+
+    def _onTreeItemDragBegin(self, event):
+        item = event.GetItem()
+        if self._isRootItem(item):
+            return
+
+        event.Allow()
+        self._treeDragSource = self._getItemData(item).path
+
+    def _onTreeItemDragEnd(self, event):
+        treeDragTarget = event.GetItem()
+        dropPath = self._getItemData(treeDragTarget).path
+        sourceParent = os.path.dirname(self._treeDragSource)
+
+        if not os.path.isdir(dropPath):
+            dropPath = os.path.dirname(dropPath)
+
+        if dropPath.startswith(self._treeDragSource):
+            return
+
+        if sourceParent == dropPath:
+            return
+
+        # print('{} -> {}'.format(self._treeDragSource, dropPath))
+        result_path = moveSnippetsTo(self._treeDragSource, dropPath)
+        self._updateSnippetsTree(result_path)
+        self._updateMenu()

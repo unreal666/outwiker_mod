@@ -5,19 +5,18 @@ from collections import namedtuple
 
 import wx
 
-from outwiker.core.system import getSpecialDirList
 from outwiker.core.commands import MessageBox
 from outwiker.utilites.textfile import readTextFile
 
-from snippets.actions.updatemenu import UpdateMenuAction
 from snippets.actions.editsnippets import EditSnippetsAction
+from snippets.actions.runrecentsnippet import RunRecentSnippet
 from snippets.events import RunSnippetParams
 from snippets.i18n import get_
 from snippets.snippetsloader import SnippetsLoader
 from snippets.gui.variablesdialog import VariablesDialogController
+from snippets.utils import getSnippetsDir
 import snippets.defines as defines
-
-from jinja2 import TemplateError
+from snippets.snippetparser import SnippetException
 
 SnippetInfo = namedtuple('SnippetInfo', ['filename', 'menuitem', 'parentmenu'])
 
@@ -38,8 +37,8 @@ class GuiController(object):
         )
 
         self._actions = [
-            UpdateMenuAction,
             EditSnippetsAction,
+            RunRecentSnippet,
         ]
 
     def initialize(self):
@@ -96,7 +95,7 @@ class GuiController(object):
 
     def _updateMenu(self):
         self._removeSnippetsFromMenu()
-        sl = SnippetsLoader(getSpecialDirList(defines.SNIPPETS_DIR)[-1])
+        sl = SnippetsLoader(getSnippetsDir())
         snippets_tree = sl.getSnippets()
         self._buildTree(snippets_tree, self._menu)
 
@@ -144,11 +143,10 @@ class GuiController(object):
 
     def _onRunSnippet(self, params):
         # type: (RunSnippetParams) -> None
-        if self._application.selectedPage is None:
-            return
+        editor = self._getEditor()
+        selectedText = editor.GetSelectedText() if editor is not None else u''
 
         snippet_fname = params.snippet_fname
-        selectedText = params.selectedText
         try:
             template = self._loadTemplate(snippet_fname)
         except EnvironmentError:
@@ -162,38 +160,17 @@ class GuiController(object):
             self._varDialogController.ShowDialog(
                 selectedText,
                 template,
-                os.path.dirname(snippet_fname)
+                snippet_fname
             )
-        except TemplateError as e:
-            text = _(u'Template error at line {line}:\n{text}').format(
-                line=e.lineno,
-                text=unicode(e.message)
-            )
-            MessageBox(text, _(u"Snippet error"), wx.ICON_ERROR | wx.OK)
-        except EnvironmentError as e:
-            text = _(u'Snippet reading error:\n{text}').format(
-                text=unicode(e)
-            )
-            MessageBox(text, _(u"Snippet error"), wx.ICON_ERROR | wx.OK)
-        except BaseException as e:
-            text = _(u'Snippet processing error:\n{text}').format(
-                text=unicode(e)
-            )
-            MessageBox(text, _(u"Snippet error"), wx.ICON_ERROR | wx.OK)
+        except SnippetException as e:
+            MessageBox(e.message, _(u"Snippet error"), wx.ICON_ERROR | wx.OK)
 
     def _onClick(self, event):
-        if self._application.selectedPage is None:
-            return
-
         assert event.GetId() in self._snippets_id
         snippet_fname = self._snippets_id[event.GetId()].filename
 
-        editor = self._getEditor()
-        if editor is not None:
-            selectedText = editor.GetSelectedText()
-            eventParams = RunSnippetParams(snippet_fname, selectedText)
-            self._application.customEvents(defines.EVENT_RUN_SNIPPET,
-                                           eventParams)
+        eventParams = RunSnippetParams(snippet_fname)
+        self._application.customEvents(defines.EVENT_RUN_SNIPPET, eventParams)
 
     def _loadTemplate(self, fname):
         template = readTextFile(fname)

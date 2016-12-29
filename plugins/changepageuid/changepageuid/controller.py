@@ -2,20 +2,16 @@
 
 import wx
 
-from outwiker.core.commands import testreadonly
-from outwiker.core.exceptions import ReadonlyException
-
-from .i18n import get_
-from .guicreator import GuiCreator
-from .dialog import ChangeUidDialog
-from .dialogcontroller import DialogController
+from changepageuid.i18n import get_
+from changepageuid.guicreator import GuiCreator
+from changepageuid.utils import changeUidWithDialog
 
 
-class Controller (object):
+class Controller(object):
     """
     Класс отвечает за основную работу интерфейса плагина
     """
-    def __init__ (self, plugin, application):
+    def __init__(self, plugin, application):
         """
         """
         self._plugin = plugin
@@ -29,15 +25,11 @@ class Controller (object):
 
         self.CHANGE_PAGE_UID = wx.NewId()
 
-
-    def initialize (self):
-        """
-        Инициализация контроллера при активации плагина. Подписка на нужные события
-        """
+    def initialize(self):
         global _
         _ = get_()
 
-        self._guiCreator = GuiCreator (self, self._application)
+        self._guiCreator = GuiCreator(self, self._application)
         self._guiCreator.initialize()
 
         self._application.onTreePopupMenu += self.__onTreePopupMenu
@@ -45,59 +37,29 @@ class Controller (object):
         if self._application.mainWindow is not None:
             self._guiCreator.createTools()
 
-
-    def destroy (self):
+    def destroy(self):
         """
         Вызывается при отключении плагина
         """
         self._application.onTreePopupMenu -= self.__onTreePopupMenu
 
         self._guiCreator.removeTools()
-        self._guiCreator.destroy ()
+        self._guiCreator.destroy()
 
-
-    def __onTreePopupMenu (self, menu, page):
+    def __onTreePopupMenu(self, menu, page):
         self._selectedPage = page
 
-        menu.Append (self.CHANGE_PAGE_UID, _(u"Change Page Identifier..."))
+        menu.Append(self.CHANGE_PAGE_UID, _(u"Change Page Identifier..."))
 
-        self._application.mainWindow.Bind (wx.EVT_MENU,
-                                           id=self.CHANGE_PAGE_UID,
-                                           handler=self.__onPopupClick)
+        self._application.mainWindow.Bind(wx.EVT_MENU,
+                                          id=self.CHANGE_PAGE_UID,
+                                          handler=self.__onPopupClick)
 
-
-    def __onPopupClick (self, event):
+    def __onPopupClick(self, event):
         assert self._selectedPage is not None
 
-        self.changeUidWithDialog (self._selectedPage)
-        self._application.mainWindow.Unbind (wx.EVT_MENU,
-                                             id=self.CHANGE_PAGE_UID)
+        changeUidWithDialog(self._selectedPage, self._application)
+        self._application.mainWindow.Unbind(wx.EVT_MENU,
+                                            id=self.CHANGE_PAGE_UID)
 
         self._selectedPage = None
-
-
-    @testreadonly
-    def changeUidWithDialog (self, page):
-        """
-        Вызвать диалог для изменения UID страницы
-        """
-        if page is None or page.parent is None:
-            return
-
-        if page.readonly:
-            raise ReadonlyException
-
-        dlg = ChangeUidDialog (self._application.mainWindow)
-
-        dlgController = DialogController (self._application,
-                                          dlg,
-                                          page)
-
-        resultDlg = dlgController.showDialog ()
-
-        if resultDlg == wx.ID_OK:
-            # Не отлавливаем исключения, поскольку считаем,
-            # что правильность идентификатора проверил DialogController
-            self._application.pageUidDepot.changeUid (page, dlg.uid)
-
-        dlg.Destroy()

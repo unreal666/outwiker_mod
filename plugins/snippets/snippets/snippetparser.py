@@ -6,8 +6,48 @@ import os
 from outwiker.core.attachment import Attachment
 from outwiker.utilites.textfile import readTextFile
 
-from jinja2 import Environment, meta, FileSystemLoader
+from jinja2 import (Environment, meta, FileSystemLoader,
+                    TemplateSyntaxError, TemplateNotFound)
 import snippets.defines as defines
+from snippets.i18n import get_
+
+
+class SnippetException(Exception):
+    pass
+
+
+def _convertExceptions(func):
+    '''
+    Decorator to convert Jinja's errors and other errors to SnippetException.
+    '''
+    _ = get_()
+
+    def _process(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except TemplateNotFound as e:
+            text = _(u'Snippet "{name}" not found').format(
+                name=unicode(e.name)
+            )
+            raise SnippetException(text)
+        except TemplateSyntaxError as e:
+            text = _(u'Snippet error at line {line}:\n{text}').format(
+                line=e.lineno,
+                text=unicode(e.message)
+            )
+            raise SnippetException(text)
+        except EnvironmentError as e:
+            text = _(u'Snippet reading error:\n{text}').format(
+                text=unicode(e)
+            )
+            raise SnippetException(text)
+        except BaseException as e:
+            text = _(u'Snippet processing error:\n{text}').format(
+                text=unicode(e)
+            )
+            raise SnippetException(text)
+
+    return _process
 
 
 class SnippetParser(object):
@@ -17,14 +57,15 @@ class SnippetParser(object):
         self._dirname = dirname
         self._jinja_env = Environment(loader=FileSystemLoader(self._dirname))
 
+    @_convertExceptions
     def process(self, selectedText, page, **kwargs):
-        assert self._application.selectedPage is not None
         params = self._getGlobalVariables(selectedText, page)
         params.update(kwargs)
         tpl = self._jinja_env.from_string(self._template, globals=params)
         result = tpl.render()
         return result
 
+    @_convertExceptions
     def getVariables(self):
         variables = set()
         self._getVariables(self._template, variables)
@@ -43,31 +84,34 @@ class SnippetParser(object):
                 pass
 
     def _getGlobalVariables(self, selectedText, page):
-        assert page is not None
-
-        attach = Attachment(page)
-        atatchList = VarList([fname
-                              for fname
-                              in attach.getAttachRelative()
-                              if not fname.startswith(u'__')])
-
         globals = {
-            defines.VAR_SEL_TEXT: selectedText,
-            defines.VAR_TITLE: page.title,
-            defines.VAR_SUBPATH: page.subpath,
-            defines.VAR_ATTACH: attach.getAttachPath(True),
-            defines.VAR_FOLDER: page.path,
-            defines.VAR_PAGE_ID: self._application.pageUidDepot.createUid(page),
             defines.VAR_DATE: datetime.now(),
-            defines.VAR_DATE_CREATING: page.creationdatetime,
-            defines.VAR_DATE_EDITIND: page.datetime,
-            defines.VAR_TAGS: VarList(sorted(page.tags)),
-            defines.VAR_PAGE_TYPE: page.getTypeString(),
-            defines.VAR_CHILDLIST: VarList([subpage.title
-                                            for subpage
-                                            in page.children]),
-            defines.VAR_ATTACHLIST: atatchList,
         }
+
+        if page is not None:
+            attach = Attachment(page)
+            attachList = VarList([fname
+                                  for fname
+                                  in sorted(attach.getAttachRelative())
+                                  if not fname.startswith(u'__')])
+
+            globals_page = {
+                defines.VAR_SEL_TEXT: selectedText,
+                defines.VAR_TITLE: page.display_title,
+                defines.VAR_SUBPATH: page.subpath,
+                defines.VAR_ATTACH: attach.getAttachPath(True),
+                defines.VAR_FOLDER: page.path,
+                defines.VAR_PAGE_ID: self._application.pageUidDepot.createUid(page),
+                defines.VAR_DATE_CREATING: page.creationdatetime,
+                defines.VAR_DATE_EDITIND: page.datetime,
+                defines.VAR_TAGS: VarList(sorted(page.tags)),
+                defines.VAR_PAGE_TYPE: page.getTypeString(),
+                defines.VAR_CHILDLIST: VarList([subpage.title
+                                                for subpage
+                                                in page.children]),
+                defines.VAR_ATTACHLIST: attachList,
+            }
+            globals.update(globals_page)
 
         return globals
 
