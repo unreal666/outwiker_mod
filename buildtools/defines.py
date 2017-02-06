@@ -4,7 +4,7 @@ import os
 
 
 # Supported Ubuntu releases
-UBUNTU_RELEASE_NAMES = [u"wily", u"trusty", u"xenial", "yakkety"]
+UBUNTU_RELEASE_NAMES = [u"trusty", u"xenial", "yakkety"]
 
 # List of the supported plugins
 PLUGINS_LIST = [
@@ -15,6 +15,7 @@ PLUGINS_LIST = [
     u"datagraph",
     u"export2html",
     u"externaltools",
+    u"hackpage",
     u"htmlformatter",
     u"htmlheads",
     u"lightbox",
@@ -23,6 +24,7 @@ PLUGINS_LIST = [
     u"pagetypecolor",
     u"readingmode",
     u"sessions",
+    u"snippets",
     u"source",
     u"spoiler",
     u"statistics",

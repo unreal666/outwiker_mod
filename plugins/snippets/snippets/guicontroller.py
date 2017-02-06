@@ -10,6 +10,7 @@ from outwiker.utilites.textfile import readTextFile
 
 from snippets.actions.editsnippets import EditSnippetsAction
 from snippets.actions.runrecentsnippet import RunRecentSnippet
+from snippets.actions.openhelp import OpenHelpAction
 from snippets.events import RunSnippetParams
 from snippets.i18n import get_
 from snippets.snippetsloader import SnippetsLoader
@@ -39,6 +40,7 @@ class GuiController(object):
         self._actions = [
             EditSnippetsAction,
             RunRecentSnippet,
+            OpenHelpAction,
         ]
 
     def initialize(self):
@@ -109,7 +111,7 @@ class GuiController(object):
         # Create menu items
         menu.AppendSeparator()
         for snippet in sorted(snippets_tree.snippets):
-            name = os.path.basename(snippet)[:-len(defines.EXTENSION)]
+            name = os.path.basename(snippet)
             menu_item_id = wx.Window.NewControlId()
             menu_item = menu.Append(menu_item_id, name)
 

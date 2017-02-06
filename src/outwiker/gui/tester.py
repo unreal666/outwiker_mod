@@ -3,81 +3,87 @@
 import wx
 
 
-class DialogTester (object):
+class DialogTester(object):
     """
     Класс, используемый для тестирования GUI (диалогов)
     """
-    def __init__ (self):
-        # Список функций, которые нужно вызывать при попытке вызова метода ShowModal()
-        # при использовании класса TestedDialog
+    def __init__(self):
+        # Список кортежей: (функция, *args, **kwargs),
+        # Функции нужно вызывать при попытке вызова
+        # метода ShowModal() при использовании класса TestedDialog
         # Если список пуст, вызывается обычный ShowModal() для пользователя
-        # Функция должна принимать один параметр - ссылку на диалог, для которого вызывается ShowModal()
+        # Функция должна принимать один параметр - ссылку на диалог,
+        # для которого вызывается ShowModal()
         # Функция должна возвращать значение, взвращаемое методом ShowModal()
         self._dialogActions = []
 
+    def append(self, func, *args, **kwargs):
+        '''
+        Append function to queue.
+        Function signature:
+            def func(dialog, *args, **kwags):
+        '''
+        self._dialogActions.append((func, args, kwargs))
 
-    def append (self, func):
-        self._dialogActions.append (func)
-
-
-    def clear (self):
+    def clear(self):
         self._dialogActions = []
 
-
-    @staticmethod
-    def _returnResult (result):
-        def func (dialog):
-            return result
-
-        return func
-
-
-    def appendOk (self):
+    def appendOk(self):
         """
-        Метод добавляет в _dialogActions функцию, которая только возвращает wx.ID_OK
+        Метод добавляет в _dialogActions функцию,
+        которая только возвращает wx.ID_OK
         """
-        self.append (self._returnResult (wx.ID_OK))
+        self.append(self._returnResult, wx.ID_OK)
 
-
-    def appendCancel (self):
+    def appendCancel(self):
         """
-        Метод добавляет в _dialogActions функцию, которая только возвращает wx.ID_CANCEL
+        Метод добавляет в _dialogActions функцию,
+        которая только возвращает wx.ID_CANCEL
         """
-        self.append (self._returnResult (wx.ID_CANCEL))
+        self.append(self._returnResult, wx.ID_CANCEL)
 
-
-    def appendYes (self):
+    def appendYes(self):
         """
-        Метод добавляет в _dialogActions функцию, которая только возвращает wx.YES
+        Метод добавляет в _dialogActions функцию,
+        которая только возвращает wx.YES
         """
-        self.append (self._returnResult (wx.YES))
+        self.append(self._returnResult, wx.YES)
 
-
-    def appendNo (self):
+    def appendNo(self):
         """
-        Метод добавляет в _dialogActions функцию, которая только возвращает wx.YES
+        Метод добавляет в _dialogActions функцию,
+        которая только возвращает wx.YES
         """
-        self.append (self._returnResult (wx.NO))
+        self.append(self._returnResult, wx.NO)
 
-
-    def pop (self):
+    def pop(self):
         """
-        Возвращает None, если список функций пуст или первый элемент в списке, если он есть
+        Возвращает None, если список функций пуст или первый элемент в списке,
+        если он есть
         """
-        if len (self._dialogActions) == 0:
-            return None
+        if len(self._dialogActions) == 0:
+            return (None, None, None)
 
-        return self._dialogActions.pop (0)
-
+        return self._dialogActions.pop(0)
 
     @property
-    def count (self):
-        return len (self._dialogActions)
+    def count(self):
+        return len(self._dialogActions)
+
+    def runNext(self, dialog):
+        result = None
+        while result is None and self.count != 0:
+            func, args, kwargs = self.pop()
+            result = func(dialog, *args, **kwargs)
+
+        return result
+
+    def _returnResult(self, dialog, result):
+        return result
 
 
-
-class TesterInterface (object):
-    def __init__ (self):
+class TesterInterface(object):
+    def __init__(self):
         self.dialogTester = DialogTester()
 
 

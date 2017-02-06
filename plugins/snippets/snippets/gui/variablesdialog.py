@@ -13,7 +13,6 @@ from outwiker.gui.controls.texteditorbase import TextEditorBase
 from snippets.snippetparser import SnippetParser
 from snippets.gui.snippeteditor import SnippetEditor
 from snippets.i18n import get_
-from snippets.defines import EXTENSION
 from snippets.utils import getSnippetsDir, getImagesPath
 from snippets.config import SnippetsConfig
 
@@ -132,6 +131,9 @@ class VariablesDialog(TestedDialog):
         self._shortTemplateName = shortTemplateName
         self.SetTitle(title)
 
+    def setFocusToFirstVariable(self):
+        self._varPanel.setFocusToFirstVariable()
+
 
 class VariablesDialogController(object):
     '''
@@ -182,6 +184,8 @@ class VariablesDialogController(object):
             self.dialog.setWikiCommandSetVisible(True)
         else:
             self.dialog.setWikiCommandSetVisible(False)
+
+        self.dialog.setFocusToFirstVariable()
         self.dialog.Show()
 
     def _getShortTemplateName(self, template_fname):
@@ -190,8 +194,6 @@ class VariablesDialogController(object):
         '''
         snippets_dir = getSnippetsDir()
         shortTemplateName = template_fname
-        if shortTemplateName.endswith(EXTENSION):
-            shortTemplateName = shortTemplateName[:-len(EXTENSION)]
 
         if shortTemplateName.startswith(snippets_dir):
             shortTemplateName = shortTemplateName[len(snippets_dir) + 1:]
@@ -275,6 +277,10 @@ class VaraiblesPanel(wx.ScrolledWindow):
         self._mainSizer.AddGrowableCol(0)
         self.SetSizer(self._mainSizer)
 
+    def setFocusToFirstVariable(self):
+        if self._varControls:
+            self._varControls[0][1].SetFocus()
+
     def addStringVariable(self, varname):
         newCtrl = StringVariableCtrl(self, varname)
         self._varControls.append((varname, newCtrl))
@@ -315,34 +321,110 @@ class StringVariableCtrl(wx.Panel):
 
     def __init__(self, parent, varname):
         super(StringVariableCtrl, self).__init__(parent)
+
+        self._TEXT_CTRL_SIZER_POSITION = 2
+
         self._varname = varname
         self._createGUI()
+
+    def SetFocus(self):
+        if self._textCtrlExpanded.IsShown():
+            self._textCtrlExpanded.SetFocus()
+        else:
+            self._textCtrlCollapsed.SetFocus()
 
     def _createGUI(self):
         # Label
         self._label = wx.StaticText(self, label=self._varname)
 
-        # TextCtrl
-        self._textCtrl = wx.TextCtrl(self, style=wx.TE_MULTILINE)
-        self._textCtrl.SetMinSize((-1, 75))
-        self._textCtrl.Bind(wx.EVT_TEXT, handler=self._onTextEdit)
+        # Expanded TextCtrl
+        self._textCtrlExpanded = wx.TextCtrl(self, style=wx.TE_MULTILINE)
+        self._textCtrlExpanded.SetMinSize((-1, 75))
+        self._textCtrlExpanded.Bind(wx.EVT_TEXT, handler=self._onTextEdit)
+        self._textCtrlExpanded.Hide()
 
-        mainSizer = wx.FlexGridSizer(cols=1)
-        mainSizer.AddGrowableCol(0)
+        # Collapsed TextCtrl
+        self._textCtrlCollapsed = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self._textCtrlCollapsed.Bind(wx.EVT_TEXT, handler=self._onTextEdit)
+        self._textCtrlCollapsed.Bind(wx.EVT_TEXT_ENTER,
+                                     handler=self._onPressEnter)
 
-        mainSizer.Add(self._label, flag=wx.ALL, border=2)
-        mainSizer.Add(self._textCtrl,
-                      flag=wx.EXPAND | wx.ALL,
-                      border=2)
+        # Expand / Collapse button
+        self._expandButton = wx.BitmapButton(self, bitmap=self._expandBitmap)
+        self._expandButton.Bind(wx.EVT_BUTTON, handler=self._onExpand)
 
-        self.SetSizer(mainSizer)
+        self._mainSizer = wx.FlexGridSizer(cols=2)
+        self._mainSizer.AddGrowableCol(0)
+
+        self._mainSizer.Add(self._label, flag=wx.ALL, border=2)
+        self._mainSizer.AddStretchSpacer()
+
+        self._mainSizer.Add(self._textCtrlCollapsed,
+                            flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT,
+                            border=2)
+        self._mainSizer.Add(self._expandButton)
+
+        self.SetSizer(self._mainSizer)
         self.Layout()
 
     def GetValue(self):
-        return self._textCtrl.GetValue()
+        if self._textCtrlCollapsed.IsShown():
+            return self._textCtrlCollapsed.GetValue()
+        else:
+            return self._textCtrlExpanded.GetValue()
 
     def SetValue(self, value):
-        self._textCtrl.SetValue(value)
+        self._textCtrlCollapsed.SetValue(value)
+        self._textCtrlExpanded.SetValue(value)
+
+    def _onPressEnter(self, event):
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            self._onExpand(None)
+            self._textCtrlExpanded.Value = self._textCtrlExpanded.Value + u'\n'
+            self._textCtrlExpanded.SetInsertionPointEnd()
+
+    def _onExpand(self, event):
+        self._expandButton.Unbind(wx.EVT_BUTTON, handler=self._onExpand)
+        self._expandButton.Bind(wx.EVT_BUTTON, handler=self._onCollapse)
+        self._expandButton.SetBitmapLabel(self._collapseBitmap)
+
+        self._textCtrlCollapsed.Hide()
+        self._textCtrlExpanded.Show()
+
+        self._mainSizer.Remove(self._TEXT_CTRL_SIZER_POSITION)
+        self._mainSizer.Insert(self._TEXT_CTRL_SIZER_POSITION,
+                               self._textCtrlExpanded,
+                               flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT,
+                               border=2)
+
+        self._textCtrlExpanded.Value = self._textCtrlCollapsed.Value
+        self.GetParent().Layout()
+
+        self._textCtrlExpanded.SetFocus()
+        self._textCtrlExpanded.SetInsertionPointEnd()
+
+    def _onCollapse(self, event):
+        self._expandButton.Bind(wx.EVT_BUTTON, handler=self._onExpand)
+        self._expandButton.Unbind(wx.EVT_BUTTON, handler=self._onCollapse)
+        self._expandButton.SetBitmapLabel(self._expandBitmap)
+
+        self._textCtrlExpanded.Hide()
+        self._textCtrlCollapsed.Show()
+
+        self._mainSizer.Remove(self._TEXT_CTRL_SIZER_POSITION)
+        self._mainSizer.Insert(self._TEXT_CTRL_SIZER_POSITION,
+                               self._textCtrlCollapsed,
+                               flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT,
+                               border=2)
+
+        old_text = self._textCtrlExpanded.GetValue()
+        if old_text:
+            new_text = old_text.split(u'\n')[0]
+            self._textCtrlCollapsed.SetValue(new_text)
+
+        self.GetParent().Layout()
+        self._textCtrlCollapsed.SetFocus()
+        self._textCtrlCollapsed.SetInsertionPointEnd()
 
     def _onTextEdit(self, event):
         propagationLevel = 10

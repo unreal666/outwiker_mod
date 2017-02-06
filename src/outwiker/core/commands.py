@@ -19,7 +19,7 @@ from outwiker.core.pagetitletester import PageTitleError, PageTitleWarning
 from outwiker.core.system import getOS, getCurrentDir
 from outwiker.core.tree import WikiDocument
 from outwiker.core.xmlversionparser import XmlVersionParser
-from outwiker.gui.overwritedialog import OverwriteDialog
+from outwiker.gui.dialogs.overwritedialog import OverwriteDialog
 from outwiker.gui.longprocessrunner import LongProcessRunner
 from outwiker.gui.polyaction import PolyAction
 from outwiker.gui.dateformatdialog import DateFormatDialog
@@ -29,24 +29,26 @@ from outwiker.gui.testeddialog import TestedFileDialog
 from outwiker.utilites.textfile import readTextFile
 
 
-def MessageBox (*args, **kwargs):
+def MessageBox(*args, **kwargs):
     """
-    Замена стандартного MessageBox. Перед показом диалога отключает приложение от события EVT_ACTIVATE_APP.
+    Замена стандартного MessageBox. Перед показом диалога отключает
+    приложение от события EVT_ACTIVATE_APP.
     """
-    func = Tester.dialogTester.pop()
-    if func is not None:
-        return func (None)
+    result = Tester.dialogTester.runNext(None)
+    if result is not None:
+        return result
 
     wx.GetApp().unbindActivateApp()
-    result = wx.MessageBox (*args, **kwargs)
+    result = wx.MessageBox(*args, **kwargs)
     wx.GetApp().bindActivateApp()
 
     return result
 
 
-def testreadonly (func):
+def testreadonly(func):
     """
-    Декоратор для отлавливания исключения outwiker.core.exceptions.ReadonlyException
+    Декоратор для отлавливания исключения
+        outwiker.core.exceptions.ReadonlyException
     """
     def readOnlyWrap (*args, **kwargs):
         try:
@@ -60,7 +62,7 @@ def testreadonly (func):
 
 
 @testreadonly
-def attachFiles (parent, page, files):
+def attachFiles(parent, page, files):
     """
     Прикрепить файлы к странице с диалогом о перезаписи при необходимости
     parent - родительское окно
@@ -69,32 +71,36 @@ def attachFiles (parent, page, files):
     if page.readonly:
         raise outwiker.core.exceptions.ReadonlyException
 
-    oldAttaches = [os.path.basename (fname).lower()
-                   for fname in Attachment (page).attachmentFull]
+    oldAttachesFull = Attachment(page).attachmentFull
+    oldAttaches = [os.path.basename(fname).lower()
+                   for fname in oldAttachesFull]
 
     # Список файлов, которые будут добавлены
     newAttaches = []
 
-    overwriteDialog = OverwriteDialog (parent)
+    overwriteDialog = OverwriteDialog(parent)
 
     for fname in files:
-        if os.path.basename (fname).lower() in oldAttaches:
-            text = _(u"File '%s' exists already") % (os.path.basename (fname))
-            result = overwriteDialog.ShowDialog (text)
+        if fname in oldAttachesFull:
+            continue
+
+        if os.path.basename(fname).lower() in oldAttaches:
+            text = _(u"File '%s' exists already") % (os.path.basename(fname))
+            result = overwriteDialog.ShowDialog(text)
 
             if result == overwriteDialog.ID_SKIP:
                 continue
             elif result == wx.ID_CANCEL:
                 break
 
-        newAttaches.append (fname)
+        newAttaches.append(fname)
 
     try:
-        Attachment (page).attach (newAttaches)
+        Attachment(page).attach(newAttaches)
     except IOError as e:
-        text = _(u'Error copying files\n{0}').format (str (e))
+        text = _(u'Error copying files\n{0}').format(str(e))
     except shutil.Error as e:
-        text = _(u'Error copying files\n{0}').format (str (e))
+        text = _(u'Error copying files\n{0}').format(str(e))
 
     overwriteDialog.Destroy()
 
@@ -172,10 +178,8 @@ def openWiki (path, readonly=False):
     def threadFunc (path, readonly):
         try:
             return WikiDocument.load (path, readonly)
-        except IOError as error:
-            return error
-        except outwiker.core.exceptions.RootFormatError as error:
-            return error
+        except BaseException as e:
+            return e
 
     preWikiOpenParams = PreWikiOpenParams(path, readonly)
     Application.onPreWikiOpen(Application.selectedPage,
@@ -186,6 +190,8 @@ def openWiki (path, readonly=False):
                                 _(u"Loading"),
                                 _(u"Opening notes tree..."))
     result = runner.run (os.path.realpath (path), readonly)
+
+    # result = WikiDocument.load (os.path.realpath (path), readonly)
 
     success = False
     if isinstance(result, IOError):
