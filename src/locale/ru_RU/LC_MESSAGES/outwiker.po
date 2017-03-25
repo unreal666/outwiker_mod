@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: outwiker 1.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-20 22:33+0300\n"
+"POT-Creation-Date: 2017-03-20 09:42+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Eugeniy Ilin <jenyay.ilin@gmail.com>\n"
 "Language-Team: Jenyay <jenyay.ilin@gmail.com>\n"
@@ -19,15 +19,15 @@ msgstr ""
 msgid "Error reading page {}"
 msgstr "Ошибка чтения страницы {}"
 
-#: outwiker/core/pluginsloader.py:200
+#: outwiker/core/pluginsloader.py:208
 msgid "Plug-in \"{}\". Can't read \"{}\" file"
 msgstr "Плагин \"{}\". Ошибка чтения файла \"{}\"."
 
-#: outwiker/core/pluginsloader.py:219
+#: outwiker/core/pluginsloader.py:228
 msgid "Plug-in \"{}\" is outdated. Please, update the plug-in."
 msgstr "Плагин \"{}\" устарел. Пожалуйста, обновите плагин."
 
-#: outwiker/core/pluginsloader.py:229
+#: outwiker/core/pluginsloader.py:238
 msgid ""
 "Plug-in \"{}\" is designed for a newer version OutWiker. Please, install a "
 "new OutWiker version."
@@ -43,9 +43,9 @@ msgstr "Страница открыта только для чтения"
 #: outwiker/core/commands.py:128 outwiker/core/commands.py:247
 #: outwiker/core/commands.py:286 outwiker/core/commands.py:294
 #: outwiker/core/commands.py:302 outwiker/core/commands.py:312
-#: outwiker/core/commands.py:386 outwiker/core/commands.py:392
-#: outwiker/core/commands.py:421 outwiker/core/commands.py:432
-#: outwiker/core/commands.py:436 outwiker/core/textprinter.py:105
+#: outwiker/core/commands.py:385 outwiker/core/commands.py:391
+#: outwiker/core/commands.py:420 outwiker/core/commands.py:431
+#: outwiker/core/commands.py:435 outwiker/core/textprinter.py:106
 #: outwiker/pages/html/basehtmlpanel.py:312
 #: outwiker/pages/wiki/actions/include.py:37
 #: outwiker/pages/wiki/basewikipageview.py:241
@@ -169,29 +169,29 @@ msgstr "Невозможно открыть буфер обмена"
 msgid "Can't copy text to clipboard"
 msgstr "Ошибка копирования текста в буфер обмена"
 
-#: outwiker/core/commands.py:385 outwiker/core/commands.py:431
+#: outwiker/core/commands.py:384 outwiker/core/commands.py:430
 msgid "Can't move page when page with that title already exists"
 msgstr ""
 "Невозможно переместить страницу, так как страница с таким именем уже "
 "существует"
 
-#: outwiker/core/commands.py:391
+#: outwiker/core/commands.py:390
 msgid "Can't move page"
 msgstr "Невозможно переместить страницу"
 
-#: outwiker/core/commands.py:420 outwiker/gui/notestree.py:297
+#: outwiker/core/commands.py:419 outwiker/gui/notestree.py:297
 msgid "You can't rename the root element"
 msgstr "Нельзя переименовать корневой элемент"
 
-#: outwiker/core/commands.py:435
+#: outwiker/core/commands.py:434
 msgid "Can't rename page \"{}\" to \"{}\""
 msgstr "Невозможно переименовать страницу \"{}\" в \"{}\" "
 
-#: outwiker/core/commands.py:451
+#: outwiker/core/commands.py:450
 msgid "The invalid page title"
 msgstr "Ошибка заголовка страницы"
 
-#: outwiker/core/commands.py:456
+#: outwiker/core/commands.py:455
 #, python-brace-format
 msgid ""
 "{0}\n"
@@ -200,15 +200,15 @@ msgstr ""
 "{0}\n"
 "Продолжить?"
 
-#: outwiker/core/commands.py:459
+#: outwiker/core/commands.py:458
 msgid "The page title"
 msgstr "Заголовок страницы"
 
-#: outwiker/core/commands.py:505
+#: outwiker/core/commands.py:510
 msgid "Enter format of the date"
 msgstr "Введите формат даты"
 
-#: outwiker/core/commands.py:506 outwiker/pages/wiki/actions/dates.py:29
+#: outwiker/core/commands.py:511 outwiker/pages/wiki/actions/dates.py:29
 msgid "Date format"
 msgstr "Формат даты"
 
@@ -276,7 +276,7 @@ msgstr "ярлыки"
 msgid "weather"
 msgstr "погода"
 
-#: outwiker/core/htmlimproverfactory.py:28
+#: outwiker/core/htmlimproverfactory.py:27
 msgid "Line Breaks (<br/>)"
 msgstr "Разрывы строк (<br/>)"
 
@@ -284,7 +284,7 @@ msgstr "Разрывы строк (<br/>)"
 msgid "Printing error"
 msgstr "Ошибка печати"
 
-#: outwiker/core/pagetitletester.py:50
+#: outwiker/core/pagetitletester.py:51
 #, python-format
 msgid ""
 "The page title contains the expression \"%xx\". Links on this page may be "
@@ -305,11 +305,11 @@ msgstr "Ошибка заголовка страницы"
 msgid "The page title can not begin with __"
 msgstr "Заголовок страницы не может начинаться с __"
 
-#: outwiker/core/pagetitletester.py:71 outwiker/core/pagetitletester.py:114
+#: outwiker/core/pagetitletester.py:71 outwiker/core/pagetitletester.py:112
 msgid "The page title contains invalid characters"
 msgstr "Заголовок страницы содержит запрещённые символы"
 
-#: outwiker/core/pagetitletester.py:135
+#: outwiker/core/pagetitletester.py:131
 msgid ""
 "The page title contains invalid characters for Microsoft Windows operating "
 "system"
@@ -325,6 +325,7 @@ msgstr "# Поиск"
 
 #: outwiker/pages/search/searchpanel.py:41
 #: outwiker/pages/search/searchpanel.py:301 outwiker/actions/search.py:31
+#: outwiker/gui/preferences/hotkeyspanel.py:82
 #: outwiker/gui/basetextpanel.py:354
 msgid "Search"
 msgstr "Поиск"
@@ -475,7 +476,7 @@ msgid "Appearance"
 msgstr "Внешний вид"
 
 #: outwiker/pages/html/basehtmlpanel.py:193
-#: outwiker/gui/preferences/prefcontroller.py:59
+#: outwiker/gui/preferences/prefcontroller.py:118
 #: outwiker/gui/preferences/generalpanel.py:40
 msgid "Preview"
 msgstr "Просмотр"
@@ -771,8 +772,8 @@ msgstr "<b>Ошибка создания миниатюры для \"{}\"</b>"
 #: outwiker/pages/wiki/wikipagecontroller.py:75
 #: outwiker/gui/toolbars/generaltoolbar.py:28
 #: outwiker/gui/basepagedialog.py:130
-#: outwiker/gui/preferences/prefcontroller.py:58
-#: outwiker/gui/preferences/prefcontroller.py:79
+#: outwiker/gui/preferences/prefcontroller.py:117
+#: outwiker/gui/preferences/prefcontroller.py:138
 msgid "General"
 msgstr "Общие"
 
@@ -1122,7 +1123,7 @@ msgid "Set focus to notes tree"
 msgstr "Установить фокус на дерево заметок"
 
 #: outwiker/actions/switchto.py:63 outwiker/actions/showhideattaches.py:18
-#: outwiker/gui/preferences/prefcontroller.py:61
+#: outwiker/gui/preferences/prefcontroller.py:120
 #: outwiker/gui/mainpanes/attachmainpane.py:19
 msgid "Attachments"
 msgstr "Прикрепленные файлы"
@@ -1258,7 +1259,7 @@ msgid "Toolbars"
 msgstr "Панели инструментов"
 
 #: outwiker/gui/toolbars/pluginstoolbar.py:28
-#: outwiker/gui/preferences/prefcontroller.py:90
+#: outwiker/gui/preferences/prefcontroller.py:148
 msgid "Plugins"
 msgstr "Плагины"
 
@@ -1270,46 +1271,46 @@ msgstr "Значок"
 msgid "Not found"
 msgstr "Не найдено"
 
-#: outwiker/gui/preferences/prefdialog.py:63
-msgid "Preferences"
-msgstr "Параметры"
-
-#: outwiker/gui/preferences/prefcontroller.py:60
+#: outwiker/gui/preferences/prefcontroller.py:119
 msgid "Tags cloud"
 msgstr "Облако меток"
 
-#: outwiker/gui/preferences/prefcontroller.py:62
+#: outwiker/gui/preferences/prefcontroller.py:121
 msgid "Hotkeys"
 msgstr "Горячие клавиши"
 
-#: outwiker/gui/preferences/prefcontroller.py:63
+#: outwiker/gui/preferences/prefcontroller.py:122
 msgid "Text Printout"
 msgstr "Печать текста"
 
-#: outwiker/gui/preferences/prefcontroller.py:66
+#: outwiker/gui/preferences/prefcontroller.py:125
 msgid "Interface"
 msgstr "Интерфейс"
 
-#: outwiker/gui/preferences/prefcontroller.py:80
+#: outwiker/gui/preferences/prefcontroller.py:139
 #: outwiker/gui/actionslist.py:122
 msgid "Spell checking"
 msgstr "Проверка орфографии"
 
-#: outwiker/gui/preferences/prefcontroller.py:81
+#: outwiker/gui/preferences/prefcontroller.py:140
 msgid "HTML Editor"
 msgstr "HTML-редактор"
 
-#: outwiker/gui/preferences/prefcontroller.py:82
+#: outwiker/gui/preferences/prefcontroller.py:141
 msgid "Wiki Editor"
 msgstr "Викиредактор"
 
-#: outwiker/gui/preferences/prefcontroller.py:85
+#: outwiker/gui/preferences/prefcontroller.py:144
 msgid "Editor"
 msgstr "Редактор"
 
-#: outwiker/gui/preferences/prefcontroller.py:95
+#: outwiker/gui/preferences/prefcontroller.py:152
 msgid "User's iconset"
 msgstr "Значки пользователя"
+
+#: outwiker/gui/preferences/prefcontroller.py:157
+msgid "Preferences"
+msgstr "Параметры"
 
 #: outwiker/gui/preferences/attachpanel.py:17
 msgid "Insert link"
@@ -1323,21 +1324,26 @@ msgstr "Открыть файл"
 msgid "Double click on an attached file"
 msgstr "Двойной клик на прикрепленном файле"
 
-#: outwiker/gui/preferences/hotkeyspanel.py:84
+#: outwiker/gui/preferences/hotkeyspanel.py:42
+#, python-brace-format
+msgid ""
+"{hotkey} hotkey assigned for \"{old}\".\n"
+"Assign this hotkey for \"{new}\"?"
+msgstr ""
+"Горячая клавиша {hotkey} назначена для \"{old}\".\n"
+"Назначить эту горячую клавишу для \"{new}\"?"
+
+#: outwiker/gui/preferences/hotkeyspanel.py:48
+msgid "Hotkeys conflict"
+msgstr "Конфликт горячих клавиш"
+
+#: outwiker/gui/preferences/hotkeyspanel.py:101
 msgid ""
 "Hot key.\n"
 "Press the Backspace key to clear"
 msgstr ""
 "Горячая клавиша.\n"
 "Нажмите Backspace, чтобы ее очистить"
-
-#: outwiker/gui/preferences/hotkeyspanel.py:99
-msgid "Actions with the same hotkey"
-msgstr "Действия с той же клавишей"
-
-#: outwiker/gui/preferences/hotkeyspanel.py:106
-msgid "Set hot key"
-msgstr "Установить горячую клавишу"
 
 #: outwiker/gui/preferences/iconsetpanel.py:90
 msgid "Add new group"
@@ -1484,19 +1490,23 @@ msgstr "Имя файла загруженной вики"
 msgid "Page title"
 msgstr "Заголовок страницы"
 
-#: outwiker/gui/preferences/generalpanel.py:211
+#: outwiker/gui/preferences/generalpanel.py:207
+msgid "Relative path to current page"
+msgstr "Относительный путь до текущей страницы"
+
+#: outwiker/gui/preferences/generalpanel.py:212
 msgid "Main window title format"
 msgstr "Формат заголовка главного окна"
 
-#: outwiker/gui/preferences/generalpanel.py:243
+#: outwiker/gui/preferences/generalpanel.py:244
 msgid "Language(restart required)"
 msgstr "Язык (требуется перезапуск)"
 
-#: outwiker/gui/preferences/generalpanel.py:260
+#: outwiker/gui/preferences/generalpanel.py:261
 msgid "Default opening page mode"
 msgstr "Режим открытия страниц по умолчанию"
 
-#: outwiker/gui/preferences/generalpanel.py:407
+#: outwiker/gui/preferences/generalpanel.py:408
 msgid "Auto"
 msgstr "Авто"
 
@@ -2499,6 +2509,12 @@ msgstr "Вставить таблицу"
 #: outwiker/gui/tabledialog.py:114
 msgid "Border width"
 msgstr "Толщина рамки"
+
+#~ msgid "Actions with the same hotkey"
+#~ msgstr "Действия с той же клавишей"
+
+#~ msgid "Set hot key"
+#~ msgstr "Установить горячую клавишу"
 
 #~ msgid "None"
 #~ msgstr "Нет"

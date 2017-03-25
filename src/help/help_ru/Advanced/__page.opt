@@ -1,12 +1,12 @@
 [wiki]
-md5_hash = 02ee2f9f4473250cc4af439197df1cfa
+md5_hash = 1ad5623afb4bbbee78a4bcb13406188a
 
 [Tree]
 expand = True
 
 [General]
 type = wiki
-order = 7
+order = 6
 tags = продвинутым пользователям
 datetime = 2013-05-22 18:02:11.389395
 cursorposition = 0

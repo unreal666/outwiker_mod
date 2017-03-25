@@ -27,6 +27,7 @@ from buildtools.defines import (
     PLUGIN_VERSIONS_FILENAME,
     FILES_FOR_UPLOAD_UNSTABLE_WIN,
     OUTWIKER_VERSIONS_FILENAME,
+    NEED_FOR_BUILD_DIR,
 )
 from buildtools.versions import (getOutwikerVersion,
                                  downloadAppInfo,
@@ -234,8 +235,8 @@ def locale():
         local(r'find . -iname "*.py" | xargs xgettext -o locale/outwiker.pot')
 
 
-@task
-def localeplugin(pluginname):
+@task(alias='plugin_locale')
+def locale_plugin(pluginname):
     """
     Create or update the localization file for pluginname plug-in
     """
@@ -521,7 +522,7 @@ def deploy():
     upload_unstable()
 
 
-@task
+@task(alias='apiversions')
 def apiversion():
     print(u'core: {}.{}'.format(outwiker.core.__version__[0],
                                 outwiker.core.__version__[1]))
@@ -541,3 +542,12 @@ def apiversion():
 def doc():
     with lcd('doc'):
         local('make html')
+
+
+@task
+def prepare_virtual():
+    '''
+    Prepare virtual machine
+    '''
+    with lcd(os.path.join(NEED_FOR_BUILD_DIR, u'virtual')):
+        local(u'ansible-playbook virtual_prepare.yml -k --ask-sudo-pass')
