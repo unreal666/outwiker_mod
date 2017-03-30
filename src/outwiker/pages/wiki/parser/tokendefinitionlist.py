@@ -3,6 +3,7 @@
 import re
 
 from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Literal, Suppress, FollowedBy
+from .utils import TagAttrsPattern, getAttributes
 
 
 class DefinitionListFactory (object):
@@ -21,11 +22,11 @@ class DefinitionListToken (object):
 
     def getToken (self):
         term = Regex (r"(?P<text>(?:(?:\\\n)|.)*)\s*(?=\n)")
-        term = LineStart() + Regex (r"\^\^") + term + LineEnd()
+        term = LineStart() + Regex (r"\^\^") + Regex(TagAttrsPattern.value) + term + LineEnd()
         term.setParseAction(self.__convertTerm).leaveWhitespace()
 
         description = Regex (r"(?P<text>(?:(?!(?<!\\)\n(?:<}}|\$\$.|\^\^.)).)*)", re.DOTALL)
-        description = LineStart() + Regex (r"\$\$") + description + LineEnd()
+        description = LineStart() + Regex (r"\$\$") + Regex(TagAttrsPattern.value) + description + LineEnd()
         description.setParseAction(self.__convertDescription).leaveWhitespace()
 
         definitionList = LineStart() + Regex (r"{{> *(?P<params>.+)?\s*") + \
@@ -35,19 +36,25 @@ class DefinitionListToken (object):
         return definitionList
 
 
-    def __convertTerm (self, s, l, t):
-        return u'<dt>%s</dt>' % (self.parser.parseTextLevelMarkup (t["text"].strip()))
+    def __convertTerm (self, s, loc, toks):
+        text = u''.join(toks[2:len(toks)]).strip()
+        attrs = getAttributes(toks)
+
+        return u'<dt%s>%s</dt>' % (attrs, self.parser.parseWikiMarkup (text))
 
 
-    def __convertDescription (self, s, l, t):
-        return u'<dd>%s</dd>' % (self.parser.parseWikiMarkup (t["text"].strip()))
+    def __convertDescription (self, s, loc, toks):
+        text = u''.join(toks[2:len(toks)]).strip()
+        attrs = getAttributes(toks)
+
+        return u'<dd%s>%s</dd>' % (attrs, self.parser.parseWikiMarkup (text))
 
 
-    def __convertDefinitionList (self, s, l, t):
-        result = u"<dl %s>" % t[0][3:].strip()
-        for element in t[1:]:
-            result += element
+    def __convertDefinitionList (self, s, loc, toks):
+        attrs = toks[0][3:].strip()
+        attrs = u' %s' % attrs if attrs else ''
+        result = []
+        for element in toks[1:]:
+            result.append(element)
 
-        result += "</dl>"
-
-        return result
+        return u'<dl%s>%s</dl>' % (attrs, ''.join(result))
