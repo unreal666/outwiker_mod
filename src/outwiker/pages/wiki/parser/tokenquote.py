@@ -2,7 +2,6 @@
 
 from outwiker.libs.pyparsing import Forward, CharsNotIn, NotAny, ZeroOrMore, OneOrMore, Combine, Literal, Suppress, Regex
 from .utils import TagAttrsPattern, getAttributes
-import sys
 
 
 class QuoteFactory (object):
@@ -36,7 +35,7 @@ class QuoteToken (object):
         text = u''.join(toks[1:len(toks)])
         attrs = getAttributes(toks)
 
-        return u''.join([u'<blockquote', attrs, u'>', text, u'</blockquote>'])
+        return '<blockquote%s>%s</blockquote>' % (attrs, text)
 
 
     def __parseText (self, s, loc, toks):
