@@ -27,13 +27,16 @@ class BuilderPlugins(BuilderBase):
         self._plugins_list = plugins_list
         self._updatedOnly = updatedOnly
 
+    def get_plugins_pack_path(self):
+        return self._getSubpath(self._all_plugins_fname)
+
     def clear(self):
         super(BuilderPlugins, self).clear()
-        self._remove(self._getSubpath(self._all_plugins_fname))
+        self._remove(self.get_plugins_pack_path())
 
     def _build(self):
         # Path to archive with all plug-ins
-        full_archive_path = self._getSubpath(self._all_plugins_fname)
+        full_archive_path = self.get_plugins_pack_path()
 
         for plugin in self._plugins_list:
             # Path to plugin.xml for current plugin
@@ -70,8 +73,14 @@ class BuilderPlugins(BuilderBase):
 
                 # Archive a single plug-in
                 with lcd("plugins/{}".format(plugin)):
-                    local("7z a -r -aoa -xr!*.pyc -xr!.ropeproject ../../{} ./*".format(archive_path))
+                    local('7z a -r -aoa -xr!*.pyc -xr!.ropeproject "{}" ./*'.format(archive_path))
 
             # Add a plug-in to full archive
             with lcd("plugins/{}".format(plugin)):
-                local("7z a -r -aoa -xr!*.pyc -xr!.ropeproject -w../ ../../{} ./*".format(full_archive_path))
+                local('7z a -r -aoa -xr!*.pyc -xr!.ropeproject -w../ "{}" ./*'.format(full_archive_path))
+
+    def _getSubpath(self, *args):
+        """
+        Return subpath inside current build path (inside 'build' subpath)
+        """
+        return os.path.join(self.build_dir, *args)

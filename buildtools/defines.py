@@ -38,9 +38,11 @@ PLUGINS_LIST = [
 
 BUILD_DIR = u'build'
 LINUX_BUILD_DIR = u"outwiker_linux"
-WINDOWS_BUILD_DIR = u"outwiker_win"
-DEB_BINARY_BUILD_DIR = u'deb_binary'
-DEB_SOURCE_BUILD_DIR = u'deb_source'
+WINDOWS_BUILD_DIR = u"windows"
+WINDOWS_EXECUTABLE_DIR = u"outwiker_exe"
+WINDOWS_INSTALLER_FILENAME = u"outwiker_win_unstable.exe"
+DEB_BINARY_BUILD_DIR = u'linux/deb_binary'
+DEB_SOURCE_BUILD_DIR = u'linux/deb_source'
 SOURCES_DIR = u'sources'
 PLUGINS_DIR = u'plugins'
 PLUGIN_VERSIONS_FILENAME = u'plugin.xml'
@@ -48,12 +50,16 @@ OUTWIKER_VERSIONS_FILENAME = u'versions.xml'
 NEED_FOR_BUILD_DIR = u'need_for_build'
 
 FILES_FOR_UPLOAD_UNSTABLE_WIN = [
-    u'outwiker_win_unstable.7z',
-    u'outwiker_win_unstable.exe',
-    u'outwiker_win_unstable_all_plugins.7z',
-    u'outwiker_win_unstable_all_plugins.zip',
-    u'outwiker_win_unstable.zip',
+    u'windows/outwiker_win_unstable.7z',
+    u'windows/outwiker_win_unstable.exe',
+    u'windows/outwiker_win_unstable_all_plugins.7z',
+    u'windows/outwiker_win_unstable_all_plugins.zip',
+    u'windows/outwiker_win_unstable.zip',
 ]
+
+PPA_DEV_PATH = u'ppa:outwiker-team/dev'
+PPA_UNSTABLE_PATH = u'ppa:outwiker-team/unstable'
+PPA_STABLE_PATH = u'ppa:outwiker-team/ppa'
 
 # Timeout in seconds
 DOWNLOAD_TIMEOUT = 15

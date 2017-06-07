@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import __builtin__
@@ -16,7 +16,8 @@ from buildtools.libs.colorama import Fore
 from buildtools.utilites import (getPython,
                                  execute,
                                  getCurrentUbuntuDistribName,
-                                 getPathToPlugin
+                                 getPathToPlugin,
+                                 tobool,
                                  )
 from buildtools.defines import (
     UBUNTU_RELEASE_NAMES,
@@ -28,6 +29,7 @@ from buildtools.defines import (
     FILES_FOR_UPLOAD_UNSTABLE_WIN,
     OUTWIKER_VERSIONS_FILENAME,
     NEED_FOR_BUILD_DIR,
+    PPA_UNSTABLE_PATH,
 )
 from buildtools.versions import (getOutwikerVersion,
                                  downloadAppInfo,
@@ -61,6 +63,7 @@ try:
                                        DEPLOY_HOME_PATH,
                                        DEPLOY_SITE,
                                        PATH_TO_WINDOWS_DISTRIBS,
+                                       DEPLOY_PLUGINS_PACK_PATH,
                                        )
 except ImportError:
     shutil.copyfile(u'buildtools/serverinfo.py.example',
@@ -70,28 +73,34 @@ except ImportError:
                                        DEPLOY_HOME_PATH,
                                        DEPLOY_SITE,
                                        PATH_TO_WINDOWS_DISTRIBS,
+                                       DEPLOY_PLUGINS_PACK_PATH,
                                        )
 
 # env.hosts = [DEPLOY_SERVER_NAME]
 
 
 @task
-def deb_sources_included():
+def deb_sources_included(is_stable=False):
     """
-    Create files for uploading in PPA(including sources)
+    Create files for uploading in PPA (including sources)
     """
     builder = BuilderDebSourcesIncluded(DEB_SOURCE_BUILD_DIR,
-                                        UBUNTU_RELEASE_NAMES)
+                                        UBUNTU_RELEASE_NAMES,
+                                        tobool(is_stable))
     builder.build()
+    return builder.getResultPath()
 
 
 @task
-def deb():
+def deb(is_stable=False):
     """
     Assemble the deb packages
     """
-    builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR, UBUNTU_RELEASE_NAMES)
+    builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
+                               UBUNTU_RELEASE_NAMES,
+                               tobool(is_stable))
     builder.build()
+    return builder.getResultPath()
 
 
 @task
@@ -104,43 +113,52 @@ def deb_clear():
 
 
 @task
-def debsingle():
+def deb_single(is_stable=False):
     """
     Assemble the deb package for the current Ubuntu release
     """
     builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
-                               [getCurrentUbuntuDistribName()])
+                               [getCurrentUbuntuDistribName()],
+                               tobool(is_stable))
     builder.build()
+    return builder.getResultPath()
 
 
 @task
-def ppaunstable():
+def deb_install(is_stable=False):
     """
-    Upload the current OutWiker version in PPA(unstable)
+    Assemble deb package for current Ubuntu release
+    """
+    result_path = deb_single(tobool(is_stable))
+
+    version = getOutwikerVersion()
+
+    with lcd(result_path):
+        local("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format(
+            version[0],
+            version[1],
+            getCurrentUbuntuDistribName()))
+
+
+def _ppa_upload(ppa_path, deb_path):
+    """
+    Upload the current OutWiker version in PPA
     """
     version = getOutwikerVersion()
 
     for distname in UBUNTU_RELEASE_NAMES:
-        with lcd(os.path.join(BUILD_DIR, DEB_SOURCE_BUILD_DIR)):
-            local("dput ppa:outwiker-team/unstable outwiker_{}+{}~{}_source.changes".format(version[0], version[1], distname))
-
-
-# @task
-# def ppastable():
-#     """
-#     Upload the current OutWiker version in PPA(unstable)
-#     """
-#     version = getOutwikerVersion()
-#
-#     for distname in UBUNTU_RELEASE_NAMES:
-#         with lcd(os.path.join(BUILD_DIR, DEB_SOURCE_BUILD_DIR)):
-#             local("dput ppa:outwiker-team/ppa outwiker_{}+{}~{}_source.changes".format(version[0], version[1], distname))
+        with lcd(deb_path):
+            local("dput {} outwiker_{}+{}~{}_source.changes".format(
+                ppa_path,
+                version[0],
+                version[1],
+                distname))
 
 
 @task
 def plugins(updatedonly=False):
     """
-    Create an archive with plugins(7z required)
+    Create an archive with plugins (7z required)
     """
     builder = BuilderPlugins(updatedOnly=updatedonly)
     builder.build()
@@ -149,18 +167,18 @@ def plugins(updatedonly=False):
 @task
 def plugins_clear():
     """
-    Remove an archive with plugins(7z required)
+    Remove an archive with plugins (7z required)
     """
     builder = BuilderPlugins()
     builder.clear()
 
 
 @task
-def sources():
+def sources(is_stable=False):
     """
-    Create the sources archives.
+    Create the sources archives as stable version.
     """
-    builder = BuilderSources()
+    builder = BuilderSources(is_stable=tobool(is_stable))
     builder.build()
 
 
@@ -174,12 +192,13 @@ def sources_clear():
 
 
 @task
-def win(skipinstaller=False, skiparchives=False):
+def win(is_stable=False, skipinstaller=False, skiparchives=False):
     """
     Build assemblies under Windows
     """
-    builder = BuilderWindows(create_installer=not skipinstaller,
-                             create_archives=not skiparchives)
+    builder = BuilderWindows(create_installer=not tobool(skipinstaller),
+                             create_archives=not tobool(skiparchives),
+                             is_stable=tobool(is_stable))
     builder.build()
 
 
@@ -211,25 +230,9 @@ def linux_clear():
 
 
 @task
-def debinstall():
-    """
-    Assemble deb package for current Ubuntu release
-    """
-    debsingle()
-
-    version = getOutwikerVersion()
-
-    with lcd(os.path.join(BUILD_DIR, DEB_SOURCE_BUILD_DIR)):
-        local("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format(
-            version[0],
-            version[1],
-            getCurrentUbuntuDistribName()))
-
-
-@task
 def locale():
     """
-    Update the localization file(outwiker.pot)
+    Update the localization file (outwiker.pot)
     """
     with lcd("src"):
         local(r'find . -iname "*.py" | xargs xgettext -o locale/outwiker.pot')
@@ -266,7 +269,7 @@ def test(section=u'', *args):
 @task
 def test_build(section=u'', *args):
     """
-    Run the unit tests
+    Run the build unit tests
     """
     _runTests(u'.', u'test_build_', section, *args)
 
@@ -442,8 +445,15 @@ def upload_plugin(*args):
     if len(args) == 0:
         args = PLUGINS_LIST
 
+    version = getOutwikerVersion()
+
     for pluginname in args:
-        path_to_plugin_local = os.path.join(BUILD_DIR, PLUGINS_DIR, pluginname)
+        path_to_plugin_local = os.path.join(
+            BUILD_DIR,
+            u'{}.{}'.format(version[0], version[1]),
+            PLUGINS_DIR,
+            pluginname)
+
         if not os.path.exists(path_to_plugin_local):
             continue
 
@@ -455,7 +465,7 @@ def upload_plugin(*args):
         url = appinfo_local.updatesUrl
         try:
             appinfo_remote = downloadAppInfo(url)
-        except:
+        except Exception:
             appinfo_remote = None
 
         if (appinfo_remote is not None and
@@ -484,9 +494,18 @@ def upload_unstable():
     """
     Upload unstable version on the site
     """
-    versions = os.path.join(PATH_TO_WINDOWS_DISTRIBS, OUTWIKER_VERSIONS_FILENAME)
-    upload_files = map(lambda item: os.path.join(PATH_TO_WINDOWS_DISTRIBS, item),
+    version = getOutwikerVersion()
+    version_dir = u'{}.{}'.format(version[0], version[1])
+
+    versions = os.path.join(PATH_TO_WINDOWS_DISTRIBS,
+                            version_dir,
+                            OUTWIKER_VERSIONS_FILENAME)
+
+    upload_path = os.path.join(PATH_TO_WINDOWS_DISTRIBS, version_dir)
+
+    upload_files = map(lambda item: os.path.join(upload_path, item),
                        FILES_FOR_UPLOAD_UNSTABLE_WIN)
+
     upload_files = upload_files + [versions]
 
     for fname in upload_files:
@@ -513,12 +532,32 @@ def upload_unstable():
 
 @hosts(DEPLOY_SERVER_NAME)
 @task
-def deploy():
+def upload_plugins_pack():
+    '''
+    Upload archive with all plugins.
+    '''
+    pluginsBuilder = BuilderPlugins()
+    pack_path = pluginsBuilder.get_plugins_pack_path()
+    with cd(DEPLOY_PLUGINS_PACK_PATH):
+        basename = os.path.basename(pack_path)
+        put(pack_path, basename)
+
+
+@hosts(DEPLOY_SERVER_NAME)
+@task
+def deploy_unstable():
     """
     Upload unstable version on the site
     """
-    deb_sources_included()
-    ppaunstable()
+    ppa_path = PPA_UNSTABLE_PATH
+    is_stable = False
+
+    plugins(True)
+    upload_plugin()
+    upload_plugins_pack()
+
+    deb_path = deb_sources_included(is_stable)
+    _ppa_upload(ppa_path, deb_path)
     upload_unstable()
 
 
@@ -540,6 +579,10 @@ def apiversion():
 
 @task
 def doc():
+    doc_path = u'doc/_build'
+    if os.path.exists(doc_path):
+        shutil.rmtree(doc_path)
+
     with lcd('doc'):
         local('make html')
 

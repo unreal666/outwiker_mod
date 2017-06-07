@@ -7,7 +7,24 @@
 		<website>http://jenyay.net/Outwiker/UnstableEn</website>
 
 		<changelog>
-			<version number="2.0.0.813" status="beta">
+		        <version number="2.0.0.822" status="stable" date="June, 2017">
+				<change>Stable version.</change>
+			</version>
+			
+			<version number="2.0.0.820" status="RC3" date="May 28, 2017">
+				<change>Fixed errors.</change>
+			</version>
+
+			<version number="2.0.0.818" status="RC2" date="May 22, 2017">
+				<change>Fixed errors.</change>
+				<change>Changed in the build system.</change>
+			</version>
+
+			<version number="2.0.0.816" status="RC" date="April 25, 2017">
+				<change>Removed Italian localization.</change>
+			</version>
+
+			<version number="2.0.0.814" status="beta" date="April 03, 2017">
 				<change>Added the "subpath" parameter to main window title.</change>
 				<change>Some GUI improvements.</change>
 				<change>Bug fixes.</change>
@@ -85,7 +102,24 @@
 		<website>http://jenyay.net/Outwiker/Unstable</website>
 
 		<changelog>
-			<version number="2.0.0.813" status="beta">
+		        <version number="2.0.0.822" status="stable" date="Июнь 2017">
+				<change>Стабильная версия.</change>
+		        </version>
+		  
+			<version number="2.0.0.820" status="RC3" date="28.05.2017">
+				<change>Исправление ошибок.</change>
+			</version>
+
+			<version number="2.0.0.818" status="RC2" date="22.05.2017">
+				<change>Исправление ошибок.</change>
+				<change>Исправления в системе сборки.</change>
+			</version>
+
+			<version number="2.0.0.816" status="RC" date="24.04.2017">
+				<change>Удалена итальянская локализация.</change>
+			</version>
+
+			<version number="2.0.0.814" status="beta" date="03.04.2017">
 				<change>Добавлен параметр "subpath" в настройках выбора заголовка главного окна программы.</change>
 				<change>Некоторые улучшения в интерфейсе.</change>
 				<change>Исправления ошибок.</change>
