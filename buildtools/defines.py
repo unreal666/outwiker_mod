@@ -1,10 +1,10 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 
 
 # Supported Ubuntu releases
-UBUNTU_RELEASE_NAMES = [u"trusty", u"xenial", "yakkety", "zesty"]
+UBUNTU_RELEASE_NAMES = [u"xenial", "yakkety", "zesty"]
 
 # List of the supported plugins
 PLUGINS_LIST = [
@@ -37,7 +37,7 @@ PLUGINS_LIST = [
 ]
 
 BUILD_DIR = u'build'
-LINUX_BUILD_DIR = u"outwiker_linux"
+LINUX_BUILD_DIR = u"linux"
 WINDOWS_BUILD_DIR = u"windows"
 WINDOWS_EXECUTABLE_DIR = u"outwiker_exe"
 WINDOWS_INSTALLER_FILENAME = u"outwiker_win_unstable.exe"
@@ -50,11 +50,33 @@ OUTWIKER_VERSIONS_FILENAME = u'versions.xml'
 NEED_FOR_BUILD_DIR = u'need_for_build'
 
 FILES_FOR_UPLOAD_UNSTABLE_WIN = [
-    u'windows/outwiker_win_unstable.7z',
-    u'windows/outwiker_win_unstable.exe',
-    u'windows/outwiker_win_unstable_all_plugins.7z',
-    u'windows/outwiker_win_unstable_all_plugins.zip',
-    u'windows/outwiker_win_unstable.zip',
+    u'outwiker_win_unstable.exe',
+    u'outwiker_win_unstable.zip',
+    u'outwiker_win_unstable.7z',
+    u'outwiker_win_unstable_all_plugins.zip',
+    u'outwiker_win_unstable_all_plugins.7z',
+]
+
+FILES_FOR_UPLOAD_STABLE_WIN = [
+    u'outwiker_{version}_win.exe',
+    u'outwiker_{version}_win.zip',
+    u'outwiker_{version}_win.7z',
+    u'outwiker_{version}_win_all_plugins.zip',
+    u'outwiker_{version}_win_all_plugins.7z',
+]
+
+FILES_FOR_UPLOAD_UNSTABLE_LINUX = [
+    u'outwiker_linux_x86.zip',
+    u'outwiker_linux_x86.7z',
+    u'outwiker_linux_x64.zip',
+    u'outwiker_linux_x64.7z',
+]
+
+FILES_FOR_UPLOAD_STABLE_LINUX = [
+    u'outwiker_linux_{version}_x86.zip',
+    u'outwiker_linux_{version}_x86.7z',
+    u'outwiker_linux_{version}_x64.zip',
+    u'outwiker_linux_{version}_x64.7z',
 ]
 
 PPA_DEV_PATH = u'ppa:outwiker-team/dev'
@@ -75,3 +97,16 @@ try:
     DEB_MAINTAINER_EMAIL = os.environ['DEBEMAIL']
 except KeyError:
     DEB_MAINTAINER_EMAIL = u'jenyay.ilin@gmail.com'
+
+
+VM_BUILD_PARAMS = {
+    u'zesty_64': {
+        u'vagrant_path': 'need_for_build/virtual/build_machines/zesty_64',
+        u'host': u'192.168.101.64',
+    },
+
+    u'zesty_32': {
+        u'vagrant_path': 'need_for_build/virtual/build_machines/zesty_32',
+        u'host': u'192.168.101.32',
+    },
+}

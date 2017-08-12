@@ -12,6 +12,7 @@ import shutil
 
 from fabric.api import local, lcd, settings, task, cd, put, hosts
 from buildtools.libs.colorama import Fore
+from buildtools.buildfacts import BuildFacts
 
 from buildtools.utilites import (getPython,
                                  execute,
@@ -27,14 +28,19 @@ from buildtools.defines import (
     PLUGINS_LIST,
     PLUGIN_VERSIONS_FILENAME,
     FILES_FOR_UPLOAD_UNSTABLE_WIN,
-    OUTWIKER_VERSIONS_FILENAME,
+    FILES_FOR_UPLOAD_STABLE_WIN,
+    FILES_FOR_UPLOAD_UNSTABLE_LINUX,
+    FILES_FOR_UPLOAD_STABLE_LINUX,
     NEED_FOR_BUILD_DIR,
     PPA_UNSTABLE_PATH,
+    PPA_STABLE_PATH,
+    VM_BUILD_PARAMS,
+    LINUX_BUILD_DIR
 )
 from buildtools.versions import (getOutwikerVersion,
+                                 getOutwikerVersionStr,
                                  downloadAppInfo,
                                  getLocalAppInfoList,
-                                 readAppInfo,
                                  )
 from buildtools.contentgenerators import (SiteChangelogGenerator,
                                           SitePluginsTableGenerator)
@@ -60,9 +66,9 @@ import outwiker.libs
 try:
     from buildtools.serverinfo import (DEPLOY_SERVER_NAME,
                                        DEPLOY_UNSTABLE_PATH,
+                                       DEPLOY_STABLE_PATH,
                                        DEPLOY_HOME_PATH,
                                        DEPLOY_SITE,
-                                       PATH_TO_WINDOWS_DISTRIBS,
                                        DEPLOY_PLUGINS_PACK_PATH,
                                        )
 except ImportError:
@@ -70,13 +76,13 @@ except ImportError:
                     u'buildtools/serverinfo.py')
     from buildtools.serverinfo import (DEPLOY_SERVER_NAME,
                                        DEPLOY_UNSTABLE_PATH,
+                                       DEPLOY_STABLE_PATH,
                                        DEPLOY_HOME_PATH,
                                        DEPLOY_SITE,
-                                       PATH_TO_WINDOWS_DISTRIBS,
                                        DEPLOY_PLUGINS_PACK_PATH,
                                        )
 
-# env.hosts = [DEPLOY_SERVER_NAME]
+from buildtools.uploaders import BinaryUploader
 
 
 @task
@@ -194,11 +200,12 @@ def sources_clear():
 @task
 def win(is_stable=False, skipinstaller=False, skiparchives=False):
     """
-    Build assemblies under Windows
+    Build OutWiker for Windows with cx_Freeze
     """
-    builder = BuilderWindows(create_installer=not tobool(skipinstaller),
+    builder = BuilderWindows(is_stable=tobool(is_stable),
                              create_archives=not tobool(skiparchives),
-                             is_stable=tobool(is_stable))
+                             create_installer=not tobool(skipinstaller)
+                             )
     builder.build()
 
 
@@ -212,11 +219,13 @@ def win_clear():
 
 
 @task
-def linux(create_archive=True):
+def linux_binary(is_stable=False, skiparchives=False):
     """
     Assemble binary builds for Linux
     """
-    builder = BuilderLinuxBinary(create_archive=create_archive)
+    builder = BuilderLinuxBinary(is_stable=tobool(is_stable),
+                                 create_archive=not tobool(skiparchives)
+                                 )
     builder.build()
 
 
@@ -445,19 +454,19 @@ def upload_plugin(*args):
     if len(args) == 0:
         args = PLUGINS_LIST
 
-    version = getOutwikerVersion()
+    version_str = getOutwikerVersionStr()
 
     for pluginname in args:
-        path_to_plugin_local = os.path.join(
-            BUILD_DIR,
-            u'{}.{}'.format(version[0], version[1]),
-            PLUGINS_DIR,
-            pluginname)
+        path_to_plugin_local = os.path.join(BUILD_DIR,
+                                            version_str,
+                                            PLUGINS_DIR,
+                                            pluginname)
 
         if not os.path.exists(path_to_plugin_local):
             continue
 
-        path_to_xml_local = os.path.join(path_to_plugin_local, PLUGIN_VERSIONS_FILENAME)
+        path_to_xml_local = os.path.join(path_to_plugin_local,
+                                         PLUGIN_VERSIONS_FILENAME)
 
         xml_content_local = readTextFile(path_to_xml_local)
         appinfo_local = XmlVersionParser().parse(xml_content_local)
@@ -490,44 +499,42 @@ def upload_plugin(*args):
 
 @hosts(DEPLOY_SERVER_NAME)
 @task
-def upload_unstable():
+def upload_binary_stable():
+    """
+    Upload stable version on the site
+    """
+    facts = BuildFacts()
+
+    win_tpl_files = FILES_FOR_UPLOAD_STABLE_WIN
+    linux_tpl_files = FILES_FOR_UPLOAD_STABLE_LINUX
+    versions_file = facts.versions_file
+    deploy_path = DEPLOY_STABLE_PATH
+
+    binary_uploader = BinaryUploader(win_tpl_files,
+                                     linux_tpl_files,
+                                     versions_file,
+                                     deploy_path)
+    binary_uploader.deploy()
+
+
+@hosts(DEPLOY_SERVER_NAME)
+@task
+def upload_binary_unstable():
     """
     Upload unstable version on the site
     """
-    version = getOutwikerVersion()
-    version_dir = u'{}.{}'.format(version[0], version[1])
+    facts = BuildFacts()
 
-    versions = os.path.join(PATH_TO_WINDOWS_DISTRIBS,
-                            version_dir,
-                            OUTWIKER_VERSIONS_FILENAME)
+    win_tpl_files = FILES_FOR_UPLOAD_UNSTABLE_WIN
+    linux_tpl_files = FILES_FOR_UPLOAD_UNSTABLE_LINUX
+    versions_file = facts.versions_file
+    deploy_path = DEPLOY_UNSTABLE_PATH
 
-    upload_path = os.path.join(PATH_TO_WINDOWS_DISTRIBS, version_dir)
-
-    upload_files = map(lambda item: os.path.join(upload_path, item),
-                       FILES_FOR_UPLOAD_UNSTABLE_WIN)
-
-    upload_files = upload_files + [versions]
-
-    for fname in upload_files:
-        print(u'Checking {}'.format(fname))
-        assert os.path.exists(fname)
-
-    print('Checking versions')
-    newOutWikerAppInfo = readAppInfo(versions)
-    print('Download {}'.format(newOutWikerAppInfo.updatesUrl))
-    prevOutWikerAppInfo = downloadAppInfo(newOutWikerAppInfo.updatesUrl)
-
-    if newOutWikerAppInfo.currentVersion < prevOutWikerAppInfo.currentVersion:
-        print(Fore.RED + 'Error. New version < Prev version')
-        sys.exit(1)
-    elif newOutWikerAppInfo.currentVersion == prevOutWikerAppInfo.currentVersion:
-        print (Fore.RED + 'Warning: Uploaded the same version')
-
-    print ('Uploading...')
-    for fname in upload_files:
-        with cd(DEPLOY_UNSTABLE_PATH):
-            basename = os.path.basename(fname)
-            put(fname, basename)
+    binary_uploader = BinaryUploader(win_tpl_files,
+                                     linux_tpl_files,
+                                     versions_file,
+                                     deploy_path)
+    binary_uploader.deploy()
 
 
 @hosts(DEPLOY_SERVER_NAME)
@@ -552,13 +559,30 @@ def deploy_unstable():
     ppa_path = PPA_UNSTABLE_PATH
     is_stable = False
 
+    vm_linux_binary(False)
     plugins(True)
     upload_plugin()
     upload_plugins_pack()
 
     deb_path = deb_sources_included(is_stable)
     _ppa_upload(ppa_path, deb_path)
-    upload_unstable()
+    upload_binary_unstable()
+
+
+@hosts(DEPLOY_SERVER_NAME)
+@task
+def deploy_stable():
+    """
+    Upload unstable version on the site
+    """
+    deploy_unstable()
+    ppa_path = PPA_STABLE_PATH
+    is_stable = True
+
+    vm_linux_binary(True)
+    deb_path = deb_sources_included(is_stable)
+    _ppa_upload(ppa_path, deb_path)
+    upload_binary_stable()
 
 
 @task(alias='apiversions')
@@ -594,3 +618,60 @@ def prepare_virtual():
     '''
     with lcd(os.path.join(NEED_FOR_BUILD_DIR, u'virtual')):
         local(u'ansible-playbook virtual_prepare.yml -k --ask-sudo-pass')
+
+
+@task
+def vm_run():
+    '''
+    Run virtual machines for build.
+    '''
+    for host_param in VM_BUILD_PARAMS.values():
+        with lcd(host_param[u'vagrant_path']):
+            local(u'vagrant up')
+
+
+@task(alias='vm_halt')
+def vm_stop():
+    '''
+    Stop virtual machines for build.
+    '''
+    for host_param in VM_BUILD_PARAMS.values():
+        with lcd(host_param[u'vagrant_path']):
+            local(u'vagrant halt')
+
+
+@task
+def vm_remove_keys():
+    for host_param in VM_BUILD_PARAMS.values():
+        host = host_param[u'host']
+        local(u'ssh-keygen -f ~/.ssh/known_hosts -R {}'.format(host))
+
+
+@task
+def vm_prepare():
+    '''
+    Prepare virtual machines for build,
+    '''
+    vm_run()
+    with lcd(u'need_for_build/virtual/build_machines'):
+        local(u'ansible-playbook prepare_build_machines.yml')
+
+
+@task
+def vm_linux_binary(is_stable=0):
+    vm_run()
+    version_str = getOutwikerVersionStr()
+
+    path_to_result = os.path.abspath(
+        os.path.join(BUILD_DIR, version_str, LINUX_BUILD_DIR)
+    )
+
+    if not os.path.exists(path_to_result):
+        os.makedirs(path_to_result)
+
+    with lcd(u'need_for_build/virtual/build_machines'):
+        local(u'ansible-playbook build_linux_binaries.yml --extra-vars "version={version} save_to={save_to} is_stable={is_stable}"'.format(
+            version=version_str,
+            save_to=path_to_result,
+            is_stable=is_stable)
+        )
