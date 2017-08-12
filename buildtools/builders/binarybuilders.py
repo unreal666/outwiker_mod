@@ -7,7 +7,7 @@ import shutil
 
 from fabric.api import lcd, local
 
-from buildtools.utilites import remove
+from buildtools.utilites import remove, print_info
 
 
 class BaseBinaryBuilder(object):
@@ -130,7 +130,7 @@ class BasePyInstallerBuilder(BaseBinaryBuilder):
 
         self._remove_files()
 
-        print(u'Copy files to dest path.')
+        print_info(u'Copy files to dest path.')
         shutil.copytree(
             os.path.join(self._dist_dir, u'outwiker'),
             self._dest_dir
@@ -141,7 +141,7 @@ class BasePyInstallerBuilder(BaseBinaryBuilder):
                     for fname in self.get_remove_list()]
 
         for fname in toRemove:
-            print(u'Remove: {}'.format(fname))
+            print_info(u'Remove: {}'.format(fname))
             remove(fname)
 
 
@@ -180,3 +180,24 @@ class PyInstallerBuilderLinux(BasePyInstallerBuilder):
             u'_codecs_kr.so',
             u'_codecs_tw.so',
         ]
+
+    def build(self):
+        super(PyInstallerBuilderLinux, self).build()
+        files_for_strip = [
+            u'wx._aui.so',
+            u'wx._combo.so',
+            u'wx._controls_.so',
+            u'wx._core_.so',
+            u'wx._gdi_.so',
+            u'wx._html.so',
+            u'wx._html2.so',
+            u'wx._misc_.so',
+            u'wx._stc.so',
+            u'wx._windows_.so',
+        ]
+
+        for fname in files_for_strip:
+            print_info(u'Strip {}'.format(fname))
+            with lcd(self._dest_dir):
+                assert os.path.exists(os.path.join(self._dest_dir, fname))
+                local(u'strip -s -o "{fname}" "{fname}"'.format(fname=fname))

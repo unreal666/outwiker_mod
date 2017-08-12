@@ -1,68 +1,139 @@
 # -*- coding: UTF-8 -*-
 
+from abc import ABCMeta, abstractmethod
 import os
 import shutil
 
-from fabric.api import local, lcd
+from fabric.api import local, lcd, settings
 
 from ..base import BuilderBase
-from ..linuxbinary import BuilderLinuxBinary
-from buildtools.defines import DEB_BINARY_BUILD_DIR
+from ..binarybuilders import PyInstallerBuilderLinux
+from buildtools.defines import (DEB_BINARY_BUILD_DIR,
+                                NEED_FOR_BUILD_DIR,
+                                # TIMEZONE,
+                                # DEB_MAINTAINER,
+                                # DEB_MAINTAINER_EMAIL
+                                )
+# from buildtools.contentgenerators import DebChangelogGenerator
 from buildtools.versions import getOutwikerVersion
 
 
-class BuilderLinuxDebBinary(BuilderBase):
-    def __init__(self, subdir_name=DEB_BINARY_BUILD_DIR):
-        super(BuilderLinuxDebBinary, self).__init__(subdir_name)
+class BuilderDebBinaryFactory(object):
+    '''
+    Class to get necessary builder for deb binary.
+    '''
+    @staticmethod
+    def get_default(dir_name=DEB_BINARY_BUILD_DIR, is_stable=False):
+        return BuilderDebBinaryFactory.get_usr(dir_name, is_stable)
+
+    @staticmethod
+    def get_usr(dir_name=DEB_BINARY_BUILD_DIR, is_stable=False):
+        return BuilderDebBinary(dir_name, is_stable)
+
+    @staticmethod
+    def get_opt(dir_name=DEB_BINARY_BUILD_DIR, is_stable=False):
+        return BuilderDebBinaryOpt(dir_name, is_stable)
+
+
+class BuilderDebBinaryBase(BuilderBase):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, dir_name=DEB_BINARY_BUILD_DIR, is_stable=False):
+        super(BuilderDebBinaryBase, self).__init__(dir_name, is_stable)
         version = getOutwikerVersion()
-        self._architecture = self._getDebArchitecture()
-        self._debName = "outwiker-{}+{}_{}".format(version[0],
-                                                   version[1],
-                                                   self._architecture)
+        architecture = self._getDebArchitecture()
+        self.debName = "outwiker-{}+{}_{}".format(version[0],
+                                                  version[1],
+                                                  architecture)
 
-    def clear(self):
-        super(BuilderLinuxDebBinary, self).clear()
-        deb_result_filename = self._getDebFileName()
-        self._remove(os.path.join(self._root_build_dir, deb_result_filename))
+        # tmp/outwiker-x.x.x+xxx_.../
+        self.debPath = self.facts.getTempSubpath(self.debName)
+        self.debFileName = u'{}.deb'.format(self.debName)
 
-    def _build(self):
-        self._buildBinaries()
-        self._copyDebianFiles()
-        self._copy_usr_files(self._getSubpath(self._debName))
-        self._move_to_share(self._getSubpath(self._debName))
-        self._setPermissions()
-        self._buildDeb()
-
-    def _buildBinaries(self):
-        dest_subdir = self._getExecutableDir()
-
-        dest_dir = os.path.join(self._root_build_dir, dest_subdir)
-        os.makedirs(self._getSubpath(self._debName, u'usr', u'lib'))
-
-        linuxBuilder = BuilderLinuxBinary(dest_subdir, create_archive=False)
-        linuxBuilder.build()
-        self._remove(os.path.join(dest_dir, u'LICENSE.txt'))
-
-    def _getDEBIANPath(self):
-        return self._getSubpath(self._debName, u'DEBIAN')
+        self._files_to_remove = [
+            u'LICENSE.txt',
+            # u'libcrypto.so.1.0.0',
+            # u'libexpat.so.1',
+            # u'libfreetype.so.6',
+            # u'libz.so.1',
+            # u'libpng16.so.16',
+            # u'libxml2.so.2',
+            # u'libtiff.so.5',
+            # u'libtinfo.so.5',
+            # u'libjpeg.so.8',
+        ]
 
     def _getExecutableDir(self):
-        return os.path.join(self._subdir_name,
-                            self._debName,
-                            u'usr',
-                            u'lib',
-                            u'outwiker')
+        return os.path.join(self.facts.temp_dir,
+                            self.debName,
+                            self._getExecutableDirShort())
+
+    @abstractmethod
+    def _getExecutableDirShort(self):
+        pass
+
+    def _createFoldersTree(self):
+        '''
+        Create folders tree inside tmp/outwiker-x.x.x+xxx_.../
+        and copy files to it.
+        '''
+        pass
+
+    def clear(self):
+        self._remove(os.path.join(self.build_dir, self.debFileName))
+
+    def _getDEBIANPath(self):
+        return self.facts.getTempSubpath(self.debName, u'DEBIAN')
 
     def _copyDebianFiles(self):
-        debian_src_dir = os.path.join(u'need_for_build',
+        '''
+        Copy files to tmp/outwiker-x.x.x+xxx_architecture/DEBIAN
+        '''
+        debian_src_dir = os.path.join(NEED_FOR_BUILD_DIR,
                                       u'debian_debbinary',
                                       u'debian')
 
         debian_dest_dir = self._getDEBIANPath()
         shutil.copytree(debian_src_dir, debian_dest_dir)
+        self._create_control_file(debian_dest_dir)
+
+    def _create_control_file(self, debian_dir):
+        '''
+        Create DEBIAN/control file from template (insert version number)
+        '''
+        version = getOutwikerVersion()
+        template_file = os.path.join(debian_dir, 'control.tpl')
+
+        with open(template_file) as fp:
+            template = fp.read()
+
+        control_text = template.replace('{{version}}', version[0])
+        control_text = control_text.replace('{{build}}', version[1])
+
+        with open(os.path.join(debian_dir, 'control'), 'w') as fp:
+            fp.write(control_text)
+
+        os.remove(template_file)
+
+    def _getDebArchitecture(self):
+        result = local(u'dpkg --print-architecture', capture=True)
+        result = u''.join(result)
+        return result.strip()
+
+    def _buildDeb(self):
+        with lcd(self.facts.temp_dir):
+            local(u'fakeroot dpkg-deb --build {}'.format(self.debName))
+
+        shutil.move(self.facts.getTempSubpath(self.debFileName),
+                    os.path.join(self.build_dir, self.debFileName))
+
+    def _checkLintian(self):
+        with settings(warn_only=True):
+            with lcd(self.build_dir):
+                local(u'lintian --no-tag-display-limit {}.deb'.format(self.debName))
 
     def _setPermissions(self):
-        for par, dirs, files in os.walk(self._getSubpath(self._debName)):
+        for par, dirs, files in os.walk(self.debPath):
             for d in dirs:
                 try:
                     os.chmod(os.path.join(par, d), 0o755)
@@ -75,33 +146,98 @@ class BuilderLinuxDebBinary(BuilderBase):
                     continue
 
         exe_dir = self._getExecutableDir()
-        os.chmod(os.path.join(self._root_build_dir,
+        os.chmod(os.path.join(self.build_dir,
                               exe_dir,
                               u'outwiker'), 0o755)
 
-        DEBIAN_dir = self._getDEBIANPath()
+        os.chmod(os.path.join(self.debPath, u'usr', u'bin', u'outwiker'),
+                 0o755)
 
-        os.chmod(os.path.join(DEBIAN_dir, u'postinst'), 0o755)
-        os.chmod(os.path.join(DEBIAN_dir, u'postrm'), 0o755)
-        os.chmod(os.path.join(self._build_dir,
-                              self._debName,
-                              u'usr',
-                              u'bin',
-                              u'outwiker'), 0o755)
+    def _buildBinaries(self):
+        dest_dir = self._getExecutableDir()
 
-    def _buildDeb(self):
-        with lcd(self._build_dir):
-            local(u'fakeroot dpkg-deb --build {}'.format(self._debName))
+        src_dir = self.temp_sources_dir
+        temp_dir = self.facts.temp_dir
 
-        deb_filename = self._getDebFileName()
-        shutil.move(self._getSubpath(deb_filename),
-                    os.path.join(self._root_build_dir, deb_filename))
+        linuxBuilder = PyInstallerBuilderLinux(src_dir,
+                                               dest_dir,
+                                               temp_dir)
+        linuxBuilder.build()
 
-        with lcd(self._root_build_dir):
-            local(u'lintian {}.deb'.format(self._debName))
+        for fname in self._files_to_remove:
+            self._remove(os.path.join(dest_dir, fname))
 
-    def _move_to_share(self, destdir):
-        """Move images, help etc to /usr/share folder."""
+    def _create_bin_file(self):
+        '''
+        Create executable file in usr/bin
+        '''
+        bin_path = os.path.join(self.debPath, u'usr', u'bin')
+        if not os.path.exists(bin_path):
+            os.mkdir(bin_path)
+
+        text = u'''#!/bin/sh
+/{}/outwiker "$@"'''.format(self._getExecutableDirShort())
+
+        bin_file = os.path.join(bin_path, u'outwiker')
+        with open(bin_file, 'w') as fp:
+            fp.write(text)
+
+        os.chmod(bin_file, 0o755)
+
+    def _copy_share_files(self):
+        """
+        Copy files to tmp/outwiker-x.x.x+xxx_architecture/usr/bin and
+        tmp/outwiker-x.x.x+xxx_architecture/usr/share
+        """
+        dest_usr_dir = os.path.join(self.debPath, u'usr')
+        dest_share_dir = os.path.join(dest_usr_dir, u'share')
+
+        root_dir = os.path.join(NEED_FOR_BUILD_DIR,
+                                u'debian_debbinary',
+                                u'root')
+        shutil.copytree(os.path.join(root_dir, u'usr', u'share'),
+                        dest_share_dir)
+
+    def _create_changelog(self):
+        doc_dir = os.path.join(self.debPath,
+                               u'usr', u'share', u'doc',
+                               u'outwiker')
+
+        # Create empty changelog
+        # TODO: Generate changelog with
+        # buildtools.contentgenerators.DebChangelogGenerator
+        with open(os.path.join(doc_dir, u'changelog'), "w"):
+            pass
+
+        # Archive the changelog to usr/share/doc/outwiker
+        with lcd(doc_dir):
+            local(u'gzip --best -n -c changelog > changelog.gz')
+            local(u'rm changelog')
+
+    def _build(self):
+        self._buildBinaries()
+        self._copyDebianFiles()
+        self._copy_share_files()
+        self._createFoldersTree()
+        self._create_bin_file()
+        self._create_changelog()
+        self._setPermissions()
+        self._buildDeb()
+        self._checkLintian()
+
+
+class BuilderDebBinary(BuilderDebBinaryBase):
+    '''
+    Class to create deb package from which will be installed to /usr/ folder
+    '''
+    def _getExecutableDirShort(self):
+        return u'usr/lib/outwiker'
+
+    def _createFoldersTree(self):
+        '''
+        Create folders tree inside tmp/outwiker-x.x.x+xxx_.../
+        and copy files to it.
+        '''
         dir_names = [u'help',
                      u'iconset',
                      u'images',
@@ -109,54 +245,22 @@ class BuilderLinuxDebBinary(BuilderBase):
                      u'spell',
                      u'styles']
 
-        share_dir = os.path.join(destdir, u'usr', u'share', u'outwiker')
+        share_dir = os.path.join(self.debPath, u'usr', u'share', u'outwiker')
         os.makedirs(share_dir)
 
+        exec_dir = self._getExecutableDir()
+
         for dir_name in dir_names:
-            src_dir = os.path.join(destdir,
-                                   u'usr',
-                                   u'lib',
-                                   u'outwiker',
-                                   dir_name)
+            src_dir = os.path.join(exec_dir, dir_name)
             dst_dir = os.path.join(share_dir, dir_name)
             shutil.move(src_dir, dst_dir)
-            with lcd(destdir):
+            with lcd(self.debPath):
                 local(u'ln -s ../../share/outwiker/{dirname} usr/lib/outwiker'.format(dirname=dir_name))
 
-    def _copy_usr_files(self, destdir):
-        """Copy icons files for deb package"""
-        dest_usr_dir = os.path.join(destdir, u'usr')
-        dest_share_dir = os.path.join(dest_usr_dir, u'share')
-        dest_bin_dir = os.path.join(dest_usr_dir, u'bin')
 
-        root_dir = os.path.join(u'need_for_build',
-                                u'debian_debbinary',
-                                u'root')
-        shutil.copytree(os.path.join(root_dir, u'usr', u'share'),
-                        dest_share_dir)
-        shutil.copytree(os.path.join(root_dir, u'usr', u'bin'),
-                        dest_bin_dir)
-
-        dest_doc_dir = os.path.join(dest_share_dir,
-                                    u'doc',
-                                    u'outwiker')
-
-        shutil.copyfile(os.path.join(u'need_for_build',
-                                     u'debian_debsource',
-                                     u'debian',
-                                     u'changelog'),
-                        os.path.join(dest_doc_dir, u'changelog'))
-        with lcd(dest_doc_dir):
-            local(u'gzip --best -n -c changelog > changelog.Debian.gz')
-            local(u'rm changelog')
-
-    def _getDebArchitecture(self):
-        result = local(u'dpkg --print-architecture', capture=True)
-        result = u''.join(result)
-        return result.strip()
-
-    def _getDebFileName(self):
-        '''
-        Return file name for deb package(file name only, not path)
-        '''
-        return u'{}.deb'.format(self._debName)
+class BuilderDebBinaryOpt(BuilderDebBinaryBase):
+    '''
+    Class to create deb package from which will be installed to /opt/ folder
+    '''
+    def _getExecutableDirShort(self):
+        return u'opt/outwiker'

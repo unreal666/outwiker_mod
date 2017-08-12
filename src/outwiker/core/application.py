@@ -34,12 +34,12 @@ class ApplicationParams(object):
 
         # Opening wiki event
         # Parameters:
-        #     root - opened wiki root(it may be None)
+        #     root - opened wiki root (it may be None)
         self.onWikiOpen = Event()
 
         # Closing wiki event
         # Parameters:
-        #     root - closed wiki root(it may be None)
+        #     root - closed wiki root (it may be None)
         self.onWikiClose = Event()
 
         # Updating page wiki event
@@ -66,7 +66,7 @@ class ApplicationParams(object):
 
         # User want insert link to selected attached files to page
         # Parameters:
-        #     fnames - selected file names(names only, without full paths)
+        #     fnames - selected file names (names only, without full paths)
         self.onAttachmentPaste = Event()
 
         # Changings in the bookmarks list event
@@ -85,12 +85,12 @@ class ApplicationParams(object):
         #     oldSubpath - previous relative path to page
         self.onPageRename = Event()
 
-        # Beginning complex tree updating(updating of several steps) event
+        # Beginning complex tree updating (updating of several steps) event
         # Parameters:
         #     root - wiki tree root
         self.onStartTreeUpdate = Event()
 
-        # Finishing complex tree updating(updating of several steps) event
+        # Finishing complex tree updating (updating of several steps) event
         # Parameters:
         #     root - wiki tree root
         self.onEndTreeUpdate = Event()
@@ -118,7 +118,7 @@ class ApplicationParams(object):
         #     --
         self.onForceSave = Event()
 
-        # The event occurs after wiki parser(Parser cllass) creation,
+        # The event occurs after wiki parser (Parser class) creation,
         # but before it using
         # Parameter:
         #     parser - Parser class instance
@@ -155,7 +155,7 @@ class ApplicationParams(object):
         #     page - the page on which was right clicked in the notes tree
         self.onTreePopupMenu = Event()
 
-        # Event occurs before HTML generation(for wiki and HTML pages)
+        # Event occurs before HTML generation (for wiki and HTML pages)
         # Order of the calling preprocessing events is not regulated
         # Parameters:
         #    page - page for which HTML is generated
@@ -163,7 +163,7 @@ class ApplicationParams(object):
         #             class
         self.onPreprocessing = Event()
 
-        # Event occurs after HTML generation(for wiki and HTML pages)
+        # Event occurs after HTML generation (for wiki and HTML pages)
         # Order of the calling preprocessing events is not regulated
         # Parameters:
         #    page - page for which HTML is generated
@@ -171,18 +171,18 @@ class ApplicationParams(object):
         #             class
         self.onPostprocessing = Event()
 
-        # Event occurs during HtmlImproverFactory instance creation
-        # Parameters:
-        #     factory - HtmlImproverFactory instance in which can add
-        #     the new HtmlImprover instances by add() method
-        self.onPrepareHtmlImprovers = Event()
-
-        # Event occurs after wiki parsing but before HTML improveing
+        # Event occurs after wiki parsing but before HTML improving
         # Parameters:
         #     page - page for which HTML is generated
         #     params - instance of the
         #              outwiker.core.events.PreHtmlImprovingParams class
         self.onPreHtmlImproving = Event()
+
+        # Event occurs during HtmlImproverFactory instance creation
+        # Parameters:
+        #     factory - HtmlImproverFactory instance in which can add
+        #     the new HtmlImprover instances by add() method
+        self.onPrepareHtmlImprovers = Event()
 
         # Event occurs when cursor hovers under link on preview tab
         # Parameters:
@@ -274,7 +274,7 @@ class ApplicationParams(object):
         #    params - instance of the PreWikiOpenParams class
         self.onPreWikiOpen = Event()
 
-        # Event occurs before wiki opening
+        # Event occurs after wiki opening
         # Parameters:
         #    page - current(selected) page
         #    params - instance of the PostWikiOpenParams class
