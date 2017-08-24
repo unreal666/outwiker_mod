@@ -8,6 +8,7 @@
    build/start
    build/index
    sources/index
+   plugins/index
    changelog
    support
    links
