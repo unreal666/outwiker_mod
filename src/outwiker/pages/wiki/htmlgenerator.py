@@ -55,8 +55,11 @@ class HtmlGenerator(object):
         htmlAttrs = parser.htmlAttrs
 
         # Create final HTML file
-        tpl = HtmlTemplate(readTextFile (stylepath))
-        result = tpl.substitute(content=text, userhead=head, userhtmlattrs=htmlAttrs)
+        tpl = HtmlTemplate(readTextFile(stylepath))
+        result = tpl.substitute(content=text,
+                                userhead=head,
+                                userhtmlattrs=htmlAttrs,
+                                title=self.page.display_title)
 
         result = self._changeContentByEvent(self.page,
                                             PostprocessingParams(result),

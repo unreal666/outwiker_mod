@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv='X-UA-Compatible' content='IE=edge' />
+		<meta http-equiv='content-type' content='text/html; charset=utf-8'/>
+
+		<style>
+			body {
+				font-size: 110%;
+			}
+
+			.changelog {
+				display: none;
+			}
+
+			.version {
+				padding: 0.2em;
+				font-weight: bold;
+			}
+
+			.version-current {
+				color: #000;
+				font-weight: bold;
+			}
+
+			.version-new {
+				color: #518BDB;
+				font-weight: bold;
+			}
+
+			.version-block {
+				border-bottom: 1px solid #518BDB;
+			}
+
+			.version-block div {
+				margin: 0.7em 0em;
+			}
+
+			.download {
+				border-radius: 2px;
+				color: #fff;
+				font-weight: bold;
+				padding: 0.2em 1em;
+				text-decoration: none;
+				background-color: #518BDB;
+			}
+
+			.show-changelog {
+				border-radius: 2px;
+				text-decoration: none;
+				padding: 0.2em 1em;
+				background-color: #fff;
+				border: 1px solid #518BDB;
+				color: #518BDB;
+			}
+
+			.version-block {
+				border-left: 4px solid #518BDB;
+				padding-left: 1em;
+			}
+		</style>
+
+		<script>
+		function toggleChangelog(classname) {
+			var element = document.getElementById(classname);
+			if (element.style.display !== 'block') {
+				element.style.display = 'block';
+			} else {
+				element.style.display = 'none';
+			}
+		}
+		</script>
+	</head>
+	<body>
+        {% macro update_info(id)%}
+        {% set download_url = updatedAppInfo[id].appwebsite %}
+        <div class="controls">
+            {% if download_url %}
+                <a class="download button" href="{{download_url}}">{{str_download}}</a>
+            {% endif %}
+
+            <a class="show-changelog button" href="#"  onclick="toggleChangelog('{{id}}-changelog');">{{str_more_info}}</a>
+					</div>
+
+                    <!-- {{id}} version changelog -->
+                    <div id="{{id}}-changelog" class="changelog">
+						<h3>{{str_version_history}}</h3>
+
+						{% for version in updatedAppInfo[id].versionsList %}
+						<h4>{{version.version}} {{(version.date)}}</h4>
+						<ul>
+							{% for change in version.changes %}
+							<li>{{change}}</li>
+							{% endfor %}
+						</ul>
+						{% endfor %}
+					</div>
+        {%- endmacro %}
+
+		<div class="outwiker-current">{{str_outwiker_current_version}}: <span class="version version-current">{{outwiker_current_version}}</span></div>
+		<div class="version-block outwiker-version">
+
+            {% if 'OUTWIKER_STABLE' in updatedAppInfo%}
+				<!-- Outwiker stable version block begin -->
+				<div class="outwiker-latest-stable">{{str_outwiker_latest_stable_version}}: <span class="version version-new">{{updatedAppInfo['OUTWIKER_STABLE'].currentVersionStr}}</span>
+                {{ update_info('OUTWIKER_STABLE') }}
+				</div>
+				<!-- Outwiker stable version block end -->
+            {% endif %}
+
+            {% if 'OUTWIKER_UNSTABLE' in  updatedAppInfo%}
+				<!-- Outwiker unstable version block begin -->
+				<div class="outwiker-latest-unstable">{{str_outwiker_latest_unstable_version}}: <span class="version version-new">{{updatedAppInfo['OUTWIKER_UNSTABLE'].currentVersionStr}}</span>
+					{{ update_info('OUTWIKER_UNSTABLE') }}
+				</div>
+				<!-- Outwiker unstable version block end -->
+            {% endif %}
+
+			</div>
+
+		{% for pluginName, pluginInfo in updatedAppInfo.iteritems() %}
+            {% if pluginName != 'OUTWIKER_STABLE' and pluginName != 'OUTWIKER_UNSTABLE' %}
+                <!-- {{pluginName}} block begin -->
+                <div class="version-block plugin-version {{pluginName|replace(' ', '_')}}">
+                    <div class="title">{{pluginName}} <span class="version version-current">{{currentVersionsDict[pluginName]}}</span> &#x27f6; <span class="version version-new">{{pluginInfo.currentVersionStr}}</span></div>
+                    {{ update_info(pluginName) }}
+                </div>
+                <!-- {{pluginName}} block end -->
+            {% endif %}
+		{% endfor %}
+	</body>
+</html>

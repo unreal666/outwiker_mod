@@ -1,140 +1,72 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import urllib2
+import logging
 
-from outwiker.core.version import Version
+from outwiker.core.xmlversionparser import XmlVersionParser
 
 from .i18n import get_
-from .versionextractor import extractVersion
-import loaders
+from .loaders import NormalLoader
 
 
-class VersionList (object):
-    """Класс для получения последних версий плагинов и самой программы с сайтов"""
-    def __init__(self, plugins):
+logger = logging.getLogger('UpdateNotifierPlugin')
+
+
+class VersionList(object):
+    """Class to read latest versions information."""
+    def __init__(self, updateUrls, loader=None):
         """
-        plugins - экземпляр класса PluginsLoader
+        updateUrls - dict which key is plugin name or other ID,
+            value is update url
+        loader - instance of the loader from loaders.py or other.
+            Is used for tests only.
         """
         global _
         _ = get_()
 
-        self._plugins = plugins
+        self._updateUrls = updateUrls
 
-        self._loader = loaders.NormalLoader()
+        if loader is None:
+            self._loader = NormalLoader()
+        else:
+            self._loader = loader
 
-        # Номера версий OutWiker
-        self._outwikerStableVersion = None
-        self._outwikerStablePage = _(u"http://jenyay.net/Outwiker/English")
-
-        self._outwikerUnstableVersion = None
-        self._outwikerUnstablePage = _(u"http://jenyay.net/Outwiker/UnstableEn")
-
-        # Без загрузки версий все версии равны None
-        self._pluginsVersion = {plugin.name: None for plugin in self._plugins}
-        self._pluginPages = self._getPluginPages ()
-
-
-    def updateVersions (self):
+    def loadAppInfo(self):
         """
-        Получить номера версий всех плагинов и самой программы из интернета
+        Load latest versions information.
         """
-        self._outwikerStableVersion = self._getVersionFromPage (self._outwikerStablePage, "stable")
-        self._outwikerUnstableVersion = self._getVersionFromPage (self._outwikerUnstablePage,
-                                                                  "unstable", status="dev")
+        latestInfo = {}
 
-        for plugin in self._plugins:
-            version = self._getVersionFromPage (self._pluginPages[plugin.name], "stable")
-            if version:
-                self._pluginsVersion[plugin.name] = version
+        for name, url in self._updateUrls.iteritems():
+            logger.info(u"Checking update for {}".format(name))
+            appInfo = self.getAppInfoFromUrl(url)
+            if appInfo is not None:
+                latestInfo[name] = appInfo
 
+        return latestInfo
 
-    def setLoader (self, newloader):
+    def getAppInfoFromUrl(self, url):
         """
-        Метод используется только для тестирования. Нужен для эмуляции отсутствия соединения с интернетом.
-        """
-        self._loader = newloader
-
-
-    def _getPluginPages (self):
-        """
-        Составить словарь, где ключем будет имя плагина, а значением ссылка на страницу плагина. При этом учитывается, что в старых плагинах не было свойства url
-        """
-        oldPluginPages = {u"ExternalTools": _(u"http://jenyay.net/Outwiker/ExternalToolsEn"),
-                          u"Lightbox": _(u"http://jenyay.net/Outwiker/LightboxEn"),
-                          u"Livejournal": _(u"http://jenyay.net/Outwiker/LivejournalPluginEn"),
-                          u"Spoiler": _(u"http://jenyay.net/Outwiker/SpoilerEn"),
-                          u"Style": _(u"http://jenyay.net/Outwiker/StylePluginEn"),
-                          u"ThumbGallery": _(u"http://jenyay.net/Outwiker/ThumbGalleryEn"),
-                          }
-
-        pluginPages = {}
-
-        for plugin in self._plugins:
-            if "url" in dir (plugin):
-                url = plugin.url
-            elif plugin.name in oldPluginPages:
-                url = oldPluginPages[plugin.name]
-            else:
-                url = None
-
-            pluginPages[plugin.name] = url
-
-        return pluginPages
-
-
-    def _getVersionFromPage (self, url, versionname, status=""):
-        """
-        url - ссылка, откуда получается номер версии
-        versionname - название версии (stable, unstable и т.п.)
+        url - URL of path to file to read versions information.
         """
         if url is None:
             return None
 
-        text = self._loadPage (url)
-        versions = extractVersion (text)
+        logger.info(u'Downloading {}'.format(url))
 
-        if versionname not in versions:
+        try:
+            text = self._loader.load(url)
+        except (urllib2.HTTPError, urllib2.URLError, ValueError):
+            logger.warning(u"Can't download {}".format(url))
             return None
 
-        return Version.parse (versions[versionname] + " " + status)
-
-
-    def _loadPage (self, url):
-        """
-        Загрузка страницы.
-        Возвращает текст страницы или пустую строку в случае ошибки
-        """
         try:
-            text = self._loader.load (url)
-        except urllib2.HTTPError:
-            text = u""
-        except urllib2.URLError:
-            text = u""
+            appinfo = XmlVersionParser([_(u'__updateLang'), u'en']).parse(text)
         except ValueError:
-            text = u""
+            logger.warning(u'Invalid format of {}'.format(url))
+            return None
 
-        return text
+        if not appinfo.appname.strip():
+            return None
 
-
-    def getPluginVersion (self, pluginname):
-        return self._pluginsVersion[pluginname]
-
-
-    def getPluginUrl (self, pluginname):
-        return self._pluginPages[pluginname]
-
-
-    @property
-    def stableVersion (self):
-        """
-        Возвращает номер стабильной версии OutWiker, которая лежит на сайте программы
-        """
-        return self._outwikerStableVersion
-
-
-    @property
-    def unstableVersion (self):
-        """
-        Возвращает номер нестабильной версии OutWiker, которая лежит на сайте программы
-        """
-        return self._outwikerUnstableVersion
+        return appinfo
