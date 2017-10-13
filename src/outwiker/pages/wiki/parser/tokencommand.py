@@ -58,4 +58,4 @@ class CommandToken (object):
         if argcount != 4:
             return command.execute (params, content)
         else:
-            return command.execute (params, content, {"hasCmdend": hasCmdend})
+            return command.execute (params, content, {"hasCmdend": hasCmdend, "cmd_name": name,})
