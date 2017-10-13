@@ -351,8 +351,10 @@ class Parser(object):
             error = unicode(traceback.format_exc(), getOS().filesEncoding)
             return self.error_template.format(error=error)
 
-    def addCommand(self, command):
-        self.commands[command.name] = command
+    def addCommand(self, command, name=None):
+        if not name:
+            name = command.name
+        self.commands[name] = command
 
     def removeCommand(self, commandName):
         if commandName in self.commands:
