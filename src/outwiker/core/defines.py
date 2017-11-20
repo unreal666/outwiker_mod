@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 '''
 Various names and constants
 '''
@@ -37,6 +37,18 @@ APP_DATA_KEY_ANCHOR = u'__anchor'
 APP_DATA_DEBUG = u'__debug'
 
 APP_DATA_DISABLE_MINIMIZING = u'__disableMinimizing'
+
+ICONS_STD_PREFIX = u'__std_'
+ICONS_EXTENSIONS = [u'png', u'jpg', u'jpeg', u'gif', u'bmp', u'ico']
+ICON_DEFAULT = ICONS_STD_PREFIX + u'_default.png'
+RECENT_ICONS_SECTION = u'RecentIcons'
+RECENT_ICONS_PARAM_NAME = u'icon'
+
+ICONS_FOLDER_NAME = u'iconset'
+IMAGES_FOLDER_NAME = u'images'
+STYLES_FOLDER_NAME = u"styles"
+PLUGINS_FOLDER_NAME = u"plugins"
+SPELL_FOLDER_NAME = u"spell"
 
 
 # To translate this with xgettext

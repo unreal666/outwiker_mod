@@ -6,7 +6,9 @@ import os.path
 import wx
 from wx.lib.newevent import NewEvent
 
+from outwiker.core.defines import ICON_DEFAULT
 from outwiker.core.system import getImagesDir
+from outwiker.core.iconcontroller import IconController
 
 IconSelectedEvent, EVT_ICON_SELECTED = NewEvent()
 
@@ -15,18 +17,23 @@ class IconButton(object):
     """
     Button with single icons
     """
-    _invalidFileName = os.path.join(getImagesDir(), u'cross.png')
 
-    # Оформление
-    _normalBackground = wx.Colour(255, 255, 255)
-    _selectedBackground = wx.Colour(160, 190, 255)
-    _borderColor = wx.Colour(0, 0, 255)
-
-    def __init__(self, parent, fname, width, height):
+    def __init__(self, parent, fname, width, height, theme=None):
         self._parent = parent
         self._fname = fname
         self._width = width
         self._height = height
+
+        self._invalidFileName = os.path.join(getImagesDir(), u'cross.png')
+
+        self._normalBackground = wx.Colour(255, 255, 255)
+        self._selectedBackground = wx.Colour(160, 190, 255)
+        self._borderColor = wx.Colour(0, 0, 255)
+
+        if theme is not None:
+            self._normalBackground = theme.colorBackground
+            self._selectedBackground = theme.colorBackgroundSelected
+            self._borderColor = theme.colorBorderSelected
 
         self._x = 0
         self._y = 0
@@ -121,17 +128,19 @@ class IconButton(object):
         """
         Return the text of the tooltip with file name
         """
-        text = os.path.basename(self._fname)
+        text_src = os.path.basename(self._fname)
 
         # Отбросим расширение файла
-        dotPos = text.rfind(".")
+        dotPos = text_src.rfind(".")
         if dotPos != -1:
-            text = text[: dotPos]
+            text = text_src[: dotPos]
 
         if text == "__icon":
-            text = _(u"Curent icon")
-        elif text == u"_page":
+            text = _(u"Custom icon")
+        elif text_src == ICON_DEFAULT:
             text = _(u"Default icon")
+        else:
+            text = IconController.display_name(self._fname)
 
         return text
 
@@ -144,9 +153,13 @@ class IconListCtrl(wx.ScrolledWindow):
     """
     Control with icons for pages
     """
-    def __init__(self, parent, multiselect=False):
+    def __init__(self, parent, multiselect=False, theme=None):
         wx.ScrolledWindow.__init__(self, parent, style=wx.BORDER_THEME)
+        self._theme = theme
+
         self._backgroundColor = wx.Colour(255, 255, 255)
+        if self._theme is not None:
+            self._backgroundColor = self._theme.colorBackground
 
         self._canvas = wx.Panel(self)
         self._canvas.SetSize((0, 0))
@@ -221,13 +234,10 @@ class IconListCtrl(wx.ScrolledWindow):
 
     def setIconsList(self, iconFileNames):
         self.clear()
-        self._iconFileNames = iconFileNames
+        self._iconFileNames = iconFileNames[:]
 
-        for fname in reversed(iconFileNames):
+        for fname in reversed(self._iconFileNames):
             self.__addButton(fname)
-
-        if len(self.buttons) != 0:
-            self.__selectSingleButton(self.buttons[0])
 
         self.__layout()
         self.Scroll(0, 0)
@@ -240,7 +250,8 @@ class IconListCtrl(wx.ScrolledWindow):
             button = IconButton(self._canvas,
                                 fname,
                                 self.cellWidth,
-                                self.cellHeight)
+                                self.cellHeight,
+                                self._theme)
         except ValueError:
             return
 

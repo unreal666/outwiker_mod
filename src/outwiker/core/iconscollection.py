@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import os.path
@@ -16,17 +16,16 @@ class IconsCollection(object):
     '''
     Class for the working with groups of the icons
     '''
-
     # File name for cover of the group
     COVER_FILE_NAME = u'__cover.png'
 
     def __init__(self, iconsDir):
         '''
-        iconsDir - Root directory(absolute path) with the icons
+        iconsDir - Root directory (absolute path) with the icons
         '''
         self._iconsDir = iconsDir
 
-        # Key - group name, value - files list(full paths)
+        # Key - group name, value - files list (full paths)
         self._groups = {}
 
         # Key - group name, value - full path to group icon
@@ -76,7 +75,7 @@ class IconsCollection(object):
 
     def _findIcons(self, folder):
         '''
-        Return files list(full paths) for icons in 'folder'
+        Return files list (full paths) for icons in 'folder'
         '''
         result = []
         files = sorted(os.listdir(folder))
@@ -84,7 +83,7 @@ class IconsCollection(object):
         for fname in files:
             fullpath = os.path.join(folder, fname)
 
-            if(os.path.isfile(fullpath) and
+            if (os.path.isfile(fullpath) and
                     self._isIcon(fullpath) and
                     fname != self.COVER_FILE_NAME):
                 result.append(fullpath)
@@ -94,10 +93,10 @@ class IconsCollection(object):
     def _isIcon(self, fname):
         fname_lower = fname.lower()
 
-        return(fname_lower.endswith(u'.png') or
-               fname_lower.endswith(u'.jpg') or
-               fname_lower.endswith(u'.gif') or
-               fname_lower.endswith(u'.bmp'))
+        return (fname_lower.endswith(u'.png') or
+                fname_lower.endswith(u'.jpg') or
+                fname_lower.endswith(u'.gif') or
+                fname_lower.endswith(u'.bmp'))
 
     def getGroups(self):
         '''
@@ -110,7 +109,7 @@ class IconsCollection(object):
 
     def getIcons(self, groupname):
         '''
-        Return all icons(full paths) for groups with name group
+        Return all icons (full paths) for groups with name group
         Raise KeyError if group not exists
         '''
         if groupname is None:
@@ -120,7 +119,7 @@ class IconsCollection(object):
 
     def addGroup(self, groupname):
         '''
-        Add new group(and directory) of the icons.
+        Add new group (and directory) of the icons.
         If directory exists the method does nothing.
         The method can raise ValueError, IOError and SystemError exceptions.
         '''
@@ -163,7 +162,7 @@ class IconsCollection(object):
         Remove icon group and all icons inside it.
         '''
         oldGroupPath = os.path.join(self._iconsDir, groupname)
-        if(len(groupname) == 0 or
+        if (len(groupname) == 0 or
                 not os.path.exists(oldGroupPath) or
                 groupname not in self._groups):
             raise KeyError
@@ -192,9 +191,9 @@ class IconsCollection(object):
     def _addIconToDir(self, grouppath, iconpath):
         '''
         Add single icon with full path iconpath into folder groupPath.
-        Not images is skipped.
+        Not images will be skipped.
         '''
-        if(not isImage(iconpath) or not os.path.exists(iconpath)):
+        if (not isImage(iconpath) or not os.path.exists(iconpath)):
             return
 
         iconname = os.path.basename(iconpath)
@@ -247,7 +246,7 @@ class IconsCollection(object):
         if not os.path.exists(grouppath):
             raise KeyError
 
-        if(not isImage(fname) or not os.path.exists(fname)):
+        if (not isImage(fname) or not os.path.exists(fname)):
             return
 
         newIconPath = os.path.join(grouppath, self.COVER_FILE_NAME)

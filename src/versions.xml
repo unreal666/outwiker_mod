@@ -7,6 +7,16 @@
 		<website>http://jenyay.net/Outwiker/UnstableEn</website>
 
 		<changelog>
+			<version number="2.1.0.832" status="dev" date="November 20, 2017">
+				<change>Added options to select length of history of recently used icons.</change>
+				<change>Fixed errors.</change>
+			</version>
+
+			<version number="2.1.0.830" status="dev" date="October 23, 2017">
+				<change>The way of storing standard icons in notes is changed.</change>
+				<change>New interface to select notes icons.</change>
+			</version>
+
 			<version number="2.1.0.828" status="dev" date="September 24, 2017">
 				<change>To the page style files added a new variable with name $title.</change>
 				<change>Added support for Ubuntu 17.10.</change>
@@ -27,6 +37,16 @@
 		<website>http://jenyay.net/Outwiker/Unstable</website>
 
 		<changelog>
+			<version number="2.1.0.832" status="dev" date="20.11.2017">
+				<change>Добавлена настройка для выбора размера истории последних используемых значков страницы.</change>
+				<change>Исправление ошибок.</change>
+			</version>
+
+			<version number="2.1.0.830" status="dev" date="23.10.2017">
+				<change>Изменен способ хранения стандартных значков в заметках.</change>
+				<change>Новый интерфейс выбора значков заметок.</change>
+			</version>
+
 			<version number="2.1.0.828" status="dev" date="24.09.2017">
 				<change>В файлы стилей страниц добавлена новая переменная $title.</change>
 				<change>Добавлена поддержка Ubuntu 17.10.</change>
