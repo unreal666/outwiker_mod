@@ -2,7 +2,8 @@
 
 import os.path
 import hashlib
-from StringIO import StringIO
+from io import StringIO
+from functools import reduce
 
 from outwiker.core.attachment import Attachment
 from outwiker.core.style import Style
@@ -37,11 +38,10 @@ class WikiHashCalculator (object):
         content = StringIO()
 
         # Заголовок страницы
-        content.write (page.title.encode (self._unicodeEncoding))
+        content.write (page.title)
 
         # Содержимое
-        pagecontent = page.content.encode (self._unicodeEncoding)
-        content.write (pagecontent)
+        content.write(page.content)
 
         self.__getDirContent (page, content)
         content.write (self.__getPluginsList())
@@ -53,23 +53,23 @@ class WikiHashCalculator (object):
 
         # Настройки отображения HTML-страницы
         content.write (str (self._htmlConfig.fontSize.value))
-        content.write (self._htmlConfig.fontName.value.encode(self._unicodeEncoding))
-        content.write (self._htmlConfig.userStyle.value.encode(self._unicodeEncoding))
-        content.write (self._htmlConfig.HTMLImprover.value.encode(self._unicodeEncoding))
+        content.write (self._htmlConfig.fontName.value)
+        content.write (self._htmlConfig.userStyle.value)
+        content.write (self._htmlConfig.HTMLImprover.value)
 
         # Список подстраниц
         for child in page.children:
-            content.write (child.title.encode (self._unicodeEncoding) + "\n")
+            content.write(child.title + "\n")
 
         if len (page.content) == 0:
             # Если страница пустая, то проверим настройку, отвечающую за шаблон пустой страницы
-            emptycontent = EmptyContent (self._mainConfig)
-            content.write (emptycontent.content.encode (self._unicodeEncoding))
+            emptycontent = EmptyContent(self._mainConfig)
+            content.write (emptycontent.content)
 
         result = content.getvalue()
         content.close()
 
-        return result
+        return result.encode('utf-8')
 
 
     def __getStyleContent (self, page):
@@ -80,13 +80,13 @@ class WikiHashCalculator (object):
 
         try:
             with open (style.getPageStyle (page)) as fp:
-                stylecontent = unicode (fp.read(), "utf8")
+                stylecontent = fp.read()
         except IOError:
             stylecontent = u""
         except UnicodeDecodeError:
             stylecontent = u""
 
-        return stylecontent.encode (self._unicodeEncoding)
+        return stylecontent
 
 
     def __getPluginsList (self):
@@ -97,7 +97,7 @@ class WikiHashCalculator (object):
         if len (self._application.plugins) == 0:
             return u""
 
-        plugins = [plugin.name + unicode(plugin.version) for plugin in self._application.plugins]
+        plugins = [plugin.name + str(plugin.version) for plugin in self._application.plugins]
         plugins.sort()
         result = reduce (lambda x, y: x + y, plugins)
         return result
@@ -113,7 +113,7 @@ class WikiHashCalculator (object):
         attachroot = attach.getAttachPath()
 
         attachlist = attach.getAttachRelative (dirname)
-        attachlist.sort (Attachment.sortByName)
+        attachlist.sort(key=str.lower)
 
         for fname in attachlist:
             fullpath = os.path.join (attachroot, dirname, fname)
@@ -121,8 +121,8 @@ class WikiHashCalculator (object):
             # Пропустим директории, которые начинаются с __
             if not os.path.isdir (fname) or not fname.startswith ("__"):
                 try:
-                    filescontent.write (fname.encode (self._unicodeEncoding))
-                    filescontent.write (unicode (os.stat (fullpath).st_mtime))
+                    filescontent.write (fname)
+                    filescontent.write (str (os.stat (fullpath).st_mtime))
 
                     if os.path.isdir (fullpath):
                         self.__getDirContent (page, filescontent, os.path.join (dirname, fname))

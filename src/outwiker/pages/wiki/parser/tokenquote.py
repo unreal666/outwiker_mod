@@ -13,16 +13,16 @@ class QuoteFactory (object):
         return QuoteToken(parser).getToken()
 
 
-class QuoteToken (object):
+class QuoteToken(object):
     quoteStart = '[>'
     quoteEnd = '<]'
 
-    def __init__ (self, parser):
+    def __init__(self, parser):
         self.parser = parser
 
 
-    def getToken (self):
-        anyExcept = Combine(ZeroOrMore(NotAny (Literal(QuoteToken.quoteStart) | Literal(QuoteToken.quoteEnd)) + CharsNotIn('', exact=1)))
+    def getToken(self):
+        anyExcept = Combine(ZeroOrMore(NotAny(Literal(QuoteToken.quoteStart) | Literal(QuoteToken.quoteEnd)) + CharsNotIn('', exact=1)))
         anyExcept = anyExcept.leaveWhitespace().setParseAction(self.__parseText)
         token = Forward()
         token << (Suppress(QuoteToken.quoteStart) + Regex(TagAttrsPattern.value) +
@@ -31,12 +31,12 @@ class QuoteToken (object):
         return token
 
 
-    def __parse (self, s, loc, toks):
+    def __parse(self, s, loc, toks):
         text = u''.join(toks[1:len(toks)])
         attrs = getAttributes(toks)
 
         return '<blockquote%s>%s</blockquote>' % (attrs, text)
 
 
-    def __parseText (self, s, loc, toks):
+    def __parseText(self, s, loc, toks):
         return self.parser.parseWikiMarkup (u''.join(toks))

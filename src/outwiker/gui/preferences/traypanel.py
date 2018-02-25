@@ -2,7 +2,7 @@
 
 import wx
 
-import configelements
+from . import configelements
 from outwiker.core.application import Application
 from outwiker.gui.guiconfig import TrayConfig
 from outwiker.gui.preferences.baseprefpanel import BasePrefPanel
@@ -24,7 +24,7 @@ class TrayPanel(BasePrefPanel):
 
         self.LoadState()
         self.updateCheckState()
-        self._setScrolling()
+        self.SetupScrolling()
 
     def __set_properties(self):
         DEFAULT_WIDTH = 520

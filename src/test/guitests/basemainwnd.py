@@ -14,7 +14,6 @@ from outwiker.gui.tester import Tester
 from outwiker.core.tree import WikiDocument
 from test.utils import removeDir
 
-
 class BaseMainWndTest(unittest.TestCase):
     def _processEvents (self):
         """
@@ -23,16 +22,13 @@ class BaseMainWndTest(unittest.TestCase):
         count = 0
 
         app = wx.GetApp()
-
-        while app.Pending():
-            count += 1
-            app.Dispatch()
+        app.DeletePendingEvents()
 
         return count
 
 
     def setUp(self):
-        self.path = mkdtemp (prefix=u'OutWiker_Абырвалг абырвалг_' + unicode (self.__class__.__name__, 'utf-8'))
+        self.path = mkdtemp (prefix='OutWiker_Абырвалг абырвалг_' + str (self.__class__.__name__))
 
         Application.config.remove_section (MainWindowConfig.MAIN_WINDOW_SECTION)
 

@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-import __builtin__
+
+import builtins
 import os
 import os.path
 import glob
 import sys
-import urllib2
+import urllib.request
+import urllib.error
+import urllib.parse
 import shutil
 
 from fabric.api import local, lcd, settings, task, cd, put, hosts
@@ -16,7 +18,7 @@ from buildtools.buildfacts import BuildFacts
 
 from buildtools.utilites import (getPython,
                                  execute,
-                                 getCurrentUbuntuDistribName,
+                                 # getCurrentUbuntuDistribName,
                                  getPathToPlugin,
                                  tobool,
                                  print_info,
@@ -26,9 +28,9 @@ from buildtools.utilites import (getPython,
                                  linux_only
                                  )
 from buildtools.defines import (
-    UBUNTU_RELEASE_NAMES,
+    # UBUNTU_RELEASE_NAMES,
     BUILD_DIR,
-    DEB_SOURCE_BUILD_DIR,
+    # DEB_SOURCE_BUILD_DIR,
     DEB_BINARY_BUILD_DIR,
     PLUGINS_DIR,
     PLUGINS_LIST,
@@ -38,8 +40,8 @@ from buildtools.defines import (
     FILES_FOR_UPLOAD_UNSTABLE_LINUX,
     FILES_FOR_UPLOAD_STABLE_LINUX,
     NEED_FOR_BUILD_DIR,
-    PPA_UNSTABLE_PATH,
-    PPA_STABLE_PATH,
+    # PPA_UNSTABLE_PATH,
+    # PPA_STABLE_PATH,
     VM_BUILD_PARAMS,
     LINUX_BUILD_DIR,
     WINDOWS_BUILD_DIR,
@@ -49,27 +51,19 @@ from buildtools.versions import (getOutwikerVersion,
                                  downloadAppInfo,
                                  getLocalAppInfoList,
                                  )
-from buildtools.contentgenerators import (SiteChangelogGenerator,
-                                          SitePluginsTableGenerator)
+from buildtools.contentgenerators import SiteChangelogGenerator
 from buildtools.builders import (BuilderWindows,
                                  BuilderSources,
                                  BuilderPlugins,
                                  BuilderLinuxBinary,
                                  BuilderDebBinaryFactory,
-                                 BuilderDebSource,
-                                 BuilderDebSourcesIncluded,
+                                 # BuilderDebSource,
+                                 # BuilderDebSourcesIncluded,
                                  BuilderAppImage,
                                  )
 
 from outwiker.utilites.textfile import readTextFile
 from outwiker.core.xmlversionparser import XmlVersionParser
-import outwiker
-import outwiker.core
-import outwiker.gui
-import outwiker.actions
-import outwiker.pages
-import outwiker.utilites
-import outwiker.libs
 
 try:
     from buildtools.serverinfo import (DEPLOY_SERVER_NAME,
@@ -95,87 +89,87 @@ except ImportError:
 from buildtools.uploaders import BinaryUploader
 
 
-@task
-@linux_only
-def deb_sources_included(is_stable=False):
-    '''
-    Create files for uploading in PPA (including sources)
-    '''
-    builder = BuilderDebSourcesIncluded(DEB_SOURCE_BUILD_DIR,
-                                        UBUNTU_RELEASE_NAMES,
-                                        tobool(is_stable))
-    builder.build()
-    return builder.getResultPath()
+# @task
+# @linux_only
+# def deb_sources_included(is_stable=False):
+#     '''
+#     Create files for uploading in PPA (including sources)
+#     '''
+#     builder = BuilderDebSourcesIncluded(DEB_SOURCE_BUILD_DIR,
+#                                         UBUNTU_RELEASE_NAMES,
+#                                         tobool(is_stable))
+#     builder.build()
+#     return builder.getResultPath()
 
 
-@task
-@linux_only
-def deb(is_stable=False):
-    '''
-    Assemble the deb packages
-    '''
-    builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
-                               UBUNTU_RELEASE_NAMES,
-                               tobool(is_stable))
-    builder.build()
-    return builder.getResultPath()
+# @task
+# @linux_only
+# def deb(is_stable=False):
+#     '''
+#     Assemble the deb packages
+#     '''
+#     builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
+#                                UBUNTU_RELEASE_NAMES,
+#                                tobool(is_stable))
+#     builder.build()
+#     return builder.getResultPath()
 
 
-@task
-@linux_only
-def deb_clear():
-    '''
-    Remove the deb packages
-    '''
-    builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
-                               UBUNTU_RELEASE_NAMES,
-                               False)
-    builder.clear()
+# @task
+# @linux_only
+# def deb_clear():
+#     '''
+#     Remove the deb packages
+#     '''
+#     builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
+#                                UBUNTU_RELEASE_NAMES,
+#                                False)
+#     builder.clear()
 
 
-@task
-@linux_only
-def deb_single(is_stable=False):
-    '''
-    Assemble the deb package for the current Ubuntu release
-    '''
-    builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
-                               [getCurrentUbuntuDistribName()],
-                               tobool(is_stable))
-    builder.build()
-    return builder.getResultPath()
+# @task
+# @linux_only
+# def deb_single(is_stable=False):
+#     '''
+#     Assemble the deb package for the current Ubuntu release
+#     '''
+#     builder = BuilderDebSource(DEB_SOURCE_BUILD_DIR,
+#                                [getCurrentUbuntuDistribName()],
+#                                tobool(is_stable))
+#     builder.build()
+#     return builder.getResultPath()
 
 
-@task
-@linux_only
-def deb_install(is_stable=False):
-    '''
-    Assemble deb package for current Ubuntu release
-    '''
-    result_path = deb_single(tobool(is_stable))
+# @task
+# @linux_only
+# def deb_install(is_stable=False):
+#     '''
+#     Assemble deb package for current Ubuntu release
+#     '''
+#     result_path = deb_single(tobool(is_stable))
+#
+#     version = getOutwikerVersion()
+#
+#     with lcd(result_path):
+#         local("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format(
+#             version[0],
+#             version[1],
+#             getCurrentUbuntuDistribName()))
 
-    version = getOutwikerVersion()
 
-    with lcd(result_path):
-        local("sudo dpkg -i outwiker_{}+{}~{}_all.deb".format(
-            version[0],
-            version[1],
-            getCurrentUbuntuDistribName()))
-
-
-def _ppa_upload(ppa_path, deb_path):
-    '''
-    Upload the current OutWiker version in PPA
-    '''
-    version = getOutwikerVersion()
-
-    for distname in UBUNTU_RELEASE_NAMES:
-        with lcd(deb_path):
-            local("dput {} outwiker_{}+{}~{}_source.changes".format(
-                ppa_path,
-                version[0],
-                version[1],
-                distname))
+# def _ppa_upload(ppa_path, deb_path):
+#     '''
+#     Upload the current OutWiker version in PPA
+#     '''
+#     version = getOutwikerVersion()
+#
+#     for distname in UBUNTU_RELEASE_NAMES:
+#         with lcd(deb_path):
+#             local("dput {} outwiker_{}+{}~{}_source.changes".format(
+#                 ppa_path,
+#                 version[0],
+#                 version[1],
+#                 distname))
 
 
 @task
@@ -218,7 +212,7 @@ def sources_clear():
 @windows_only
 def win(is_stable=False, skipinstaller=False, skiparchives=False):
     '''
-    Build OutWiker for Windows with cx_Freeze
+    Build OutWiker for Windows
     '''
     builder = BuilderWindows(is_stable=tobool(is_stable),
                              create_archives=not tobool(skiparchives),
@@ -285,7 +279,7 @@ def run(args=u''):
     Run OutWiker from sources
     '''
     with lcd("src"):
-        execute(u'{} runoutwiker.py {}'.format(getPython(), args.decode('utf8')))
+        execute(u'{} runoutwiker.py {}'.format(getPython(), args))
 
 
 @task
@@ -362,7 +356,7 @@ def clear():
 
     if sys.platform.startswith('linux'):
         linux_clear()
-        deb_clear()
+        # deb_clear()
         deb_binary_clear()
     elif sys.platform.startswith('win32'):
         win_clear()
@@ -397,31 +391,6 @@ def _print_changelog(path_to_xml, lang):
 
 
 @task
-def plugins_list(lang=None):
-    '''
-    Print plugins list for th site
-    '''
-    if lang is None:
-        print_error(u'Error. No language specified')
-        sys.exit(1)
-
-    appinfo_list = []
-    for plugin_name in PLUGINS_LIST:
-        path_to_xml = os.path.join(PLUGINS_DIR,
-                                   plugin_name,
-                                   plugin_name,
-                                   PLUGIN_VERSIONS_FILENAME)
-        xml_content = readTextFile(path_to_xml)
-        parser = XmlVersionParser([lang])
-        appinfo = parser.parse(xml_content)
-        appinfo_list.append(appinfo)
-
-    generator = SitePluginsTableGenerator(appinfo_list)
-    text = generator.make()
-    print(text)
-
-
-@task
 def site_versions():
     '''
     Compare current OutWiker and plugins versions with versions on the site
@@ -450,7 +419,7 @@ def site_versions():
                 siteversion=str(appinfo.currentVersion),
                 devversion=font + str(localAppInfo.currentVersion)
                 ))
-        except (urllib2.URLError, urllib2.HTTPError) as e:
+        except (urllib.error.URLError, urllib.error.HTTPError) as e:
             print(Fore.RED + u'Error')
             print(str(e))
             print(url)
@@ -464,7 +433,7 @@ def create_tree(maxlevel, nsiblings, path):
     '''
     from outwiker.core.tree import WikiDocument
 
-    __builtin__._ = _empty
+    builtins._ = _empty
     wikiroot = WikiDocument.create(path)
     _create_tree(1, int(maxlevel), int(nsiblings), wikiroot)
 
@@ -529,7 +498,7 @@ def upload_plugin(*args):
         print_info(u'Uploading...')
 
         path_to_upload = os.path.dirname(appinfo_local.updatesUrl.replace(DEPLOY_SITE + u'/', DEPLOY_HOME_PATH))
-        version_local = unicode(appinfo_local.currentVersion)
+        version_local = str(appinfo_local.currentVersion)
         archive_name = u'{}-{}.zip'.format(pluginname, version_local)
         path_to_archive_local = os.path.join(path_to_plugin_local, archive_name)
 
@@ -543,7 +512,7 @@ def upload_plugin(*args):
 @task
 def upload_binary(is_stable=False):
     '''
-    Upload unstable version to site
+    Upload binary version to site
     '''
     facts = BuildFacts()
 
@@ -601,7 +570,7 @@ def build(is_stable=False):
 
     if sys.platform.startswith('linux'):
         vm_linux_binary(is_stable)
-        deb_sources_included(is_stable)
+        # deb_sources_included(is_stable)
     elif sys.platform.startswith('win32'):
         win(is_stable)
 
@@ -611,7 +580,7 @@ def build(is_stable=False):
 @linux_only
 def deploy(is_stable=False):
     '''
-    Upload unstable version to site
+    Upload to site
     '''
     if is_stable:
         deploy(False)
@@ -620,12 +589,12 @@ def deploy(is_stable=False):
         upload_plugin()
         upload_plugins_pack()
 
-    ppa_path = PPA_STABLE_PATH if is_stable else PPA_UNSTABLE_PATH
-
-    deb_path = BuilderDebSourcesIncluded(DEB_SOURCE_BUILD_DIR,
-                                         UBUNTU_RELEASE_NAMES,
-                                         tobool(is_stable)).getResultPath()
-    _ppa_upload(ppa_path, deb_path)
+    # ppa_path = PPA_STABLE_PATH if is_stable else PPA_UNSTABLE_PATH
+    #
+    # deb_path = BuilderDebSourcesIncluded(DEB_SOURCE_BUILD_DIR,
+    #                                      UBUNTU_RELEASE_NAMES,
+    #                                      tobool(is_stable)).getResultPath()
+    # _ppa_upload(ppa_path, deb_path)
 
     upload_binary(is_stable)
 
@@ -636,25 +605,6 @@ def deploy(is_stable=False):
         tagname = u'unstable_{}'.format(version_str)
 
     _add_git_tag(tagname)
-
-
-@task(alias='apiversions')
-def apiversion():
-    '''
-    Print current OutWiker API versions
-    '''
-    print(u'core: {}.{}'.format(outwiker.core.__version__[0],
-                                outwiker.core.__version__[1]))
-    print(u'gui: {}.{}'.format(outwiker.gui.__version__[0],
-                               outwiker.gui.__version__[1]))
-    print(u'actions: {}.{}'.format(outwiker.actions.__version__[0],
-                                   outwiker.actions.__version__[1]))
-    print(u'pages: {}.{}'.format(outwiker.pages.__version__[0],
-                                 outwiker.pages.__version__[1]))
-    print(u'utilites: {}.{}'.format(outwiker.utilites.__version__[0],
-                                    outwiker.utilites.__version__[1]))
-    print(u'libs: {}.{}'.format(outwiker.libs.__version__[0],
-                                outwiker.libs.__version__[1]))
 
 
 @task
@@ -755,7 +705,7 @@ def vm_linux_binary(is_stable=0):
         )
 
 
-@task
+@task(alias='linux_appimage')
 @linux_only
 def appimage(is_stable=0):
     builder = BuilderAppImage(is_stable=tobool(is_stable))

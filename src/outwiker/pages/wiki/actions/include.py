@@ -33,7 +33,7 @@ class WikiIncludeAction (BaseAction):
         assert self._application.mainWindow.pagePanel is not None
 
         if len (Attachment (self._application.selectedPage).attachmentFull) == 0:
-            MessageBox (_("Current page does not have any attachments"),
+            MessageBox (_(u"Current page does not have any attachments"),
                         _(u"Error"),
                         wx.OK | wx.ICON_INFORMATION)
             return
@@ -77,7 +77,7 @@ class IncludeDialogController (object):
 
     def _fillAttaches (self):
         attachList = Attachment(self._selectedPage).getAttachRelative()
-        attachList.sort (Attachment.sortByName)
+        attachList.sort (key=str.lower)
 
         self._dialog.attachmentList = attachList
 

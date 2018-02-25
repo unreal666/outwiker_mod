@@ -4,15 +4,14 @@ import os
 
 
 # Supported Ubuntu releases
-UBUNTU_RELEASE_NAMES = [u"xenial", u"zesty", u"artful"]
+UBUNTU_RELEASE_NAMES = [u"xenial", u"artful"]
 
 # List of the supported plugins
 PLUGINS_LIST = [
     u"autorenamer",
-    u"changepageuid",
     u"counter",
-    u"diagrammer",
     u"datagraph",
+    u"diagrammer",
     u"export2html",
     u"externaltools",
     u"hackpage",
@@ -28,7 +27,6 @@ PLUGINS_LIST = [
     u"source",
     u"spoiler",
     u"statistics",
-    u"style",
     u"tableofcontents",
     u"texequation",
     u"thumbgallery",
@@ -101,8 +99,16 @@ except KeyError:
 
 
 VM_BUILD_PARAMS = {
-    u'zesty_64': {
-        u'vagrant_path': 'need_for_build/virtual/build_machines/zesty_64',
-        u'host': u'192.168.101.64',
+    # u'zesty64': {
+    #     u'vagrant_path': 'need_for_build/virtual/build_machines/zesty64',
+    #     u'host': u'192.168.101.64',
+    # },
+    u'xenial64': {
+        u'vagrant_path': 'need_for_build/virtual/build_machines/xenial64',
+        u'host': u'192.168.101.65',
     },
+    # u'artful64': {
+    #     u'vagrant_path': 'need_for_build/virtual/build_machines/artful64',
+    #     u'host': u'192.168.101.66',
+    # },
 }

@@ -1,6 +1,7 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import wx
+import wx.adv
 
 from outwiker.core.application import Application
 from outwiker.gui.guiconfig import PluginsConfig
@@ -18,16 +19,17 @@ class PluginsPanel (BasePrefPanel):
 
         self.__createGui()
         self.__controller = PluginsController(self)
-        self._setScrolling()
+        self.SetupScrolling()
 
     def __createGui(self):
         self.pluginsList = wx.CheckListBox(self, -1, style=wx.LB_SORT)
         self.pluginsList.SetMinSize((50, 20))
 
-        self.__downloadLink = wx.HyperlinkCtrl(self,
-                                               -1,
-                                               _(u"Download more plugins"),
-                                               _(u"http://jenyay.net/Outwiker/PluginsEn"))
+        self.__downloadLink = wx.adv.HyperlinkCtrl(
+            self,
+            -1,
+            _(u"Download more plugins"),
+            _(u"http://jenyay.net/Outwiker/PluginsEn"))
 
         # Панель, которая потом заменится на HTML-рендер
         self.__blankPanel = wx.Panel(self)
@@ -41,7 +43,7 @@ class PluginsPanel (BasePrefPanel):
     def pluginsInfo(self):
         if self.__pluginsInfo is None:
             # Удалим пустую панель, а вместо нее добавим HTML-рендер
-            self.pluginsSizer.Remove(self.__blankPanel)
+            self.pluginsSizer.Detach(self.__blankPanel)
             self.__blankPanel.Destroy()
 
             self.__pluginsInfo = getOS().getHtmlRender(self)
@@ -87,13 +89,16 @@ class PluginsController (object):
     def __init__(self, pluginspanel):
         self.__owner = pluginspanel
 
-        # Т.к. под виндой к элементам CheckListBox нельзя прикреплять пользовательские данные,
+        # Т.к. под виндой к элементам CheckListBox нельзя
+        # прикреплять пользовательские данные,
         # придется их хранить отдельно.
         # Ключ - имя плагина, оно же текст строки
         # Значение - экземпляр плагина
         self.__pluginsItems = {}
 
-        self.__owner.Bind(wx.EVT_LISTBOX, self.__onSelectItem, self.__owner.pluginsList)
+        self.__owner.Bind(wx.EVT_LISTBOX,
+                          self.__onSelectItem,
+                          self.__owner.pluginsList)
 
     def __onSelectItem(self, event):
         htmlContent = u""
@@ -160,7 +165,7 @@ class PluginsController (object):
         for plugin in Application.plugins:
             index = self.__owner.pluginsList.Append(plugin.name)
 
-            assert plugin.name not in self.__pluginsItems.keys()
+            assert plugin.name not in self.__pluginsItems
             self.__pluginsItems[plugin.name] = plugin
 
             self.__owner.pluginsList.Check(index, True)
@@ -172,7 +177,7 @@ class PluginsController (object):
         for plugin in Application.plugins.disabledPlugins.values():
             index = self.__owner.pluginsList.Append(plugin.name)
 
-            assert plugin.name not in self.__pluginsItems.keys()
+            assert plugin.name not in self.__pluginsItems
             self.__pluginsItems[plugin.name] = plugin
 
             self.__owner.pluginsList.Check(index, False)

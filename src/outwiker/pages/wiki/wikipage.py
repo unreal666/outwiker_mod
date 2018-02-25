@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """
 Необходимые классы для создания страниц с HTML
 """
@@ -9,18 +9,18 @@ from outwiker.core.defines import PAGE_RESULT_HTML
 from outwiker.core.factory import PageFactory
 from outwiker.core.tree import WikiPage
 from outwiker.gui.hotkey import HotKey
-from wikipageview import WikiPageView
+from .wikipageview import WikiPageView
 
-from actions.fontsizebig import WikiFontSizeBigAction
-from actions.fontsizesmall import WikiFontSizeSmallAction
-from actions.nonparsed import WikiNonParsedAction
-from actions.thumb import WikiThumbAction
-from actions.openhtmlcode import WikiOpenHtmlCodeAction
-from actions.updatehtml import WikiUpdateHtmlAction
-from actions.attachlist import WikiAttachListAction
-from actions.childlist import WikiChildListAction
-from actions.include import WikiIncludeAction
-from actions.dates import WikiDateCreationAction, WikiDateEditionAction
+from .actions.fontsizebig import WikiFontSizeBigAction
+from .actions.fontsizesmall import WikiFontSizeSmallAction
+from .actions.nonparsed import WikiNonParsedAction
+from .actions.thumb import WikiThumbAction
+from .actions.openhtmlcode import WikiOpenHtmlCodeAction
+from .actions.updatehtml import WikiUpdateHtmlAction
+from .actions.attachlist import WikiAttachListAction
+from .actions.childlist import WikiChildListAction
+from .actions.include import WikiIncludeAction
+from .actions.dates import WikiDateCreationAction, WikiDateEditionAction
 
 
 wiki_actions = [
@@ -81,11 +81,9 @@ class WikiPageFactory(PageFactory):
         """
         Зарегистрировать все действия, связанные с викистраницей
         """
-        map(lambda actionTuple: application.actionController.register(actionTuple[0](application),
-                                                                      actionTuple[1]),
-            wiki_actions)
+        [application.actionController.register(actionTuple[0](application),
+                                               actionTuple[1]) for actionTuple in wiki_actions]
 
     @staticmethod
     def removeActions(application):
-        map(lambda actionTuple: application.actionController.removeAction(actionTuple[0].stringId),
-            wiki_actions)
+        [application.actionController.removeAction(actionTuple[0].stringId) for actionTuple in wiki_actions]

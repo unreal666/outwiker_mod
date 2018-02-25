@@ -42,13 +42,13 @@ class AboutDialog(wx.Dialog):
     def __set_properties(self):
         self.SetTitle(_("About"))
         self.SetSize((500, 350))
-        self.titleLabel.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.titleLabel.SetFont(wx.Font(15, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, 0, ""))
         self.description.SetMinSize((-1, 50))
         self.okButton.SetFocus()
         self.okButton.SetDefault()
 
     def __do_layout(self):
-        main_sizer = wx.FlexGridSizer(rows=4)
+        main_sizer = wx.FlexGridSizer(rows=4, cols=0, vgap=0, hgap=0)
         grid_sizer_2 = wx.FlexGridSizer(cols=2)
         grid_sizer_3 = wx.FlexGridSizer(cols=1)
         sizeSizer = wx.FlexGridSizer(cols=2)

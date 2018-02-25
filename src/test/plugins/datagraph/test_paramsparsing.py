@@ -6,21 +6,19 @@ from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.application import Application
 
 
-class ParamsParsingTest (unittest.TestCase):
+class ParamsParsingTest(unittest.TestCase):
     def setUp(self):
-        dirlist = [u"../plugins/datagraph"]
+        dirlist = ["../plugins/datagraph"]
 
         self.loader = PluginsLoader(Application)
-        self.loader.load (dirlist)
+        self.loader.load(dirlist)
 
-
-    def tearDown (self):
+    def tearDown(self):
         self.loader.clear()
 
-
-    def testParamsParsing_01 (self):
+    def testParamsParsing_01(self):
         from datagraph.commands import PlotCommand
-        params_text = u"""Параметр1
+        params_text = """Параметр1
         Параметр2 = 111
         Параметр3 = " бла бла бла"
         Параметр4
@@ -29,89 +27,80 @@ class ParamsParsingTest (unittest.TestCase):
         Параметр7 = " проверка 'бла бла бла' проверка"
         Параметр8 = ' проверка "bla-bla-bla" тест ' """
 
-        params = PlotCommand.parseGraphParams (params_text)
+        params = PlotCommand.parseGraphParams(params_text)
 
-        self.assertEqual (len (params), 8)
-        self.assertEqual (params[u"Параметр1"], u"")
-        self.assertEqual (params[u"Параметр2"], u"111")
-        self.assertEqual (params[u"Параметр3"], u" бла бла бла")
-        self.assertEqual (params[u"Параметр4"], u"")
-        self.assertEqual (params[u"Параметр5"], u"111")
-        self.assertEqual (params[u"Параметр6"], u" 222 ")
-        self.assertEqual (params[u"Параметр7"], u" проверка 'бла бла бла' проверка")
-        self.assertEqual (params[u"Параметр8"], u' проверка "bla-bla-bla" тест ')
+        self.assertEqual(len(params), 8)
+        self.assertEqual(params["Параметр1"], "")
+        self.assertEqual(params["Параметр2"], "111")
+        self.assertEqual(params["Параметр3"], " бла бла бла")
+        self.assertEqual(params["Параметр4"], "")
+        self.assertEqual(params["Параметр5"], "111")
+        self.assertEqual(params["Параметр6"], " 222 ")
+        self.assertEqual(params["Параметр7"], " проверка 'бла бла бла' проверка")
+        self.assertEqual(params["Параметр8"], ' проверка "bla-bla-bla" тест ')
 
-
-    def testParamsParsing_02 (self):
+    def testParamsParsing_02(self):
         from datagraph.commands import PlotCommand
-        params_text = u""
-        params = PlotCommand.parseGraphParams (params_text)
+        params_text = ""
+        params = PlotCommand.parseGraphParams(params_text)
 
-        self.assertEqual (len (params), 0)
+        self.assertEqual(len(params), 0)
 
-
-    def testParamsParsing_03 (self):
+    def testParamsParsing_03(self):
         from datagraph.commands import PlotCommand
-        params_text = u"""Параметр=-1"""
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"-1")
+        params_text = """Параметр=-1"""
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "-1")
 
-
-    def testParamsParsing_04 (self):
+    def testParamsParsing_04(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр="-1"'
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"-1")
+        params_text = 'Параметр="-1"'
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "-1")
 
-
-    def testParamsParsing_05 (self):
+    def testParamsParsing_05(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр= -1 '
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"-1")
+        params_text = 'Параметр= -1 '
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "-1")
 
-
-    def testParamsParsing_06 (self):
+    def testParamsParsing_06(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр=Бла-бла-бла'
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"Бла-бла-бла")
+        params_text = 'Параметр=Бла-бла-бла'
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "Бла-бла-бла")
 
-
-    def testParamsParsing_07 (self):
+    def testParamsParsing_07(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр= Бла-бла-бла'
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"Бла-бла-бла")
+        params_text = 'Параметр= Бла-бла-бла'
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "Бла-бла-бла")
 
-
-    def testParamsParsing_08 (self):
+    def testParamsParsing_08(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр=Бла_бла_бла'
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"Бла_бла_бла")
+        params_text = 'Параметр=Бла_бла_бла'
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "Бла_бла_бла")
 
-
-    def testParamsParsing_09 (self):
+    def testParamsParsing_09(self):
         from datagraph.commands import PlotCommand
-        params_text = u'Параметр= Бла_бла_бла'
-        params = PlotCommand.parseGraphParams (params_text)
-        self.assertEqual (params[u"Параметр"], u"Бла_бла_бла")
+        params_text = 'Параметр= Бла_бла_бла'
+        params = PlotCommand.parseGraphParams(params_text)
+        self.assertEqual(params["Параметр"], "Бла_бла_бла")
 
-
-    def testParamsParsing_10 (self):
+    def testParamsParsing_10(self):
         from datagraph.commands import PlotCommand
-        params_text = u"""Параметр1.Подпараметр
+        params_text = """Параметр1.Подпараметр
         Пар_аме_тр2 = 111
         Параметр3.Еще.Подпар_аметр
         Пар.ам.етр4 = " проверка 'бла бла бла' проверка"
         Пар.аме.тр5 = ' проверка "bla-bla-bla" тест ' """
 
-        params = PlotCommand.parseGraphParams (params_text)
+        params = PlotCommand.parseGraphParams(params_text)
 
-        self.assertEqual (len (params), 5)
-        self.assertEqual (params[u"Параметр1.Подпараметр"], u"")
-        self.assertEqual (params[u"Пар_аме_тр2"], u"111")
-        self.assertEqual (params[u"Параметр3.Еще.Подпар_аметр"], u"")
-        self.assertEqual (params[u"Пар.ам.етр4"], u" проверка 'бла бла бла' проверка")
-        self.assertEqual (params[u"Пар.аме.тр5"], u' проверка "bla-bla-bla" тест ')
+        self.assertEqual(len(params), 5)
+        self.assertEqual(params["Параметр1.Подпараметр"], "")
+        self.assertEqual(params["Пар_аме_тр2"], "111")
+        self.assertEqual(params["Параметр3.Еще.Подпар_аметр"], "")
+        self.assertEqual(params["Пар.ам.етр4"], " проверка 'бла бла бла' проверка")
+        self.assertEqual(params["Пар.аме.тр5"], ' проверка "bla-bla-bla" тест ')

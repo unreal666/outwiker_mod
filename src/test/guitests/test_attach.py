@@ -3,7 +3,7 @@
 import os.path
 from tempfile import mkdtemp
 
-from basemainwnd import BaseMainWndTest
+from .basemainwnd import BaseMainWndTest
 from outwiker.core.tree import WikiDocument
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.core.application import Application
@@ -19,14 +19,14 @@ class AttachPanelTest (BaseMainWndTest):
         BaseMainWndTest.setUp (self)
 
         factory = TextPageFactory()
-        factory.create (self.wikiroot, u"Страница 1", [])
-        factory.create (self.wikiroot, u"Страница 2", [])
-        factory.create (self.wikiroot[u"Страница 2"], u"Страница 3", [])
+        factory.create (self.wikiroot, "Страница 1", [])
+        factory.create (self.wikiroot, "Страница 2", [])
+        factory.create (self.wikiroot["Страница 2"], "Страница 3", [])
 
-        self.page = self.wikiroot[u"Страница 2/Страница 3"]
+        self.page = self.wikiroot["Страница 2/Страница 3"]
 
-        filesPath = u"../test/samplefiles/"
-        self.files = [u"accept.png", u"add.png", u"anchor.png", u"файл с пробелами.tmp", u"dir"]
+        filesPath = "../test/samplefiles/"
+        self.files = ["accept.png", "add.png", "anchor.png", "файл с пробелами.tmp", "dir"]
         self.fullFilesPath = [os.path.join (filesPath, fname) for fname in self.files]
 
 
@@ -80,7 +80,7 @@ class AttachPanelTest (BaseMainWndTest):
         Application.wikiroot.selectedPage = self.page
         self.assertEqual (self.wnd.attachPanel.panel.attachList.GetItemCount(), len (self.fullFilesPath))
 
-        Application.wikiroot.selectedPage = self.wikiroot[u"Страница 1"]
+        Application.wikiroot.selectedPage = self.wikiroot["Страница 1"]
         self.assertEqual (self.wnd.attachPanel.panel.attachList.GetItemCount(), 0)
 
 
@@ -141,19 +141,19 @@ class AttachPanelTest (BaseMainWndTest):
         self.assertEqual (self.wnd.attachPanel.panel.attachList.GetItemCount(), len (self.fullFilesPath))
 
         # Создадим другую независимую вики
-        newpath = mkdtemp (prefix=u'Абыр Абырвалг')
+        newpath = mkdtemp (prefix='Абыр Абырвалг')
         newwikiroot = WikiDocument.create (newpath)
 
-        TextPageFactory().create (newwikiroot, u"Новая страница 1", [])
-        TextPageFactory().create (newwikiroot, u"Новая страница 2", [])
+        TextPageFactory().create (newwikiroot, "Новая страница 1", [])
+        TextPageFactory().create (newwikiroot, "Новая страница 2", [])
 
-        filesPath = u"../test/samplefiles/"
-        newfiles = [u"accept.png", u"add.png", u"anchor.png"]
+        filesPath = "../test/samplefiles/"
+        newfiles = ["accept.png", "add.png", "anchor.png"]
         newfullFilesPath = [os.path.join (filesPath, fname) for fname in newfiles]
 
-        newattach = Attachment (newwikiroot[u"Новая страница 1"])
+        newattach = Attachment (newwikiroot["Новая страница 1"])
         newattach.attach (newfullFilesPath)
-        newwikiroot.selectedPage = newwikiroot[u"Новая страница 1"]
+        newwikiroot.selectedPage = newwikiroot["Новая страница 1"]
 
         Application.wikiroot = newwikiroot
         self.assertEqual (self.wnd.attachPanel.panel.attachList.GetItemCount(), len (newfullFilesPath))

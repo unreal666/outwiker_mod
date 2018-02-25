@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os.path
 import re
@@ -11,16 +11,18 @@ from outwiker.core.commands import MessageBox
 from outwiker.gui.dialogs.buttonsdialog import ButtonsDialog
 from outwiker.gui.hotkey import HotKey
 from outwiker.core.pluginbase import Plugin
-from outwiker.core.system import getOS, getImagesDir
+from outwiker.core.system import getImagesDir
 from outwiker.gui.pagedialogpanels.iconspanel import IconsGroupInfo
+from outwiker.gui.defines import TOOLBAR_PLUGINS
 
-from debugaction import DebugAction
-from eventswatcher import EventsWatcher
-from timer import Timer
-from tokendebug import DebugTokenFactory
-from newpagedialogpanel import NewPageDialogPanel
-from debugconfig import DebugConfig
-from pagedialogcontroller import DebugPageDialogController
+from .debugaction import DebugAction
+from .eventswatcher import EventsWatcher
+from .timer import Timer
+from .tokendebug import DebugTokenFactory
+from .newpagedialogpanel import NewPageDialogPanel
+from .debugconfig import DebugConfig
+from .pagedialogcontroller import DebugPageDialogController
+from .i18n import set_
 
 
 class PluginDebug(Plugin):
@@ -63,20 +65,15 @@ class PluginDebug(Plugin):
         config.enableOnIconsGroupsListInit.value = self._enableOnIconsGroupsListInit
 
     def initialize(self):
+        set_(self.gettext)
+
+        global _
+        _ = self.gettext
+
         self.enableFeatures()
 
-        domain = u"testdebug"
         self.__ID_TREE_POPUP = wx.NewId()
         self.__ID_TRAY_POPUP = wx.NewId()
-
-        langdir = unicode(os.path.join(os.path.dirname(__file__), "locale"),
-                          getOS().filesEncoding)
-        global _
-
-        try:
-            _ = self._init_i18n(domain, langdir)
-        except BaseException as e:
-            print e
 
         self.__menuName = _(u"Debug")
 
@@ -108,7 +105,8 @@ class PluginDebug(Plugin):
         Уничтожение (выгрузка) плагина. Здесь плагин должен отписаться от всех событий
         """
         mainWindow = self._application.mainWindow
-        if mainWindow is not None and mainWindow.PLUGINS_TOOLBAR_STR in mainWindow.toolbars:
+        mainMenu = mainWindow.menuController.getRootMenu()
+        if mainWindow is not None and TOOLBAR_PLUGINS in mainWindow.toolbars:
             self._application.actionController.removeMenuItem(DebugAction.stringId)
             self._application.actionController.removeToolbarButton(DebugAction.stringId)
             self._application.actionController.removeAction(DebugAction.stringId)
@@ -129,10 +127,10 @@ class PluginDebug(Plugin):
                                                 handler=self.__onStopWatchEvents,
                                                 id=self.ID_STOP_WATCH_EVENTS)
 
-            index = self._application.mainWindow.mainMenu.FindMenu(self.__menuName)
+            index = mainMenu.FindMenu(self.__menuName)
             assert index != wx.NOT_FOUND
 
-            index = self._application.mainWindow.mainMenu.Remove(index)
+            index = mainMenu.Remove(index)
 
             self._application.onTreePopupMenu -= self.__onTreePopupMenu
             self._application.onPostprocessing -= self.__onPostProcessing
@@ -161,7 +159,7 @@ class PluginDebug(Plugin):
         self.menu.Append(self.ID_STOP_WATCH_EVENTS, _(u"Stop watch events"))
         self.menu.Append(self.ID_RAISE_EXCEPTION, _(u"Raise exception"))
 
-        self._application.mainWindow.mainMenu.Append(self.menu, self.__menuName)
+        self._application.mainWindow.menuController.getRootMenu().Append(self.menu, self.__menuName)
 
         self._application.mainWindow.Bind(wx.EVT_MENU,
                                           self.__onPluginsList,
@@ -186,10 +184,10 @@ class PluginDebug(Plugin):
     def __createTestAction(self):
         mainWindow = self._application.mainWindow
 
-        if mainWindow is not None and mainWindow.PLUGINS_TOOLBAR_STR in mainWindow.toolbars:
+        if mainWindow is not None and TOOLBAR_PLUGINS in mainWindow.toolbars:
             action = DebugAction(self._application)
             hotkey = HotKey("T", ctrl=True, shift=True, alt=True)
-            toolbar = mainWindow.toolbars[mainWindow.PLUGINS_TOOLBAR_STR]
+            toolbar = mainWindow.toolbars[TOOLBAR_PLUGINS]
             image = self.getImagePath("bug.png")
 
             controller = self._application.actionController
@@ -205,7 +203,7 @@ class PluginDebug(Plugin):
         """
         Получить полный путь до картинки
         """
-        imagedir = unicode(os.path.join(os.path.dirname(__file__), "images"), getOS().filesEncoding)
+        imagedir = os.path.join(os.path.dirname(__file__), "images")
         fname = os.path.join(imagedir, imageName)
         return fname
 
@@ -282,9 +280,9 @@ class PluginDebug(Plugin):
             result = dlg.ShowModal()
 
             if result == wx.ID_CANCEL:
-                print u"Cancel"
+                print (u"Cancel")
             else:
-                print result
+                print (result)
 
     def __onPluginsList(self, event):
         pluginslist = [plugin.name + "\n" for plugin in self._application.plugins]
@@ -312,7 +310,7 @@ class PluginDebug(Plugin):
         if not self._enableOnLinkClick:
             return
 
-        print params.link
+        print (params.link)
         # params["process"] = True
 
     def __onEditorPopupMenu(self, page, params):
@@ -353,23 +351,23 @@ class PluginDebug(Plugin):
 
     def __onPageDialogPageTypeChanged(self, page, params):
         if self._enablePageDialogEvents:
-            print u'Selected page type: {}'.format(params.pageType)
+            print (u'Selected page type: {}'.format(params.pageType))
 
     def __onPageDialogPageTitleChanged(self, page, params):
         if self._enablePageDialogEvents:
-            print u'New page title: {}'.format(params.pageTitle)
+            print (u'New page title: {}'.format(params.pageTitle))
 
     def __onPageDialogPageStyleChanged(self, page, params):
         if self._enablePageDialogEvents:
-            print u'New page style: {}'.format(params.pageStyle)
+            print (u'New page style: {}'.format(params.pageStyle))
 
     def __onPageDialogPageIconChanged(self, page, params):
         if self._enablePageDialogEvents:
-            print u'New page icon: {}'.format(params.pageIcon)
+            print (u'New page icon: {}'.format(params.pageIcon))
 
     def __onPageDialogPageTagsChanged(self, page, params):
         if self._enablePageDialogEvents:
-            print u'New page tags: {}'.format(params.pageTags)
+            print (u'New page tags: {}'.format(params.pageTags))
 
     def __onPreWikiOpen(self, page, params):
         if self._enableOpeningTimeMeasure:
@@ -390,7 +388,7 @@ class PluginDebug(Plugin):
 
     @property
     def name(self):
-        return u"Debug Plugin"
+        return u"TestDebug"
 
     @property
     def description(self):

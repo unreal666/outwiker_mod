@@ -13,8 +13,8 @@ from outwiker.core.tree import WikiPage
 from outwiker.gui.hotkey import HotKey
 from outwiker.pages.html.htmlpageview import HtmlPageView
 
-from actions.autolinewrap import HtmlAutoLineWrap
-from actions.switchcoderesult import SwitchCodeResultAction
+from .actions.autolinewrap import HtmlAutoLineWrap
+from .actions.switchcoderesult import SwitchCodeResultAction
 
 html_actions = [
     (HtmlAutoLineWrap, None),
@@ -73,14 +73,14 @@ class HtmlPageFactory (PageFactory):
         """
         Зарегистрировать все действия, связанные с HTML-страницей
         """
-        map(lambda actionTuple: application.actionController.register(
-            actionTuple[0](application), actionTuple[1]), html_actions)
+        [application.actionController.register(
+            actionTuple[0](application), actionTuple[1]) for actionTuple in html_actions]
 
 
     @staticmethod
     def removeActions (application):
-        map (lambda actionTuple: application.actionController.removeAction(
-            actionTuple[0].stringId), html_actions)
+        [application.actionController.removeAction(
+            actionTuple[0].stringId) for actionTuple in html_actions]
 
 
     def getPageType(self):

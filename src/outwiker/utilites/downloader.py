@@ -1,7 +1,9 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-import urllib2
-from StringIO import StringIO
+import urllib.request
+import urllib.error
+import urllib.parse
+from io import BytesIO
 import gzip
 
 
@@ -21,14 +23,14 @@ class Downloader (object):
                          ('Accept-encoding', 'gzip')]
 
     def download(self, url):
-        opener = urllib2.build_opener()
+        opener = urllib.request.build_opener()
         opener.addheaders = self._headers
 
         response = opener.open(url, timeout=self._timeout)
         if response.info().get('Content-Encoding') == 'gzip':
-            buf = StringIO(response.read())
+            buf = BytesIO(response.read())
             zipfile = gzip.GzipFile(fileobj=buf)
             result = zipfile.read()
         else:
             result = response.read()
-        return result.decode('utf8')
+        return result

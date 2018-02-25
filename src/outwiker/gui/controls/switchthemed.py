@@ -4,8 +4,8 @@ import wx
 from wx.lib.newevent import NewCommandEvent
 from wx.lib.scrolledpanel import ScrolledPanel
 
-from stickybuttonthemed import StickyButtonThemed
-from staticlinethemed import StaticLineThemed
+from .stickybuttonthemed import StickyButtonThemed
+from .staticlinethemed import StaticLineThemed
 
 
 SwitchEvent, EVT_SWITCH = NewCommandEvent()
@@ -50,12 +50,20 @@ class SwitchThemed(ScrolledPanel):
         self.SetMinSize((minWidth + scrollWidth, -1))
 
     def Notify(self):
-        wx.PostEvent(self, SwitchEvent(self.GetId(), index=self.GetSelection()))
+        wx.PostEvent(self,
+                     SwitchEvent(self.GetId(), index=self.GetSelection()))
 
     def SetTheme(self, theme):
         self._theme = theme
-        map(lambda button: button.SetTheme(self._theme),
-            self._buttons + self._otherItems)
+
+        if self._theme:
+            self.SetBackgroundColour(self._theme.colorBackground)
+        else:
+            self.SetBackgroundColour(wx.Colour(255, 255, 255))
+
+        [button.SetTheme(self._theme)
+         for button
+         in self._buttons + self._otherItems]
 
     def Append(self, label=u'', bitmap=None):
         button = StickyButtonThemed(self, label=label, bitmap=bitmap)
@@ -74,14 +82,14 @@ class SwitchThemed(ScrolledPanel):
             button.SetToggle(True)
 
         self._buttons.append(button)
-        self._mainSizer.Add(button, flag=wx.EXPAND | wx.ALL, border=0)
+        self._mainSizer.Add(button, flag=wx.EXPAND)
         self._updateMinWidth()
         self.Layout()
 
     def AppendSeparator(self):
         separator = StaticLineThemed(self, theme=self._theme)
         self._otherItems.append(separator)
-        self._mainSizer.Add(separator, flag=wx.EXPAND | wx.ALL, border=0)
+        self._mainSizer.Add(separator, flag=wx.EXPAND)
 
     def GetSelection(self):
         for n, button in enumerate(self._buttons):
@@ -94,7 +102,7 @@ class SwitchThemed(ScrolledPanel):
         assert index >= 0
         assert index < len(self._buttons)
 
-        map(lambda button: button.SetToggle(False), self._buttons)
+        [button.SetToggle(False) for button in self._buttons]
         self._buttons[index].SetToggle(True)
         self._buttons[index].SetFocus()
         self.Notify()
@@ -104,8 +112,9 @@ class SwitchThemed(ScrolledPanel):
 
     def SetButtonsHeight(self, height):
         self._buttonsHeight = height
-        map(lambda button: button.SetMinSize((-1, self._buttonsHeight)),
-            self._buttons)
+        [button.SetMinSize((-1, self._buttonsHeight))
+         for button
+         in self._buttons]
         self.Layout()
 
 
@@ -121,8 +130,8 @@ class MyFrame(wx.Frame):
         self.switch.SetSelection(4)
 
     def _onSwitch(self, event):
-        print event.index
-        print self.switch.GetSelection()
+        print(event.index)
+        print(self.switch.GetSelection())
 
 
 if __name__ == '__main__':

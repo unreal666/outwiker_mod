@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-import cgi
+import html
 
 import wx
 import wx.html
@@ -34,7 +34,7 @@ class TextPrinter(object):
 
         self.paperId = self.config.paperId.value
 
-        self.htmltemplate = ur"""<HTML>
+        self.htmltemplate = r"""<HTML>
 <HEAD>
     <META HTTP-EQUIV='CONTENT-TYPE' CONTENT='TEXT/HTML; CHARSET=UTF-8'/>
 </HEAD>
@@ -48,7 +48,7 @@ class TextPrinter(object):
         Подготовить текст с учетом того, что печататься будет HTML
         """
         # Заменим спецсимволы HTML и установим переводы строк
-        newtext = cgi.escape(text, True)
+        newtext = html.escape(text, True)
         newtext = newtext.replace("\n\n", "<P>")
         newtext = newtext.replace("\n", "<BR>")
 
@@ -103,6 +103,6 @@ class TextPrinter(object):
 
         if printer.GetLastError() == wx.PRINTER_ERROR:
             MessageBox(_(u"Printing error"),
-                       _("Error"),
+                       _(u"Error"),
                        wx.OK | wx.ICON_ERROR,
                        self.parent)

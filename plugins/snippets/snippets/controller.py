@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 
@@ -7,11 +7,11 @@ from outwiker.core.system import getSpecialDirList
 from .i18n import get_
 from .guicontroller import GuiController
 from .defines import SNIPPETS_DIR
-from snippets.actions.editsnippets import EditSnippetsAction
-from snippets.actions.runrecentsnippet import RunRecentSnippet
-from snippets.actions.openhelp import OpenHelpAction
-from snippets.wikicommand import CommandSnip
-from snippets.utils import getSnippetsDir
+from .actions.editsnippets import EditSnippetsAction
+from .actions.runrecentsnippet import RunRecentSnippet
+from .actions.openhelp import OpenHelpAction
+from .wikicommand import CommandSnip
+from .utils import getSnippetsDir
 
 
 class Controller(object):
@@ -50,19 +50,12 @@ class Controller(object):
             self._guiController.initialize()
 
         self._application.onWikiParserPrepare += self.__onWikiParserPrepare
-        self._application.onPageViewCreate += self.__onPageViewCreate
-        self._application.onPageViewDestroy += self.__onPageViewDestroy
-
-        if self._isCurrentWikiPage:
-            self.__onPageViewCreate(self._application.selectedPage)
 
     def destroy(self):
         """
         Вызывается при отключении плагина
         """
         self._application.onWikiParserPrepare -= self.__onWikiParserPrepare
-        self._application.onPageViewCreate -= self.__onPageViewCreate
-        self._application.onPageViewDestroy -= self.__onPageViewDestroy
 
         if self._application.mainWindow is not None:
             self._guiController.destroy()
@@ -75,29 +68,13 @@ class Controller(object):
         command = CommandSnip(parser, getSnippetsDir(), self._application)
         parser.addCommand(command)
 
-    @property
-    def _isCurrentWikiPage(self):
-        """
-        Возвращает True, если текущая страница - это викистраница,
-        и False в противном случае
-        """
-        return (self._application.selectedPage is not None and
-                self._application.selectedPage.getTypeString() == u"wiki")
-
-    def __onPageViewCreate(self, page):
-        """Обработка события после создания представления страницы"""
-        assert self._application.mainWindow is not None
-
-    def __onPageViewDestroy(self, page):
-        """
-        Обработка события перед удалением вида страницы
-        """
-        assert self._application.mainWindow is not None
+    def _isWikiPage(self, page):
+        return page is not None and page.getTypeString() == u"wiki"
 
     def _registerActions(self):
-        map(lambda actionTuple: self._application.actionController.register(
-            actionTuple[0](self._application), actionTuple[1]), self._actions)
+        [*map(lambda actionTuple: self._application.actionController.register(
+            actionTuple[0](self._application), actionTuple[1]), self._actions)]
 
     def _unregisterActions(self):
-        map(lambda actionTuple: self._application.actionController.removeAction(
-            actionTuple[0].stringId), self._actions)
+        [*map(lambda actionTuple: self._application.actionController.removeAction(
+            actionTuple[0].stringId), self._actions)]

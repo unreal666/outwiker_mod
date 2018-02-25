@@ -1,9 +1,10 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from string import Template
 import os.path
 
 from outwiker.core.system import getOS
+from outwiker.utilites.textfile import readTextFile
 
 
 def loadTemplate (fname):
@@ -12,11 +13,9 @@ def loadTemplate (fname):
     """
     templatedir = u"templates"
 
-    currentdir = unicode ((os.path.dirname (__file__)), getOS().filesEncoding)
+    currentdir = str ((os.path.dirname (__file__)))
 
     templateFileName = os.path.join (currentdir, templatedir, fname)
-
-    with open (templateFileName) as fp:
-        template = unicode (fp.read(), "utf8")
+    template = readTextFile(templateFileName)
 
     return Template (template)

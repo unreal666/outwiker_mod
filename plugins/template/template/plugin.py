@@ -1,74 +1,50 @@
-# -*- coding: UTF-8 -*-
-
-import os.path
-import logging
+# -*- coding: utf-8 -*-
 
 from outwiker.core.pluginbase import Plugin
-from outwiker.core.commands import getCurrentVersion
-from outwiker.core.version import Version, StatusSet
-from outwiker.core.system import getOS
+
+from .controller import Controller
+from .i18n import set_
 
 
-def _no_translate(text):
-    return text
+class PluginName(Plugin):
+    def __init__(self, application):
+        """
+        application - Instance of the
+            core.application.ApplicationParams class
+        """
+        super(PluginName, self).__init__(application)
+        self.__controller = Controller(self, application)
 
+    @property
+    def application(self):
+        return self._application
 
-if getCurrentVersion() < Version(2, 0, 0, 807, status=StatusSet.DEV):
-    logging.warning("PluginName plugin. OutWiker version requirement: 2.0.0.807")
-else:
-    from .controller import Controller
+    #########################################
+    # Properties and methods to overloading #
+    #########################################
 
-    class PluginName(Plugin):
-        def __init__(self, application):
-            """
-            application - Instance of the
-                core.application.ApplicationParams class
-            """
-            super(PluginName, self).__init__(application)
-            self.__controller = Controller(self, application)
+    @property
+    def name(self):
+        return u"PluginName"
 
-        @property
-        def application(self):
-            return self._application
+    @property
+    def description(self):
+        return _(u"Plugin description")
 
-        #########################################
-        # Properties and methods to overloading #
-        #########################################
+    @property
+    def url(self):
+        return _(u"http://jenyay.net")
 
-        @property
-        def name(self):
-            return u"PluginName"
+    def initialize(self):
+        set_(self.gettext)
 
-        @property
-        def description(self):
-            return _(u"Plugin description")
+        global _
+        _ = self.gettext
+        self.__controller.initialize()
 
-        @property
-        def url(self):
-            return _(u"http://jenyay.net")
-
-        def initialize(self):
-            self._initlocale(u"pluginname")
-            self.__controller.initialize()
-
-        def destroy(self):
-            """
-            Destroy (unload) the plugin.
-            The plugin must unbind all events.
-            """
-            self.__controller.destroy()
-
-        #############################################
-
-        def _initlocale(self, domain):
-            from .i18n import set_
-            langdir = unicode(os.path.join(os.path.dirname(__file__),
-                                           "locale"), getOS().filesEncoding)
-            global _
-
-            try:
-                _ = self._init_i18n(domain, langdir)
-            except BaseException:
-                _ = _no_translate
-
-            set_(_)
+    def destroy(self):
+        """
+        Destroy (unload) the plugin.
+        The plugin must unbind all events.
+        """
+        self.__controller.destroy()

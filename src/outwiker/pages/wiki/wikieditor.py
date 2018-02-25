@@ -5,6 +5,7 @@ import wx.stc
 from outwiker.core.application import Application
 from outwiker.gui.texteditor import TextEditor
 from .wikiconfig import WikiConfig
+from functools import reduce
 
 
 class WikiEditor (TextEditor):
@@ -108,7 +109,7 @@ class WikiEditor (TextEditor):
         Создать список
         """
         selText = self.textCtrl.GetSelectedText()
-        items = filter (lambda item: len (item.strip()) > 0, selText.split ("\n"))
+        items = [item for item in selText.split ("\n") if len (item.strip()) > 0]
 
         # Собираем все элементы
         if len (items) > 0:

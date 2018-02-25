@@ -1,131 +1,116 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from outwiker.gui.baseaction import BaseAction
+
 from .i18n import get_
+from . import defines
 
 
-class BaseHeadAction (BaseAction):
+class BaseHeadAction(BaseAction):
     """
     Базовый класс действий для вставки команд
     """
-    def __init__ (self, application, controller):
+    def __init__(self, application):
         self._application = application
-        self._controller = controller
 
         global _
         _ = get_()
 
-
-    def _getEditor (self):
+    def _getEditor(self):
         """
         Возвращает указатель на редактор
         """
         return self._application.mainWindow.pagePanel.pageView.codeEditor
 
 
-
-class TitleAction (BaseHeadAction):
+class TitleAction(BaseHeadAction):
     """
     Вставить команду (:title:)
     """
-    stringId = u"HtmlHeads_InsertTitle"
-
-
-    @property
-    def title (self):
-        return _(u"Title (:title ...:)")
-
+    stringId = '%sInsertTitle' % defines.PREFIX_ID
 
     @property
-    def description (self):
-        return _(u"HtmlHeads plugin. Insert (:title... :) command")
+    def title(self):
+        return _('Title (:title ...:)')
+
+    @property
+    def description(self):
+        return _(defines.ACTION_DESCRIPTION) % 'title'
+
+    def run(self, params):
+        self._getEditor().turnText('(:title ', ':)')
 
 
-    def run (self, params):
-        self._getEditor().turnText (u"(:title ", u":)")
-
-
-
-class DescriptionAction (BaseHeadAction):
+class DescriptionAction(BaseHeadAction):
     """
     Вставить команду (:description:)
     """
-    stringId = u"HtmlHeads_InsertDescription"
-
-
-    @property
-    def title (self):
-        return _(u"Description (:description ...:)")
-
+    stringId = '%sInsertDescription' % defines.PREFIX_ID
 
     @property
-    def description (self):
-        return _(u"HtmlHeads plugin. Insert (:description... :) command")
+    def title(self):
+        return _('Description (:description ...:)')
+
+    @property
+    def description(self):
+        return _(defines.ACTION_DESCRIPTION) % 'description'
+
+    def run(self, params):
+        self._getEditor().turnText('(:description ', ':)')
 
 
-    def run (self, params):
-        self._getEditor().turnText (u"(:description ", u":)")
-
-
-
-class KeywordsAction (BaseHeadAction):
+class KeywordsAction(BaseHeadAction):
     """
     Вставить команду (:keywords:)
     """
-    stringId = u"HtmlHeads_InsertKeywords"
-
-
-    @property
-    def title (self):
-        return _(u"Keywords (:keywords ...:)")
-
+    stringId = '%sInsertKeywords' % defines.PREFIX_ID
 
     @property
-    def description (self):
-        return _(u"HtmlHeads plugin. Insert (:keywords... :) command")
+    def title(self):
+        return _('Keywords (:keywords ...:)')
+
+    @property
+    def description(self):
+        return _(defines.ACTION_DESCRIPTION) % 'keywords'
+
+    def run(self, params):
+        self._getEditor().turnText('(:keywords ', ':)')
 
 
-    def run (self, params):
-        self._getEditor().turnText (u"(:keywords ", u":)")
-
-
-class CustomHeadsAction (BaseHeadAction):
+class CustomHeadsAction(BaseHeadAction):
     """
     Вставить команду (:htmlhead:)
     """
-    stringId = u"HtmlHeads_InsertHtmlHead"
+    stringId = '%sInsertHtmlHead' % defines.PREFIX_ID
+
+    @property
+    def title(self):
+        return _('Custom head (:htmlhead:)')
+
+    @property
+    def description(self):
+        return _(defines.ACTION_DESCRIPTION) % 'htmlhead'
+
+    def run (self, params):
+        self._getEditor().turnText('(:htmlhead:)\n', '\n(:htmlheadend:)')
+
+
+class HtmlAttrsAction(BaseHeadAction):
+    """
+    Вставить команду (:htmlattrs:)
+    """
+    stringId = '%sInsertHtmlAttrs' % defines.PREFIX_ID
 
 
     @property
     def title (self):
-        return _(u"Custom head (:htmlhead:)")
+        return _('<html> tag attributes (:htmlattrs ...:)')
 
 
     @property
     def description (self):
-        return _(u"HtmlHeads plugin. Insert (:htmlhead:) command")
+        return _(defines.ACTION_DESCRIPTION) % 'htmlattrs'
 
 
     def run (self, params):
-        self._getEditor().turnText (u"(:htmlhead:)\n", u"\n(:htmlheadend:)")
-
-
-class HtmlAttrsAction (BaseHeadAction):
-    """
-    Вставить команду (:keywords:)
-    """
-    stringId = u"HtmlHeads_InsertHtmlAttrs"
-
-
-    @property
-    def title (self):
-        return _(u"<html> tag attributes (:htmlattrs ...:)")
-
-
-    @property
-    def description (self):
-        return _(u"HtmlHeads plugin. Insert (:htmlattrs... :) command")
-
-
-    def run (self, params):
-        self._getEditor().turnText (u"(:htmlattrs ", u":)")
+        self._getEditor().turnText('(:htmlattrs ', ':)')

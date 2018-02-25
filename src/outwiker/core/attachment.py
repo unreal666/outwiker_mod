@@ -1,21 +1,18 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import os.path
 import shutil
 
-from outwiker.core.exceptions import ReadonlyException
-from outwiker.core.defines import PAGE_ATTACH_DIR
-import events
+from .defines import PAGE_ATTACH_DIR
+from .exceptions import ReadonlyException
+from .events import AttachListChangedParams
 
 
 class Attachment(object):
     """
     Класс для работы с прикрепленными файлами
     """
-    # Depricated. Leave for compatibility with Thumbgallery plug-in.
-    attachDir = PAGE_ATTACH_DIR
-
     def __init__(self, page):
         """
         page - страница, для которой интересуют прикрепленные файлы
@@ -79,8 +76,8 @@ class Attachment(object):
                 shutil.copy(name, attachPath)
 
         self.page.updateDateTime()
-        self.page.root.onPageUpdate(self.page,
-                                    change=events.PAGE_UPDATE_ATTACHMENT)
+        self.page.root.onAttachListChanged(self.page,
+                                           AttachListChangedParams())
 
     def removeAttach(self, files):
         """
@@ -100,105 +97,106 @@ class Attachment(object):
                 else:
                     os.remove(path)
             except OSError:
-                self.page.root.onPageUpdate(
-                    self.page,
-                    change=events.PAGE_UPDATE_ATTACHMENT)
+                self.page.root.onAttachListChanged(self.page,
+                                                   AttachListChangedParams())
                 raise IOError(u"Can't remove %s" % fname)
 
         self.page.updateDateTime()
-        self.page.root.onPageUpdate(self.page,
-                                    change=events.PAGE_UPDATE_ATTACHMENT)
+        self.page.root.onAttachListChanged(self.page,
+                                           AttachListChangedParams())
 
     @staticmethod
-    def sortByName(fname1, fname2):
+    def sortByName(fname):
         """
+        Deprecated. Please use kye=str.lower instead.
+
         Метод для сортировки файлов по имени
-        """
-        fname1_lower = fname1.lower()
-        fname2_lower = fname2.lower()
+        Key stile method to sort files by name.
 
-        if fname1_lower > fname2_lower:
-            return 1
-        elif fname1_lower < fname2_lower:
-            return -1
-        return 0
+        Args:
+            fname: path to the file.
+        Returns:
+            fname.lower()
+        """
+        return fname.lower()
 
     @staticmethod
-    def sortByExt(fname1, fname2):
+    def sortByExt(fname):
         """
         Метод для сортировки файлов по расширению
+        Key stile method to sort files by extension.
+        If the extension is equivalent for 2 files they will be sorted by name.
+
+        Args:
+            fname: path to the file.
+        Returns:
+            (file_ext, file_name)
         """
-        ext1 = os.path.splitext(os.path.basename(fname1).lower())[1]
-        ext2 = os.path.splitext(os.path.basename(fname2).lower())[1]
+        name, ext = os.path.splitext(os.path.basename(fname).lower())
 
-        if ext1 > ext2:
-            return 1
-        elif ext1 < ext2:
-            return -1
-
-        return Attachment.sortByName(fname1, fname2)
+        return ext, name
 
     @staticmethod
-    def sortByDate(fname1, fname2):
+    def sortByDate(full_file_path):
         """
-        Метод для сортировки файлов по дате.
-        Пути до файлов должны быть полные
+        Метод для сортировки файлов по дате последней модификации.
+        Key stile method to sort files by last modified date.
+        If the date is equivalent for 2 files they will be sorted by name.
+
+        Args:
+            full_file_path: full path to the existing file.
+        Returns:
+            (os.stat().st_mtimem, full_file_path.lower())
         """
-        stat1 = os.stat(fname1)
-        stat2 = os.stat(fname2)
+        stat = os.stat(full_file_path)
 
-        if stat1.st_mtime > stat2.st_mtime:
-            return 1
-        elif stat1.st_mtime < stat2.st_mtime:
-            return -1
-
-        return Attachment.sortByName(fname1, fname2)
+        return stat.st_mtime, full_file_path.lower()
 
     @staticmethod
-    def sortBySize(fname1, fname2):
+    def sortBySize(full_file_path):
         """
-        Метод для сортировки файлов по размеру.
-        Пути до файлов должны быть полные
+        Метод для сортировки файлов по размеру файла.
+        Key stile method to sort files by file size.
+        If the size is equivalent for 2 files they will be sorted by name.
+
+        Args:
+            full_file_path: full path to the existing file.
+        Returns:
+            (os.stat().st_mtimem, full_file_path.lower())
         """
-        stat1 = os.stat(fname1)
-        stat2 = os.stat(fname2)
+        stat = os.stat(full_file_path)
 
-        if stat1.st_size > stat2.st_size:
-            return 1
-        elif stat1.st_size < stat2.st_size:
-            return -1
+        return stat.st_size, full_file_path.lower()
 
-        return Attachment.sortByName(fname1, fname2)
+    def sortBySizeRelative(self, relative_file_path):
+        """
+        Метод для сортировки файлов по размеру файла.
+        Key stile method to sort files by file size.
+        If the size is equivalent for 2 files they will be sorted by name.
 
-    def sortBySizeRelative(self, fname1, fname2):
+        Args:
+            relative_file_path: relative path to the file.
+        Returns:
+            (os.stat().st_mtimem, relative_file_path.lower())
+        """
+        stat = os.stat(self.getFullPath(relative_file_path))
+
+        return stat.st_size, relative_file_path.lower()
+
+    def sortByDateRelative(self, relative_file_path):
         """
         Метод для сортировки файлов по дате.
-        Пути до файлов - относительные
+        Key stile method to sort files by last modified date.
+        If the date is equivalent for 2 files they will be sorted by name.
+
+        Args:
+            relative_file_path: relative path to the file.
+        Returns:
+            (os.stat().st_mtimem, relative_file_path.lower())
         """
-        stat1 = os.stat(self.getFullPath(fname1))
-        stat2 = os.stat(self.getFullPath(fname2))
+        stat = os.stat(self.getFullPath(relative_file_path))
 
-        if stat1.st_size > stat2.st_size:
-            return 1
-        elif stat1.st_size < stat2.st_size:
-            return -1
-
-        return Attachment.sortByName(fname1, fname2)
-
-    def sortByDateRelative(self, fname1, fname2):
-        """
-        Метод для сортировки файлов по дате.
-        Пути до файлов - относительные
-        """
-        stat1 = os.stat(self.getFullPath(fname1))
-        stat2 = os.stat(self.getFullPath(fname2))
-
-        if stat1.st_mtime > stat2.st_mtime:
-            return 1
-        elif stat1.st_mtime < stat2.st_mtime:
-            return -1
-
-        return Attachment.sortByName(fname1, fname2)
+        return stat.st_mtime, relative_file_path.lower()
 
     def getFullPath(self, fname, create=False):
         """

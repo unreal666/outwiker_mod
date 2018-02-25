@@ -1,18 +1,17 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 import sys
 import os
+import logging
 
 from outwiker.core.i18n import getLanguageFromConfig, loadLanguage
-from outwiker.core.system import getOS
 
 
-class Plugin (object):
+class Plugin (object, metaclass=ABCMeta):
     """
     Базовый класс для плагинов
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, application):
         self._application = application
@@ -21,11 +20,14 @@ class Plugin (object):
             sys.modules[self.__class__.__module__].__file__)
         )
 
-        # Added in OutWiker 2.0.0.801
-        self._pluginPath = unicode(self._pluginPath, getOS().filesEncoding)
-
         # Load plugin's information
         self._version = u'0.0'
+
+        self.logger = logging.getLogger(self.name)
+
+        domain = self.name.lower()
+        langdir = os.path.join(self.pluginPath, "locale")
+        self._init_i18n(domain, langdir)
 
     def _init_i18n(self, domain, langdir):
         """
@@ -34,15 +36,23 @@ class Plugin (object):
         langdir - путь до папки с переводами
         """
         language = getLanguageFromConfig(self._application.config)
-        lang = loadLanguage(language, langdir, domain)
-        return lang.ugettext
+        self.lang = loadLanguage(language, langdir, domain)
+
+        if self.lang is not None:
+            self.gettext = self.lang.gettext
+        else:
+            self.logger.debug('Localization not found.')
+            self.gettext = self._no_translate
+        return self.gettext
+
+    def _no_translate(self, text):
+        return text
 
     @property
     def version(self):
         """
         Свойство должно возвращать строку, описывающую версию плагина
         в формате "x.y.z".
-        Will be reloaded for Outwiker version before 2.0.0.801
         """
         return self._version
 
@@ -54,7 +64,6 @@ class Plugin (object):
     def pluginPath(self):
         '''
         Return path to plugin's directory.
-        Added in outwiker.core 1.4
         '''
         return self._pluginPath
 

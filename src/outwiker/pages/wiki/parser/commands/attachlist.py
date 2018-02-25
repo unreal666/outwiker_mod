@@ -79,26 +79,26 @@ class AttachListCommand (Command):
         attach = Attachment (self.parser.page)
 
         if u"sort" not in params_dict:
-            names.sort (Attachment.sortByName)
+            names.sort(key=str.lower)
             return
 
         sort = params_dict["sort"].lower()
 
         if sort == u"name":
-            names.sort (Attachment.sortByName)
+            names.sort(key=str.lower)
         elif sort == u"descendname":
-            names.sort (Attachment.sortByName, reverse=True)
+            names.sort(key=str.lower, reverse=True)
         elif sort == u"ext":
-            names.sort (Attachment.sortByExt)
+            names.sort(key=Attachment.sortByExt)
         elif sort == u"descendext":
-            names.sort (Attachment.sortByExt, reverse=True)
+            names.sort(key=Attachment.sortByExt, reverse=True)
         elif sort == u"size":
-            names.sort (attach.sortBySizeRelative)
+            names.sort(key=attach.sortBySizeRelative)
         elif sort == u"descendsize":
-            names.sort (attach.sortBySizeRelative, reverse=True)
+            names.sort(key=attach.sortBySizeRelative, reverse=True)
         elif sort == u"date":
-            names.sort (attach.sortByDateRelative)
+            names.sort(key=attach.sortByDateRelative)
         elif sort == u"descenddate":
-            names.sort (attach.sortByDateRelative, reverse=True)
+            names.sort(key=attach.sortByDateRelative, reverse=True)
         else:
-            names.sort (Attachment.sortByName)
+            names.sort(key=str.lower)

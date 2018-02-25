@@ -1,23 +1,22 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import wx
-from abc import ABCMeta, abstractmethod
 
 from outwiker.core.commands import MessageBox
 
 from outwiker.gui.htmltexteditor import HtmlTextEditor
-from outwiker.pages.html.basehtmlpanel import (BaseHtmlPanel,
-                                               EVT_PAGE_TAB_CHANGED)
+from outwiker.pages.html.basehtmlpanel import BaseHtmlPanel
 from outwiker.utilites.textfile import readTextFile
 
-from actions.openhtmlcode import WikiOpenHtmlCodeAction
-from actions.updatehtml import WikiUpdateHtmlAction
+from .actions.openhtmlcode import WikiOpenHtmlCodeAction
+from .actions.updatehtml import WikiUpdateHtmlAction
 from outwiker.pages.html.actions.switchcoderesult import SwitchCodeResultAction
+from outwiker.core.defines import (PAGE_MODE_TEXT,
+                                   PAGE_MODE_PREVIEW,
+                                   PAGE_MODE_HTML)
 
 
 class BaseWikiPageView (BaseHtmlPanel):
-    __metaclass__ = ABCMeta
-
     HTML_RESULT_PAGE_INDEX = BaseHtmlPanel.RESULT_PAGE_INDEX + 1
 
     def __init__(self, parent, application):
@@ -37,9 +36,9 @@ class BaseWikiPageView (BaseHtmlPanel):
         # результата или HTML
         self.__wikiNotationActions = self._getSpecificActions()
 
-        self._toolbars = self._createToolbars(self.mainWindow)
-        map(lambda toolbar: self.mainWindow.toolbars.addToolbar(toolbar),
-            self._toolbars)
+        self._toolbars = self._getToolbarsInfo(self.mainWindow)
+        for toolbar_id, title in self._toolbars:
+            self.mainWindow.toolbars.createToolBar(toolbar_id, title)
 
         self.notebook.SetPageText(0, self._getPageTitle())
 
@@ -62,14 +61,12 @@ class BaseWikiPageView (BaseHtmlPanel):
 
         self.Layout()
 
-        self.Bind(EVT_PAGE_TAB_CHANGED, handler=self.onTabChanged)
+        self._application.onPageModeChange += self.onTabChanged
 
     # Методы, которые необходимо переопределить в производном классе
-    @abstractmethod
     def _createWikiTools(self):
         pass
 
-    @abstractmethod
     def _getPageTitle(self):
         """
         Метод должен возвращать строку, показываемую на вкладке
@@ -77,21 +74,24 @@ class BaseWikiPageView (BaseHtmlPanel):
         """
         pass
 
-    @abstractmethod
     def _getMenuTitle(self):
         """
         Метод должен возвращать заголовок меню
         """
         pass
 
-    @abstractmethod
-    def _createToolbars(self, mainWindow):
+    def _getMenuId(self):
         """
-        Метод должен возвращать экземпляр панели инструментов
+        Метод должен возвращать идентификатор меню
         """
         pass
 
-    @abstractmethod
+    def _getToolbarsInfo(self, mainWindow):
+        """
+        Метод должен возвращать список кортежей: (id панели, заголовок панели)
+        """
+        pass
+
     def _getPolyActions(self):
         """
         Метод должен возвращать список используемых полиморфных actions
@@ -99,7 +99,6 @@ class BaseWikiPageView (BaseHtmlPanel):
         """
         pass
 
-    @abstractmethod
     def _getSpecificActions(self):
         """
         Метод должен возвращать список actions, которые нужно дизаблить при
@@ -107,7 +106,6 @@ class BaseWikiPageView (BaseHtmlPanel):
         """
         pass
 
-    @abstractmethod
     def _isHtmlCodeShown(self):
         """
         Возвращает True, если нужно показывать вкладку с кодом HTML,
@@ -117,15 +115,38 @@ class BaseWikiPageView (BaseHtmlPanel):
 
     # Конец методов, которые необходимо переопределить в производном классе
 
+    def GetPageMode(self):
+        '''
+        Return the current page mode.
+        '''
+        if self._selectedPageIndex == self.CODE_PAGE_INDEX:
+            return PAGE_MODE_TEXT
+        elif self._selectedPageIndex == self.RESULT_PAGE_INDEX:
+            return PAGE_MODE_PREVIEW
+        elif self._selectedPageIndex == self.HTML_RESULT_PAGE_INDEX:
+            return PAGE_MODE_HTML
+
+        assert False
+
+    def SetPageMode(self, pagemode):
+        if pagemode == PAGE_MODE_TEXT:
+            self._selectedPageIndex = self.CODE_PAGE_INDEX
+        elif pagemode == PAGE_MODE_PREVIEW:
+            self._selectedPageIndex = self.RESULT_PAGE_INDEX
+        elif pagemode == PAGE_MODE_HTML:
+            self._selectedPageIndex = self.HTML_RESULT_PAGE_INDEX
+        else:
+            raise ValueError()
+
     def Clear(self):
         self._removeActionTools()
-        self.Unbind(EVT_PAGE_TAB_CHANGED, handler=self.onTabChanged)
+        self._application.onPageModeChange -= self.onTabChanged
 
-        for toolbar in self._toolbars:
+        for toolbar_info in self._toolbars:
             self.mainWindow.toolbars.updatePanesInfo()
-            self.mainWindow.toolbars.destroyToolBar(toolbar.name)
+            self.mainWindow.toolbars.destroyToolBar(toolbar_info[0])
 
-        super(BaseWikiPageView, self).Clear()
+        super().Clear()
 
     def onPreferencesDialogClose(self, prefDialog):
         super(BaseWikiPageView, self).onPreferencesDialogClose(prefDialog)
@@ -136,12 +157,10 @@ class BaseWikiPageView (BaseHtmlPanel):
         actionController = self._application.actionController
 
         # Удалим элементы меню
-        map(lambda action: actionController.removeMenuItem(action.stringId),
-            self.__wikiNotationActions)
+        [actionController.removeMenuItem(action.stringId) for action in self.__wikiNotationActions]
 
         # Удалим элементы меню полиморфных действий
-        map(lambda strid: actionController.removeMenuItem(strid),
-            self.__polyActions)
+        [actionController.removeMenuItem(strid) for strid in self.__polyActions]
 
         actionController.removeMenuItem(WikiOpenHtmlCodeAction.stringId)
         actionController.removeMenuItem(WikiUpdateHtmlAction.stringId)
@@ -149,16 +168,15 @@ class BaseWikiPageView (BaseHtmlPanel):
 
         # Удалим кнопки с панелей инструментов
         if self._toolbars:
-            map(lambda action: actionController.removeToolbarButton(
-                    action.stringId),
-                self.__wikiNotationActions)
+            for action in self.__wikiNotationActions:
+                actionController.removeToolbarButton(action.stringId)
 
-            map(lambda strid: actionController.removeToolbarButton(strid),
-                self.__polyActions)
+            [actionController.removeToolbarButton(strid)
+             for strid in self.__polyActions]
 
         # Обнулим функции действия в полиморфных действиях
-        map(lambda strid: actionController.getAction(strid).setFunc(None),
-            self.__polyActions)
+        [actionController.getAction(strid).setFunc(None)
+         for strid in self.__polyActions]
 
     @property
     def toolsMenu(self):
@@ -175,43 +193,40 @@ class BaseWikiPageView (BaseHtmlPanel):
         return self.pageCount - 1
 
     def SetFocus(self):
-        if self.selectedPageIndex == self.htmlcodePageIndex:
+        if self._selectedPageIndex == self.htmlcodePageIndex:
             self.htmlCodeWindow.SetFocus()
         else:
             super(BaseWikiPageView, self).SetFocus()
 
     def GetSearchPanel(self):
-        if self.selectedPageIndex == self.CODE_PAGE_INDEX:
+        if self._selectedPageIndex == self.CODE_PAGE_INDEX:
             return self.codeEditor.searchPanel
-        elif self.selectedPageIndex == self.htmlcodePageIndex:
+        elif self._selectedPageIndex == self.htmlcodePageIndex:
             return self.htmlCodeWindow.searchPanel
 
-    def onTabChanged(self, event):
+    def onTabChanged(self, page, params):
         if self._currentpage is not None:
-            if event.tab == self.CODE_PAGE_INDEX:
+            if params.pagemode == PAGE_MODE_TEXT:
                 self._onSwitchToCode()
-
-            elif event.tab == self.RESULT_PAGE_INDEX:
+            elif params.pagemode == PAGE_MODE_PREVIEW:
                 self._onSwitchToPreview()
-
-            elif event.tab == self.htmlcodePageIndex:
+            elif params.pagemode == PAGE_MODE_HTML:
                 self._onSwitchCodeHtml()
+            else:
+                assert False
 
             self.savePageTab(self._currentpage)
-
-        event.Skip()
 
     def _enableActions(self, enabled):
         actionController = self._application.actionController
 
         # Активируем / дизактивируем собственные действия
-        map(lambda action: actionController.enableTools(action.stringId,
-                                                        enabled),
-            self.__wikiNotationActions)
+        [actionController.enableTools(action.stringId, enabled) for action
+         in self.__wikiNotationActions]
 
         # Активируем / дизактивируем полиморфные действия
-        map(lambda strid: actionController.enableTools(strid, enabled),
-            self.__polyActions)
+        [actionController.enableTools(strid, enabled) for strid
+         in self.__polyActions]
 
     def _onSwitchCodeHtml(self):
         assert self._currentpage is not None
@@ -236,13 +251,13 @@ class BaseWikiPageView (BaseHtmlPanel):
             self.htmlCodeWindow.SetReadOnly(False)
             self.htmlCodeWindow.SetText(html)
             self.htmlCodeWindow.SetReadOnly(True)
-        except IOError, e:
+        except IOError as e:
             MessageBox(_(u"Can't load file %s") % (unicode(e.filename)),
                        _(u"Error"),
                        wx.ICON_ERROR | wx.OK)
 
-    @BaseHtmlPanel.selectedPageIndex.setter
-    def selectedPageIndex(self, index):
+    @BaseHtmlPanel._selectedPageIndex.setter
+    def _selectedPageIndex(self, index):
         """
         Устанавливает выбранную страницу (код, просмотр или полученный HTML)
         """
@@ -253,32 +268,36 @@ class BaseWikiPageView (BaseHtmlPanel):
         else:
             selectedPage = index
 
-        BaseHtmlPanel.selectedPageIndex.fset(self, selectedPage)
+        BaseHtmlPanel._selectedPageIndex.fset(self, selectedPage)
 
     def openHtmlCode(self):
-        self.selectedPageIndex = self.HTML_RESULT_PAGE_INDEX
+        self.SetPageMode(PAGE_MODE_HTML)
 
     def removeMenu(self):
-        mainMenu = self._application.mainWindow.mainMenu
+        mainMenu = self._application.mainWindow.menuController.getRootMenu()
         index = mainMenu.FindMenu(self._getMenuTitle())
         assert index != wx.NOT_FOUND
 
         mainMenu.Remove(index)
+        self._application.mainWindow.menuController.removeMenu(self._getMenuId())
 
     def removeGui(self):
         super(BaseWikiPageView, self).removeGui()
         self.removeMenu()
 
     def updateHtml(self):
-        if self.selectedPageIndex == self.RESULT_PAGE_INDEX:
+        if self.GetPageMode() == PAGE_MODE_PREVIEW:
             self._onSwitchToPreview()
-        elif self.selectedPageIndex == self.HTML_RESULT_PAGE_INDEX:
+        elif self.GetPageMode() == PAGE_MODE_HTML:
             self._onSwitchCodeHtml()
 
     def _createCommonTools(self):
-        self.mainWindow.mainMenu.Insert(self.__WIKI_MENU_INDEX,
-                                        self.toolsMenu,
-                                        self._getMenuTitle())
+        mainMenu = self._application.mainWindow.menuController.getRootMenu()
+        mainMenu.Insert(self.__WIKI_MENU_INDEX,
+                        self.toolsMenu,
+                        self._getMenuTitle())
+        self.mainWindow.menuController.addMenu(self._getMenuId(),
+                                               self.toolsMenu)
 
         # Переключиться с кода на результат и обратно
         self._application.actionController.appendMenuItem(

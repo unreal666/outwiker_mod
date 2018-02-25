@@ -4,7 +4,7 @@ import os
 import os.path
 
 import wx
-import wx.combo
+#import wx.combo
 
 from outwiker.core.style import Style
 from outwiker.core.styleslist import StylesList
@@ -13,7 +13,7 @@ from outwiker.core.commands import MessageBox
 from outwiker.core.events import PageDialogPageStyleChangedParams
 from outwiker.gui.guiconfig import PageDialogConfig
 
-from basecontroller import BasePageDialogController
+from .basecontroller import BasePageDialogController
 
 
 class AppearancePanel (wx.Panel):
@@ -70,7 +70,7 @@ class AppearanceController (BasePageDialogController):
         try:
             Style().setPageStyle (page, self.style)
         except EnvironmentError as e:
-            MessageBox (_(u"Can't set page style\n") + unicode (e),
+            MessageBox (_(u"Can't set page style\n") + str (e),
                         _(u"Error"),
                         wx.ICON_ERROR | wx.OK)
             return False

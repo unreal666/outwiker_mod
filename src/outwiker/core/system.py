@@ -10,8 +10,6 @@ import shutil
 import sys
 import subprocess
 
-import wx
-
 from .pagetitletester import WindowsPageTitleTester, LinuxPageTitleTester
 from outwiker.gui.fileicons import WindowsFileIcons, UnixFileIcons
 from outwiker.core.defines import (ICONS_FOLDER_NAME,
@@ -45,7 +43,7 @@ class System(object):
         """
         confDir = op.join(self.settingsDir, newConfDirName)
 
-        homeDir = unicode(op.expanduser("~"), getOS().filesEncoding)
+        homeDir = str(op.expanduser("~"))
         oldConfDir = op.join(homeDir, oldConfDirName)
 
         if op.exists(oldConfDir) and not op.exists(confDir):
@@ -53,9 +51,6 @@ class System(object):
 
 
 class Windows(System):
-    def init(self):
-        pass
-
     @property
     def name(self):
         return u'windows'
@@ -67,24 +62,11 @@ class Windows(System):
         os.startfile(path.replace("/", "\\"))
 
     @property
-    def filesEncoding(self):
-        return sys.getfilesystemencoding()
-
-    @property
     def inputEncoding(self):
         """
         Кодировка, используемая для преобразования нажатой клавиши в строку
         """
         return "mbcs"
-
-    @property
-    def dragFileDataObject(self):
-        """
-        Получить класс для перетаскивания файлов
-        из окна OutWiker'а в другие приложения.
-        Под Linux'ом wx.FileDataObject не правильно работает с Unicode
-        """
-        return wx.FileDataObject
 
     @property
     def pageTitleTester(self):
@@ -100,8 +82,8 @@ class Windows(System):
         Возвращает папку, внутри которой хранятся настройки всех программ,
         и где будет создаваться папка для хранения настроек OutWiker
         """
-        homeDir = unicode(op.expanduser("~"), self.filesEncoding)
-        appdata = (unicode(os.environ["APPDATA"], self.filesEncoding)
+        homeDir = op.expanduser("~")
+        appdata = (os.environ["APPDATA"]
                    if "APPDATA" in os.environ
                    else homeDir)
         return appdata
@@ -116,12 +98,6 @@ class Unix(System):
     def name(self):
         return u'unix'
 
-    def init(self):
-        if 'LD_PRELOAD' in os.environ:
-            del os.environ['LD_PRELOAD']
-        import gtk
-        gtk.gdk.threads_init()
-
     def startFile(self, path):
         """
         Запустить программу по умолчанию для path
@@ -135,17 +111,13 @@ class Unix(System):
         и где будет создаваться папка для хранения настроек OutWiker.
         ($XDG_CONFIG_HOME/outwiker или .config/outwiker)
         """
-        homeDir = unicode(op.expanduser("~"), getOS().filesEncoding)
-        settingsDir = os.environ.get(u"XDG_CONFIG_HOME", u".config")
+        homeDir = op.expanduser("~")
+        settingsDir = os.environ.get("XDG_CONFIG_HOME", ".config")
 
         if not op.isabs(settingsDir):
             settingsDir = op.join(homeDir, settingsDir)
 
         return settingsDir
-
-    @property
-    def filesEncoding(self):
-        return sys.getfilesystemencoding()
 
     @property
     def inputEncoding(self):
@@ -155,39 +127,6 @@ class Unix(System):
             encoding = "utf8"
 
         return encoding
-
-    @property
-    def dragFileDataObject(self):
-        """
-        Получить класс для перетаскивания файлов из окна OutWiker'а
-        в другие приложения.
-        Под Linux'ом wx.FileDataObject не правильно работает с Unicode
-        """
-        class GtkFileDataObject(wx.PyDataObjectSimple):
-            """
-            Класс данных для перетаскивания файлов. Использовать вместо
-            wx.FileDataObject, который по сути не работает с Unicode
-            """
-            def __init__(self):
-                wx.PyDataObjectSimple.__init__(self,
-                                               wx.DataFormat(wx.DF_FILENAME))
-                self._fnames = []
-
-            def AddFile(self, fname):
-                self._fnames.append(fname)
-
-            def GetDataHere(self):
-                result = ""
-                for fname in self._fnames:
-                    result += u"file:%s\r\n" % (fname)
-
-                # Преобразуем в строку
-                return result.strip().encode("utf8")
-
-            def GetDataSize(self):
-                return len(self.GetDataHere())
-
-        return GtkFileDataObject
 
     @property
     def pageTitleTester(self):
@@ -210,7 +149,7 @@ def getOS():
 
 
 def getCurrentDir():
-    return unicode(op.dirname(sys.argv[0]), getOS().filesEncoding)
+    return op.dirname(sys.argv[0])
 
 
 def getConfigPath(dirname=DEFAULT_CONFIG_DIR, fname=DEFAULT_CONFIG_NAME):
@@ -263,7 +202,7 @@ def getExeFile():
     """
     Возвращает имя запускаемого файла
     """
-    return unicode(sys.argv[0], getOS().filesEncoding)
+    return sys.argv[0]
 
 
 def getPluginsDirList(configDirName=DEFAULT_CONFIG_DIR,
@@ -325,16 +264,15 @@ def openInNewWindow(path, args=[]):
     """ Open wiki tree in the new OutWiker window
     """
     exeFile = getExeFile()
-    encoding = getOS().filesEncoding
 
-    params = [exeFile.encode(encoding), path.encode(encoding)] + args
+    params = [exeFile, path] + args
 
     env = os.environ.copy()
-    if getOS().name == 'unix':
-        env['LD_PRELOAD'] = 'libwx_gtk2u_webview-3.0.so.0'
 
     if exeFile.endswith(".exe"):
         DETACHED_PROCESS = 0x00000008
         subprocess.Popen(params, creationflags=DETACHED_PROCESS, env=env)
-    else:
+    elif exeFile.endswith(".py"):
         subprocess.Popen(["python"] + params, env=env)
+    else:
+        subprocess.Popen(params, env=env)

@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from outwiker.gui.defines import ID_MOUSE_LEFT
 
@@ -13,11 +13,8 @@ PAGE_UPDATE_ICON = 2
 # Changed tags
 PAGE_UPDATE_TAGS = 4
 
-# Changes in the attach list
-PAGE_UPDATE_ATTACHMENT = 8
-
 # Changed page style
-PAGE_UPDATE_STYLE = 16
+PAGE_UPDATE_STYLE = 8
 
 
 class LinkClickParams(object):
@@ -226,8 +223,6 @@ class PageUpdateNeededParams(object):
 class PreWikiOpenParams(object):
     """
     Set of parameters for the onPreWikiOpen event
-
-    Added in OutWiker 2.0.0.795
     """
     def __init__(self, path, readonly):
         self.path = path
@@ -237,8 +232,6 @@ class PreWikiOpenParams(object):
 class PostWikiOpenParams(object):
     """
     Set of parameters for the onPostWikiOpen event
-
-    Added in OutWiker 2.0.0.795
     """
     def __init__(self, path, readonly, success):
         self.path = path
@@ -249,11 +242,29 @@ class PostWikiOpenParams(object):
 class IconsGroupsListInitParams(object):
     """
     Set of parameters for the onIconsGroupsListInit event
-
-    Added in OutWiker 2.1.0.831 (outwiker.core 1.5)
     """
     def __init__(self, groupsList):
         """
         groupsList - list of the outwiker.gui.iconspanel.IconsGroupInfo.
         """
         self.groupsList = groupsList
+
+
+class PageModeChangeParams(object):
+    """
+    Set of parameters for theon PageModeChange event
+    """
+    def __init__(self, pagemode):
+        """
+        pagemode - constant from outwiker.core.defines (or other place):
+            PAGE_MODE_TEXT, PAGE_MODE_PREVIEW, PAGE_MODE_HTML
+        """
+        self.pagemode = pagemode
+
+
+class AttachListChangedParams(object):
+    """
+    Set of parameters for the onAttachListChanged event
+    """
+    def __init__(self):
+        pass

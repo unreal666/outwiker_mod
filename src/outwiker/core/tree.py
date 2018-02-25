@@ -3,9 +3,11 @@
 import logging
 import os
 import os.path
-import ConfigParser
+import configparser
 import shutil
 import datetime
+from functools import cmp_to_key
+from functools import reduce
 
 from outwiker.core.config import PageConfig
 from outwiker.core.bookmarks import Bookmarks
@@ -22,7 +24,7 @@ from outwiker.core.defines import (PAGE_CONTENT_FILE,
                                    PAGE_OPT_FILE)
 from outwiker.core.iconcontroller import IconController
 from outwiker.core.system import getIconsDirList
-import events
+from . import events
 
 
 logger = logging.getLogger('core')
@@ -136,7 +138,7 @@ class RootWikiPage(object):
         """
         Отсортировать дочерние страницы по алфавиту
         """
-        self._children.sort(sortAlphabeticalFunction)
+        self._children.sort(key=cmp_to_key(sortAlphabeticalFunction))
 
         self.root.onStartTreeUpdate(self.root)
         self.saveChildrenParams()
@@ -170,7 +172,7 @@ class RootWikiPage(object):
         Добавить страницу к дочерним страницам
         """
         self._children.append(page)
-        self._children.sort(sortOrderFunction)
+        self._children.sort(key=cmp_to_key(sortOrderFunction))
 
     def removeFromChildren(self, page):
         """
@@ -264,7 +266,7 @@ class RootWikiPage(object):
 
                 self._children.append(page)
 
-        self._children.sort(sortOrderFunction)
+        self._children.sort(key=cmp_to_key(sortOrderFunction))
 
 
 class WikiDocument(RootWikiPage):
@@ -317,6 +319,12 @@ class WikiDocument(RootWikiPage):
         # Параметр - удаленная страница
         self.onPageRemove = Event()
 
+        # Event occurs after change attached file list.
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance if the AttachListChangedParams class
+        self.onAttachListChanged = Event()
+
     @staticmethod
     def clearConfigFile(path):
         """
@@ -331,7 +339,7 @@ class WikiDocument(RootWikiPage):
             realpath = os.path.join(path, PAGE_OPT_FILE)
 
         try:
-            fp = open(realpath, "w")
+            fp = open(realpath, "w", encoding='utf8')
             fp.close()
         except IOError:
             raise ClearConfigError
@@ -344,7 +352,7 @@ class WikiDocument(RootWikiPage):
         """
         try:
             root = WikiDocument(path, readonly)
-        except ConfigParser.Error:
+        except configparser.Error:
             raise RootFormatError
 
         root.loadChildren()
@@ -718,7 +726,7 @@ class WikiPage(RootWikiPage):
         try:
             tagsString = configParser.get(RootWikiPage.sectionGeneral,
                                           WikiPage.paramTags)
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             return []
 
         tags = parseTagsList(tagsString)
@@ -733,23 +741,25 @@ class WikiPage(RootWikiPage):
         text = ""
 
         try:
-            with open(os.path.join(self.path, RootWikiPage.contentFile)) as fp:
+            with open(os.path.join(self.path, RootWikiPage.contentFile), encoding='utf8') as fp:
                 text = fp.read()
         except IOError:
             pass
 
-        return unicode(text, "utf8", errors="replace")
+        text = text.replace('\r\n', '\n')
+        return text
 
     @content.setter
     def content(self, text):
         if self.readonly:
             raise ReadonlyException
 
+        text = text.replace('\r\n', '\n')
         if text != self.content or text == u"":
             path = os.path.join(self.path, RootWikiPage.contentFile)
 
-            with open(path, "wb") as fp:
-                fp.write(text.encode("utf8"))
+            with open(path, "w", encoding='utf8') as fp:
+                fp.write(text)
 
             self.updateDateTime()
             self.root.onPageUpdate(self, change=events.PAGE_UPDATE_CONTENT)

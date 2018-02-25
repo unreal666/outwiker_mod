@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import os.path
@@ -17,10 +17,12 @@ import outwiker.core.packageversion as pv
 
 from outwiker.core.defines import PLUGIN_VERSION_FILE_NAME
 from outwiker.core.pluginbase import Plugin, InvalidPlugin
-from outwiker.core.system import getOS
 from outwiker.core.xmlversionparser import XmlVersionParser
 from outwiker.gui.guiconfig import PluginsConfig
 from outwiker.utilites.textfile import readTextFile
+
+
+logger = logging.getLogger('outwiker.core.pluginsloader')
 
 
 class PluginsLoader (object):
@@ -53,18 +55,9 @@ class PluginsLoader (object):
         # (например, в тестах)
         self.enableOutput = True
 
-        self.__currentPackageVersions = [
-            outwiker.core.__version__,
-            outwiker.gui.__version__,
-            outwiker.pages.__version__,
-            outwiker.actions.__version__,
-            outwiker.utilites.__version__,
-            outwiker.libs.__version__,
-        ]
-
     def _print(self, text):
         if self.enableOutput:
-            logging.error(text)
+            logger.error(text)
 
     @property
     def disabledPlugins(self):
@@ -107,7 +100,7 @@ class PluginsLoader (object):
         """
         Включить отключенные плагины, если их больше нет в "черном списке"
         """
-        for plugin in self.__disabledPlugins.values():
+        for plugin in list(self.__disabledPlugins.values()):
             if plugin.name not in disableList:
                 plugin.initialize()
 
@@ -126,34 +119,28 @@ class PluginsLoader (object):
         """
         assert dirlist is not None
 
+        logger.debug(u'Plugins loading started')
+
         for currentDir in dirlist:
             if os.path.exists(currentDir):
                 dirPackets = sorted(os.listdir(currentDir))
 
                 # Добавить путь до currentDir в sys.path
                 fullpath = os.path.abspath(currentDir)
-                # TODO: Разобраться с Unicode в следующей строке.
-                # Иногда выскакивает предупреждение:
-                # ...\outwiker\core\pluginsloader.py:41:
-                # UnicodeWarning: Unicode equal comparison failed to convert
-                # both arguments to Unicode - interpreting them as
-                # being unequal
 
-                syspath = [unicode(item, getOS().filesEncoding)
-                           if type(item) != unicode else item
-                           for item in sys.path]
-
-                if fullpath not in syspath:
+                if fullpath not in sys.path:
                     sys.path.insert(0, fullpath)
 
                 # Все поддиректории попытаемся открыть как пакеты
                 self.__importModules(currentDir, dirPackets)
 
+        logger.debug(u'Plugins loading ended')
+
     def clear(self):
         """
         Уничтожить все загруженные плагины
         """
-        map(lambda plugin: plugin.destroy(), self.__plugins.values())
+        [plugin.destroy() for plugin in self.__plugins.values()]
         self.__plugins = {}
 
     def __loadPluginInfo(self, plugin_fname):
@@ -168,17 +155,12 @@ class PluginsLoader (object):
         if appinfo is None:
             return pv.PLUGIN_MUST_BE_UPGRADED
 
-        required_versions = [
-            appinfo.requirements.packages_versions.get('core', [(1, 0)]),
-            appinfo.requirements.packages_versions.get(u'gui', [(1, 0)]),
-            appinfo.requirements.packages_versions.get(u'pages', [(1, 0)]),
-            appinfo.requirements.packages_versions.get(u'actions', [(1, 0)]),
-            appinfo.requirements.packages_versions.get(u'utilites', [(1, 0)]),
-            appinfo.requirements.packages_versions.get(u'libs', [(1, 0)]),
-        ]
+        api_required_version = appinfo.requirements.api_version
+        if not api_required_version:
+            api_required_version = [(0, 0)]
 
-        return pv.checkAllPackagesVersions(self.__currentPackageVersions,
-                                           required_versions)
+        return pv.checkVersionAny(outwiker.core.__version__,
+                                  api_required_version)
 
     def __importModules(self, baseDir, dirPackagesList):
         """
@@ -198,6 +180,9 @@ class PluginsLoader (object):
                 initFile = os.path.join(packagePath, u'__init__.py')
                 if not os.path.exists(initFile):
                     continue
+
+                logger.debug(u'Trying to load the plug-in: {}'.format(
+                    packageName))
 
                 # Checking information from plugin.xml file
                 plugin_fname = os.path.join(packagePath,
@@ -265,7 +250,7 @@ class PluginsLoader (object):
                             if plugin is not None:
                                 plugin.version = appinfo.currentVersionStr
                     except BaseException as e:
-                        errors.append("*** Plugin {package} loading error ***\n{package}/{fileName}\n{error}\n{traceback}".format(
+                        errors.append("*** Plug-in {package} loading error ***\n{package}/{fileName}\n{error}\n{traceback}".format(
                             package=packageName,
                             fileName=fileName,
                             error=str(e),
@@ -287,6 +272,9 @@ class PluginsLoader (object):
                         InvalidPlugin(appinfo.appname,
                                       error,
                                       appinfo.currentVersionStr))
+                else:
+                    logger.debug(u'Successfully loaded plug-in: {}'.format(
+                        packageName))
 
     def _importSingleModule(self, packageName, fileName):
         """
@@ -358,4 +346,4 @@ class PluginsLoader (object):
         return self.__plugins[pluginname]
 
     def __iter__(self):
-        return self.__plugins.itervalues()
+        return iter(self.__plugins.values())

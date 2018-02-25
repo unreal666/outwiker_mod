@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from abc import ABCMeta
+import idna
 
 import wx
 
@@ -14,7 +15,7 @@ class HtmlRender (wx.Panel):
     """
     Базовый класс для HTML-рендеров
     """
-    __metaclass__ = ABCMeta
+    #__metaclass__ = ABCMeta
 
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
@@ -24,7 +25,7 @@ class HtmlRender (wx.Panel):
         self._currentPage = None
 
 
-    @abstractmethod
+    #@abstractmethod
     def LoadPage (self, fname):
         """
         Загрузить страницу из файла
@@ -84,13 +85,13 @@ class HtmlRender (wx.Panel):
         if link is None:
             return None
 
-        protocol = self._getLinkProtocol (link)
+        protocol = self._getLinkProtocol(link)
         if protocol is not None:
             url = link[len (protocol):]
             try:
-                link = u"{}{}".format (
+                link = u"{}{}".format(
                     protocol,
-                    unicode (url.decode ("idna")))
+                    idna.decode(url))
             except UnicodeError:
                 # Под IE ссылки не преобразуются в кодировку IDNA
                 pass

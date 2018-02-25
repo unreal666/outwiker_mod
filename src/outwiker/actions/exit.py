@@ -34,9 +34,9 @@ class ExitAction (BaseAction):
 
     def __allowExit (self):
         """
-        Возвращает True, если можно закрывать окно
+        Return True, if the window can be closed
         """
-        generalConfig = GeneralGuiConfig (self._application.config)
+        generalConfig = GeneralGuiConfig(self._application.config)
         askBeforeExit = generalConfig.askBeforeExit.value
 
         return (not askBeforeExit or

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import codecs
-import cgi
+import html
 
 import wx
 import wx.lib.newevent
@@ -45,7 +45,7 @@ class TextEditorBase(wx.Panel):
         # self.textCtrl.Bind(wx.stc.EVT_STC_KEY, self.__onStcKey)
 
     def _do_layout(self):
-        mainSizer = wx.FlexGridSizer(rows=2)
+        mainSizer = wx.FlexGridSizer(rows=2, cols=0, vgap=0, hgap=0)
         mainSizer.AddGrowableRow(0)
         mainSizer.AddGrowableCol(0)
 
@@ -128,7 +128,7 @@ class TextEditorBase(wx.Panel):
         self.textCtrl.CmdKeyClearAll()
 
         # Clear Cmd keys for Ubuntu
-        for key in range(ord('A'), ord('Z') + 1) + range(ord('0'), ord('9') + 1):
+        for key in list(range(ord('A'), ord('Z') + 1)) + list(range(ord('0'), ord('9') + 1)):
             self.textCtrl.CmdKeyClear(key, wx.stc.STC_SCMOD_ALT | wx.stc.STC_SCMOD_CTRL)
             self.textCtrl.CmdKeyClear(key, wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_ALT | wx.stc.STC_SCMOD_CTRL)
 
@@ -220,7 +220,7 @@ class TextEditorBase(wx.Panel):
             #        (ord('U'),             wx.stc.STC_SCMOD_SHIFT | wx.stc.STC_SCMOD_CTRL,    wx.stc.STC_CMD_UPPERCASE),
         )
 
-        map(lambda key: self.textCtrl.CmdKeyAssign(*key), defaultHotKeys)
+        [self.textCtrl.CmdKeyAssign(*key) for key in defaultHotKeys]
 
     @property
     def searchPanel(self):
@@ -271,8 +271,7 @@ class TextEditorBase(wx.Panel):
         old_sel_end = self.GetSelectionEnd()
 
         first_line, last_line = self.GetSelectionLines()
-        map(lambda n: self.toddleLinePrefix(n, prefix),
-            xrange(first_line, last_line + 1))
+        [self.toddleLinePrefix(n, prefix) for n in range(first_line, last_line + 1)]
 
         if old_sel_start != old_sel_end:
             new_sel_start = self.GetLineStartPosition(first_line)
@@ -301,7 +300,7 @@ class TextEditorBase(wx.Panel):
 
     def escapeHtml(self):
         selText = self.textCtrl.GetSelectedText()
-        text = cgi.escape(selText, quote=False)
+        text = html.escape(selText, quote=False)
         self.textCtrl.ReplaceSelection(text)
 
     def SetReadOnly(self, readonly):

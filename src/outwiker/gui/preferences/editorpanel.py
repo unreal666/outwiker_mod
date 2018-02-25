@@ -2,7 +2,7 @@
 
 import wx
 
-import configelements
+from . import configelements
 from outwiker.core.application import Application
 from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.stcstyle import StcStyle
@@ -24,7 +24,7 @@ class EditorPanel(BasePrefPanel):
         self.__createGuiElements(self.__config)
         self.__do_layout()
         self.LoadState()
-        self._setScrolling()
+        self.SetupScrolling()
 
     def __createGuiElements(self, config):
         self.fontLabel = wx.StaticText(self, -1, _("Font"))
@@ -81,7 +81,7 @@ class EditorPanel(BasePrefPanel):
 
     def __do_layout(self):
         # Шрифт
-        fontSizer = wx.FlexGridSizer(rows=1)
+        fontSizer = wx.FlexGridSizer(rows=1, cols=0, vgap=0, hgap=0)
         fontSizer.Add(self.fontLabel, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         fontSizer.Add(self.fontPicker,
                       1,
@@ -91,7 +91,7 @@ class EditorPanel(BasePrefPanel):
         fontSizer.AddGrowableCol(1)
 
         # Цвета шрифта и фона
-        colorsSizer = wx.FlexGridSizer(cols=2)
+        colorsSizer = wx.FlexGridSizer(cols=2, rows=0, vgap=0, hgap=0)
         colorsSizer.AddGrowableCol(0)
         colorsSizer.AddGrowableCol(1)
 
@@ -136,7 +136,7 @@ class EditorPanel(BasePrefPanel):
                         border=2)
 
         # Размер табуляции
-        tabWidthSizer = wx.FlexGridSizer(cols=2)
+        tabWidthSizer = wx.FlexGridSizer(cols=2, rows=0, vgap=0, hgap=0)
         tabWidthSizer.Add(self.tabWidthLabel,
                           0,
                           wx.ALL | wx.ALIGN_CENTER_VERTICAL,
@@ -149,7 +149,7 @@ class EditorPanel(BasePrefPanel):
         tabWidthSizer.AddGrowableCol(1)
 
         # Поведение клавиш Home / End
-        homeEndSizer = wx.FlexGridSizer(cols=2)
+        homeEndSizer = wx.FlexGridSizer(cols=2, rows=0, vgap=0, hgap=0)
         homeEndSizer.AddGrowableCol(0)
         homeEndSizer.AddGrowableCol(1)
         homeEndSizer.Add(self.homeEndLabel,

@@ -3,6 +3,7 @@
 from abc import ABCMeta, abstractmethod
 import os
 import os.path
+from pathlib import Path
 import shutil
 
 from fabric.api import lcd, local
@@ -10,9 +11,8 @@ from fabric.api import lcd, local
 from buildtools.utilites import remove, print_info
 
 
-class BaseBinaryBuilder(object):
+class BaseBinaryBuilder(object, metaclass=ABCMeta):
     """Base class for any binary builders"""
-    __metaclass__ = ABCMeta
 
     def __init__(self, src_dir, dest_dir, temp_dir):
         self._src_dir = src_dir
@@ -54,10 +54,9 @@ class BaseBinaryBuilder(object):
         return [
             'importlib',
             'urllib',
-            'urllib2',
-            'outwiker.pages.wiki.wikipanel',
             'outwiker.gui.htmlrenderfactory',
             'outwiker.gui.controls.popupbutton',
+            'outwiker.utilites.actionsguicontroller',
             'PIL.Image',
             'PIL.ImageDraw',
             'PIL.ImageFont',
@@ -66,25 +65,28 @@ class BaseBinaryBuilder(object):
             'PIL.BmpImagePlugin',
             'PIL.TiffImagePlugin',
             'enchant',
-            'htmlentitydefs',
-            'HTMLParser',
             'xml',
+            'json',
+            'asyncio',
+            'html.parser',
         ]
 
     def get_additional_files(self):
         return []
 
     def _copy_additional_files(self):
-        dest_dir = os.path.join(self._dist_dir, u'outwiker')
+        root_dir = os.path.join(self._dist_dir, u'outwiker')
 
-        for fname in self.get_additional_files():
+        for fname, subpath in self.get_additional_files():
+            dest_dir = os.path.join(root_dir, subpath)
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
             print_info(u'Copy: {} -> {}'.format(fname, dest_dir))
             shutil.copy(fname, dest_dir)
 
 
-class BasePyInstallerBuilder(BaseBinaryBuilder):
+class BasePyInstallerBuilder(BaseBinaryBuilder, metaclass=ABCMeta):
     """Class for binary assimbling creation with PyParsing. """
-    __metaclass__ = ABCMeta
 
     def __init__(self, src_dir, dest_dir, temp_dir):
         super(BasePyInstallerBuilder, self).__init__(
@@ -155,83 +157,126 @@ class BasePyInstallerBuilder(BaseBinaryBuilder):
             print_info(u'Remove: {}'.format(fname))
             remove(fname)
 
+    def get_files_by_mask(self, directory, mask):
+        return [str(fname.resolve()) for fname in Path(directory).glob(mask)]
+
 
 class PyInstallerBuilderWindows(BasePyInstallerBuilder):
     def get_remove_list(self):
         """Return list of the files or dirs to remove after build."""
-        return [
-            u'mfc90.dll',
-            u'mfc90u.dll',
-            u'mfcm90.dll',
-            u'mfcm90u.dll',
-            u'Include',
-            u'Microsoft.VC90.MFC.manifest',
-            u'iconv.dll',
+        to_remove = [
             u'_win32sysloader.pyd',
-            u'_winxptheme.pyd',
             u'win32com.shell.shell.pyd',
-            u'win32pipe.pyd',
             u'win32trace.pyd',
             u'win32wnet.pyd',
+            u'iconv.dll',
+            u'_winxptheme.pyd',
             u'enchant/iconv.dll',
             u'enchant/share',
             u'enchant/lib/enchant/README.txt',
+            u'mfc140u.dll',
+            u'include',
         ]
 
+        to_remove += [fname.name for fname
+                      in Path(self._dist_dir, 'outwiker').glob('api-ms-win*.dll')]
 
-class PyInstallerBuilderLinux(BasePyInstallerBuilder):
+        return to_remove
+
+
+class PyInstallerBuilderLinuxBase(BasePyInstallerBuilder):
     def get_remove_list(self):
         return [
-            u'lib',
-            u'include',
-            u'_codecs_cn.so',
-            u'_codecs_hk.so',
-            u'_codecs_iso2022.so',
-            u'_codecs_jp.so',
-            u'_codecs_kr.so',
-            u'_codecs_tw.so',
-        ]
+            'lib',
+            'include',
+            '_codecs_cn.so',
+            '_codecs_hk.so',
+            '_codecs_iso2022.so',
+            '_codecs_jp.so',
+            '_codecs_kr.so',
+            '_codecs_tw.so',
 
-    def get_additional_files(self):
-        files = [
-            u'need_for_build/linux/loaders.cache',
-        ]
+            # libstdc++.so.6, libgio-2.0.so.0 etc must be excluded
+            # else application will be fall
+            'libstdc++.so.6',
+            'libgio-2.0.so.0',
+            'libc.so.6',
+            'libgdk_pixbuf-2.0.so.0',
+            'libz.so.1',
+            'libglib-2.0.so.0',
 
-        canberra_lib = u'/usr/lib/x86_64-linux-gnu/gtk-2.0/modules/libcanberra-gtk-module.so'
-        if os.path.exists(canberra_lib):
-            files.append(canberra_lib)
+            # List of excludes from AppImage recomendations
+            # https://github.com/AppImage/AppImages/blob/master/excludelist
 
-        pixbuf_loaders_dir = u'/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders'
+            'libgobject-2.0.so.0',
+            'libGL.so.1',
+            'libEGL.so.1',
+            'libdrm.so.2',
+            'libX11.so.6',
+            'libasound.so.2',
+            'libfontconfig.so.1',
+            'libexpat.so.1',
+            'libgcc_s.so.1',
+            'libgpg-error.so.0',
+            'libICE.so.6',
+            'libSM.so.6',
+            'libuuid.so.1',
+            'libgpg-error.so.0',
+            'libX11-xcb.so.1',
 
-        for pixbuf_type in os.listdir(pixbuf_loaders_dir):
-            if pixbuf_type.endswith('.so'):
-                files.append(os.path.join(pixbuf_loaders_dir,
-                                          pixbuf_type))
-
-        return files
+            # 'libxcb.so.1',
+            ]
 
     def build(self):
-        super(PyInstallerBuilderLinux, self).build()
-        files_for_strip = [
-            u'wx._aui.so',
-            u'wx._combo.so',
-            u'wx._controls_.so',
-            u'wx._core_.so',
-            u'wx._gdi_.so',
-            u'wx._html.so',
-            u'wx._html2.so',
-            u'wx._misc_.so',
-            u'wx._stc.so',
-            u'wx._windows_.so',
-        ]
+        super(PyInstallerBuilderLinuxBase, self).build()
+        self._strip_binary()
+
+    def _strip_binary(self):
+        strip_path = Path(self._dest_dir)
+        files_for_strip = (list(strip_path.glob('libwx*.so.*')) +
+                           list(strip_path.glob('wx.*so')))
 
         for fname in files_for_strip:
             print_info(u'Strip {}'.format(fname))
-            with lcd(self._dest_dir):
-                assert os.path.exists(os.path.join(self._dest_dir, fname))
+            if os.path.exists(str(fname)):
                 local(u'strip -s -o "{fname}" "{fname}"'.format(fname=fname))
 
-    def get_params(self):
-        params = super(PyInstallerBuilderLinux, self).get_params()
-        params.append(u'--runtime-hook=linux_runtime_hook.py')
-        return params
+    def get_includes(self):
+        result = super(PyInstallerBuilderLinuxBase, self).get_includes()
+        # result.append('gi')
+        # result.append('gi.repository.Gtk')
+        # result.append('gi.repository.GdkPixbuf')
+        return result
+
+    def append_so_files(self, files, modules_dir, dir_dest):
+        so_files = self.get_files_by_mask(modules_dir, '*.so')
+        files += [(fname, dir_dest) for fname in so_files]
+
+
+class PyInstallerBuilderLinuxSimple(PyInstallerBuilderLinuxBase):
+    pass
+
+    # def get_additional_files(self):
+    #     files = []
+    #     self._append_pixbuf_files(files)
+    #     self._append_immodules_files(files)
+    #     return files
+    #
+    # def _append_immodules_files(self, files):
+    #     dir_dest = u'lib/immodules'
+    #     modules_dir = u'/usr/lib/x86_64-linux-gnu/gtk-3.0/3.0.0/immodules/'
+    #
+    #     files.append(('need_for_build/linux/immodules.cache', dir_dest))
+    #     self.append_so_files(files, modules_dir, dir_dest)
+    #
+    # def _append_pixbuf_files(self, files):
+    #     dir_dest = u'lib/gdk-pixbuf'
+    #     modules_dir = u'/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders'
+    #
+    #     files.append(('need_for_build/linux/loaders.cache', dir_dest))
+    #     self.append_so_files(files, modules_dir, dir_dest)
+    #
+    # def get_params(self):
+    #     params = super().get_params()
+    #     params.append(u'--runtime-hook=linux_runtime_hook.py')
+    #     return params

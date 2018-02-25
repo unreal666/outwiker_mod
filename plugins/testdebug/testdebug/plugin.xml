@@ -1,16 +1,10 @@
 <?xml version="1.1" encoding="UTF-8" ?>
 <info>
-	<name>Debug Plugin</name>
+	<name>TestDebug</name>
 	<updates>http://jenyay.net/uploads/Outwiker/DebugPlugin/plugin.xml</updates>
     <requirements>
-		<packages>
-			<core>1.0</core>
-			<actions>1.0</actions>
-			<gui>1.0</gui>
-			<pages>1.0, 2.0</pages>
-			<utilites>1.0</utilites>
-			<libs>1.0</libs>
-		</packages>
+        <os>Windows, Linux</os>
+        <api>2.835</api>
     </requirements>
 
 	<data lang="en">
@@ -18,8 +12,8 @@
 		<website>http://jenyay.net/Outwiker/DebugPluginEn</website>
 
 		<changelog>
-			<version number="0.6">
-                <download os="all">http://jenyay.net/uploads/Outwiker/DebugPlugin/debugplugin-0.6.zip</download>
+			<version number="0.5">
+                <download os="all">http://jenyay.net/uploads/Outwiker/DebugPlugin/debugplugin-0.5.zip</download>
 				<change>The first change.</change>
 				<change>The second change.</change>
 			</version>
@@ -31,8 +25,8 @@
 		<website>http://jenyay.net/Outwiker/DebugPlugin</website>
 
 		<changelog>
-			<version number="0.6">
-                <download os="all">http://jenyay.net/uploads/Outwiker/DebugPlugin/debugplugin-0.6.zip</download>
+			<version number="0.5">
+                <download os="all">http://jenyay.net/uploads/Outwiker/DebugPlugin/debugplugin-0.5.zip</download>
 				<change>Первое изменение.</change>
 				<change>Второе изменение.</change>
 			</version>

@@ -1,128 +1,108 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os.path
 
 import wx
 
-from outwiker.core.commands import testreadonly
 import outwiker.core.exceptions
+from outwiker.core.commands import testreadonly
+from outwiker.pages.wiki.wikipage import WikiWikiPage
+from outwiker.utilites.actionsguicontroller import (ActionsGUIController,
+                                                    ActionGUIInfo,
+                                                    ButtonInfo)
+from outwiker.pages.wiki.defines import MENU_WIKI_COMMANDS
+from outwiker.gui.defines import TOOLBAR_PLUGINS
 
 from .i18n import get_
-from .guicreator import GuiCreator
 from .commandcounter import CommandCounter
 from .insertdialog import InsertDialog
 from .insertdialogcontroller import InsertDialogController
+from .actions import InsertCounterAction
 
 
-class Controller (object):
+class Controller(object):
     """
     Класс отвечает за основную работу интерфейса плагина
     """
-    def __init__ (self, plugin, application):
+    def __init__(self, plugin, application):
         """
-        plugin - Владелец контроллера (экземпляр класса PluginSource)
+        plugin - Владелец контроллера(экземпляр класса PluginSource)
         application - экземпляр класса ApplicationParams
         """
         self._plugin = plugin
         self._application = application
 
-        self._guiCreator = None
+        self._GUIController = ActionsGUIController(
+            self._application,
+            WikiWikiPage.getTypeString(),
+        )
 
-
-    def initialize (self):
+    def initialize(self):
         """
-        Инициализация контроллера при активации плагина. Подписка на нужные события
+        Инициализация контроллера при активации плагина.
+        Подписка на нужные события
         """
         global _
         _ = get_()
 
-        self._guiCreator = GuiCreator (self, self._application)
-        self._guiCreator.initialize()
-
         self._application.onWikiParserPrepare += self.__onWikiParserPrepare
-        self._application.onPageViewCreate += self.__onPageViewCreate
-        self._application.onPageViewDestroy += self.__onPageViewDestroy
+        self._initialize_guicontroller()
 
-        if self._isCurrentWikiPage:
-            self.__onPageViewCreate (self._application.selectedPage)
+    def _initialize_guicontroller(self):
+        imagesPath = os.path.join(self._plugin.pluginPath, 'images')
 
+        action_gui_info = [
+            ActionGUIInfo(InsertCounterAction(self._application, self),
+                          MENU_WIKI_COMMANDS,
+                          ButtonInfo(TOOLBAR_PLUGINS,
+                                     os.path.join(imagesPath, 'counter.png'))
+                          ),
+        ]
 
-    def destroy (self):
+        if self._application.mainWindow is not None:
+            self._GUIController.initialize(action_gui_info)
+
+    def destroy(self):
         """
         Вызывается при отключении плагина
         """
         self._application.onWikiParserPrepare -= self.__onWikiParserPrepare
-        self._application.onPageViewCreate -= self.__onPageViewCreate
-        self._application.onPageViewDestroy -= self.__onPageViewDestroy
+        self._destroy_guicontroller()
 
-        if self._isCurrentWikiPage:
-            self._guiCreator.removeTools()
+    def _destroy_guicontroller(self):
+        if self._application.mainWindow is not None:
+            self._GUIController.destroy()
 
-        self._guiCreator.destroy ()
-
-
-    def __onWikiParserPrepare (self, parser):
+    def __onWikiParserPrepare(self, parser):
         """
-        Вызывается до разбора викитекста. Добавление команды (:counter:)
+        Вызывается до разбора викитекста. Добавление команды(:counter:)
         """
-        parser.addCommand (CommandCounter (parser))
-
-
-    @property
-    def _isCurrentWikiPage (self):
-        """
-        Возвращает True, если текущая страница - это викистраница, и False в противном случае
-        """
-        return (self._application.selectedPage != None and
-                self._application.selectedPage.getTypeString() == u"wiki")
-
-
-    def __onPageViewCreate(self, page):
-        """Обработка события после создания представления страницы"""
-        assert self._application.mainWindow != None
-
-        if page.getTypeString() == u"wiki":
-            self._guiCreator.createTools()
-
-
-    def __onPageViewDestroy (self, page):
-        """
-        Обработка события перед удалением вида страницы
-        """
-        assert self._application.mainWindow != None
-
-        if page.getTypeString() == u"wiki":
-            self._guiCreator.removeTools()
-
+        parser.addCommand(CommandCounter(parser))
 
     @testreadonly
-    def insertCommand (self):
+    def insertCommand(self):
         """
-        Вставка команды (:counter:) в редактор
+        Вставка команды(:counter:) в редактор
         """
         if self._application.selectedPage.readonly:
             raise outwiker.core.exceptions.ReadonlyException
 
-        dlg = InsertDialog (self._application.mainWindow)
+        dlg = InsertDialog(self._application.mainWindow)
 
-        dlgController = InsertDialogController (dlg, 
-                self._application.config,
-                self._application.selectedPage)
+        dlgController = InsertDialogController(dlg,
+                                               self._application.config,
+                                               self._application.selectedPage)
 
-        resultDlg = dlgController.showDialog ()
+        resultDlg = dlgController.showDialog()
 
         if resultDlg == wx.ID_OK:
             command = dlgController.getCommandString()
-            self._getPageView().codeEditor.replaceText (command)
+            self._getPageView().codeEditor.replaceText(command)
 
         dlg.Destroy()
 
-
-    def _getPageView (self):
+    def _getPageView(self):
         """
         Получить указатель на панель представления страницы
         """
-        return self._application.mainWindow.pagePanel.pageView
-
-
+        return self._application.mainWindow.pageView

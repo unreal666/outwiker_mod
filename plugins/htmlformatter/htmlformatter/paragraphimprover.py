@@ -1,26 +1,26 @@
 # -*- coding: UTF-8 -*-
 
 import re
-from StringIO import StringIO
+from io import StringIO
 
 from outwiker.core.htmlimprover import HtmlImprover
 
 
 
-class ParagraphHtmlImprover (HtmlImprover):
+class ParagraphHtmlImprover(HtmlImprover):
     """
     Class cover paragraphes by <p> tags
     """
-    def _appendLineBreaks (self, text):
-        result = self._prepareText (text)
-        result = self._coverParagraphs (result)
-        result = self._addLineBreaks (result)
-        result = self._improveRedability (result)
+    def _appendLineBreaks(self, text):
+        result = self._prepareText(text)
+        result = self._coverParagraphs(result)
+        result = self._addLineBreaks(result)
+        result = self._improveRedability(result)
 
         return result
 
 
-    def _prepareText (self, text):
+    def _prepareText(self, text):
         result = text
 
         closetags = r"[uod]l|li|d[td]"
@@ -32,7 +32,7 @@ class ParagraphHtmlImprover (HtmlImprover):
         return result
 
 
-    def _improveRedability (self, text):
+    def _improveRedability(self, text):
         result = text
 
         minopentags = r"[uod]l|hr|h\d|tr|td|blockquote"
@@ -73,11 +73,11 @@ class ParagraphHtmlImprover (HtmlImprover):
 
         # Remove empty paragraphs
         empty_par = r"<p></p>"
-        result = re.sub (empty_par, "", result, flags=re.I | re.M)
+        result = re.sub(empty_par, "", result, flags=re.I | re.M)
 
         # Remove <br> on the paragraph end
         final_linebreaks = r"<br\s*/?>\s*(</p>)"
-        result = re.sub (final_linebreaks, "\\1", result, flags=re.I | re.M)
+        result = re.sub(final_linebreaks, "\\1", result, flags=re.I | re.M)
 
         # Append line breaks before some elements (to improve readability)
         append_eol_before = r"\n*(<(?:li|h\d|/?[uo]l|hr|p|script|/?table|/?tr|td)[ >])"
@@ -98,20 +98,20 @@ class ParagraphHtmlImprover (HtmlImprover):
         return result
 
 
-    def _addLineBreaks (self, text):
-        return text.replace (u"\n", "<br/>")
+    def _addLineBreaks(self, text):
+        return text.replace(u"\n", "<br/>")
 
 
-    def _coverParagraphs (self, text):
+    def _coverParagraphs(self, text):
         paragraphs = (par.strip()
                       for par
                       in text.split (u'\n\n')
-                      if len (par.strip()) != 0)
+                      if len(par.strip()) != 0)
 
         buf = StringIO()
         for par in paragraphs:
-            buf.write ("<p>")
-            buf.write (par)
-            buf.write ("</p>")
+            buf.write("<p>")
+            buf.write(par)
+            buf.write("</p>")
 
         return buf.getvalue()

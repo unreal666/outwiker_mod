@@ -7,6 +7,7 @@
 from datetime import datetime
 import os.path
 import shutil
+import logging
 
 import wx
 
@@ -28,6 +29,8 @@ from outwiker.gui.tester import Tester
 from outwiker.gui.testeddialog import TestedFileDialog
 from outwiker.utilites.textfile import readTextFile
 
+
+logger = logging.getLogger('core')
 
 def MessageBox(*args, **kwargs):
     """
@@ -118,7 +121,7 @@ def removePage(page):
                    wx.ICON_ERROR | wx.OK)
         return
 
-    if (MessageBox(_(u'Remove page "{}" and all subpages?').format(page.title),
+    if (MessageBox(_(u'Remove page "{}" and all subpages?\nAll attached files will also be deleted.').format(page.title),
                    _(u"Remove page?"),
                    wx.YES_NO | wx.ICON_QUESTION) == wx.YES):
         try:
@@ -191,13 +194,12 @@ def openWiki(path, readonly=False):
                                _(u"Opening notes tree..."))
     result = runner.run(os.path.realpath(path), readonly)
 
-    # result = WikiDocument.load (os.path.realpath (path), readonly)
-
     success = False
-    if isinstance(result, IOError):
-        __canNotLoadWikiMessage(path)
-    elif isinstance(result, outwiker.core.exceptions.RootFormatError):
+    if isinstance(result, outwiker.core.exceptions.RootFormatError):
         __rootFormatErrorHandle(path, readonly)
+    elif isinstance(result, Exception):
+        logger.error(result)
+        __canNotLoadWikiMessage(path)
     else:
         Application.wikiroot = result
         success = True
@@ -282,7 +284,7 @@ This is the first page. You can use a text formatting: '''bold''', ''italic'', {
             Application.wikiroot.selectedPage = firstPage
         except (IOError, OSError) as e:
             # TODO: проверить под Windows
-            MessageBox(_(u"Can't create wiki\n") + unicode(e.filename.encode(getOS().filesEncoding), "utf8"),
+            MessageBox(_(u"Can't create wiki\n") + e.filename,
                        _(u"Error"), wx.OK | wx.ICON_ERROR)
 
     dlg.Destroy()
@@ -446,13 +448,13 @@ def testPageTitle(title):
         tester.test(title)
 
     except PageTitleError as error:
-        MessageBox(error.message,
+        MessageBox(str(error),
                    _(u"The invalid page title"),
                    wx.OK | wx.ICON_ERROR)
         return False
 
     except PageTitleWarning as warning:
-        text = _(u"{0}\nContinue?").format(warning.message)
+        text = _(u"{0}\nContinue?").format(str(warning))
 
         if (MessageBox(text,
                        _(u"The page title"),
@@ -511,8 +513,7 @@ def insertCurrentDate(parent, editor):
                           _(u"Date format"),
                           initial) as dlg:
         if dlg.ShowModal() == wx.ID_OK:
-            dateStr = unicode(datetime.now().strftime(dlg.Value.encode(getOS().filesEncoding)),
-                              getOS().filesEncoding)
+            dateStr = datetime.now().strftime(dlg.Value)
             editor.replaceText(dateStr)
             config.recentDateTimeFormat.value = dlg.Value
 
@@ -536,7 +537,7 @@ def dictToStr(paramsDict):
     """
     items = []
     for name, value in paramsDict.items():
-        valueStr = unicode(value)
+        valueStr = str(value)
 
         hasSingleQuote = u"'" in valueStr
         hasDoubleQuote = u'"' in valueStr
@@ -576,14 +577,11 @@ def registerActions(application):
     from outwiker.gui.actionslist import actionsList, polyactionsList
 
     # Register the normal actions
-    map(lambda item: actionController.register(item[0](application),
-                                               item[1]),
-        actionsList)
+    [actionController.register(item[0](application), item[1]) for item in actionsList]
 
     # Register the polyactions
-    map(lambda item: actionController.register(PolyAction(application,
-                                                          item[0],
-                                                          item[1],
-                                                          item[2]),
-                                               item[3]),
-        polyactionsList)
+    [actionController.register(PolyAction(application,
+                                          item[0],
+                                          item[1],
+                                          item[2]),
+                                          item[3]) for item in polyactionsList]

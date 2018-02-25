@@ -32,13 +32,15 @@ def getDefaultLanguage():
 def init_i18n(language):
     langdir = os.path.join(getCurrentDir(), u'locale')
     lang = loadLanguage(language, langdir, u"outwiker")
-    lang.install(unicode=1)
+    assert lang is not None
+    lang.install()
+    return lang
 
 
 def loadLanguage(language, langdir, domain):
     """
     Загрузить язык из указанной директории
-    language - язык, которых надо загрузить или константа AUTO_LANGUAGE
+    language - язык, который надо загрузить или константа AUTO_LANGUAGE
     """
     # Если в качестве языка передана константа AUTO_LANGUAGE,
     # значит язык надо определить самостоятельно
@@ -46,13 +48,12 @@ def loadLanguage(language, langdir, domain):
                     if language == AUTO_LANGUAGE
                     else language)
 
-    gettext.bindtextdomain(domain, langdir)
-    gettext.textdomain(domain)
-
     try:
-        lang = gettext.translation(domain, langdir, languages=[reallanguage])
+        lang = gettext.translation(domain,
+                                   langdir,
+                                   languages=[reallanguage, 'en'])
     except IOError:
-        lang = gettext.translation(domain, langdir, languages=["en"])
+        return None
 
     return lang
 

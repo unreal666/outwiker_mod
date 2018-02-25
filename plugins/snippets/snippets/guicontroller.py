@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 from collections import namedtuple
@@ -8,16 +8,16 @@ import wx
 from outwiker.core.commands import MessageBox
 from outwiker.utilites.textfile import readTextFile
 
-from snippets.actions.editsnippets import EditSnippetsAction
-from snippets.actions.runrecentsnippet import RunRecentSnippet
-from snippets.actions.openhelp import OpenHelpAction
-from snippets.events import RunSnippetParams
-from snippets.i18n import get_
-from snippets.snippetsloader import SnippetsLoader
-from snippets.gui.variablesdialog import VariablesDialogController
-from snippets.utils import getSnippetsDir
-import snippets.defines as defines
-from snippets.snippetparser import SnippetException
+from .actions.editsnippets import EditSnippetsAction
+from .actions.runrecentsnippet import RunRecentSnippet
+from .actions.openhelp import OpenHelpAction
+from .events import RunSnippetParams
+from .i18n import get_
+from .snippetsloader import SnippetsLoader
+from .gui.variablesdialog import VariablesDialogController
+from .utils import getSnippetsDir
+from . import defines
+from .snippetparser import SnippetException
 
 SnippetInfo = namedtuple('SnippetInfo', ['filename', 'menuitem', 'parentmenu'])
 
@@ -48,7 +48,7 @@ class GuiController(object):
         _ = get_()
 
         if self._application.mainWindow is not None:
-            self._mainMenu = self._application.mainWindow.mainMenu
+            self._mainMenu = self._application.mainWindow.menuController.getRootMenu()
             self._menuName = _(u'Snippets')
             self._createMenu()
             self._varDialogController.onFinishDialogEvent += self._onFinishDialog
@@ -62,8 +62,8 @@ class GuiController(object):
 
         # Snippet's control menu items (actions)
         controller = self._application.actionController
-        map(lambda action: controller.appendMenuItem(action.stringId, self._menu),
-            self._actions)
+        [*map(lambda action: controller.appendMenuItem(action.stringId, self._menu),
+              self._actions)]
 
         # Snippets list
         self._menu.AppendSeparator()
@@ -77,16 +77,15 @@ class GuiController(object):
 
     def _removeSnippetsFromMenu(self):
         # Remove all snippets
-        for snippet_id, snippet_info in reversed(self._snippets_id.items()):
+        for snippet_id, snippet_info in reversed(list(self._snippets_id.items())):
             menu_item = snippet_info.menuitem
             menu = snippet_info.parentmenu
             self._application.mainWindow.Unbind(wx.EVT_MENU,
                                                 handler=self._onClick,
                                                 id=snippet_id
                                                 )
-            menu.RemoveItem(menu_item)
+            menu.Remove(menu_item)
             menu_item.Destroy()
-            # wx.Window.UnreserveControlId(snippet_id)
 
         # Count menu items for snippets. (+-1 because of separator exists)
         menu_snippets_count = (self._menu.GetMenuItemCount() -
@@ -94,7 +93,7 @@ class GuiController(object):
 
         for _ in range(menu_snippets_count):
             menu_item = self._menu.FindItemByPosition(len(self._actions) + 1)
-            self._menu.RemoveItem(menu_item)
+            self._menu.Remove(menu_item)
             menu_item.Destroy()
 
         self._snippets_id = {}
@@ -138,8 +137,8 @@ class GuiController(object):
 
         actionController = self._application.actionController
 
-        map(lambda action: actionController.removeMenuItem(action.stringId),
-            self._actions)
+        [*map(lambda action: actionController.removeMenuItem(action.stringId),
+              self._actions)]
         self._mainMenu.Remove(index)
         self._menu = None
 

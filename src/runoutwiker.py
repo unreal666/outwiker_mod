@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -7,7 +7,7 @@ import logging
 
 import wx
 
-from outwiker.core.defines import APP_DATA_DEBUG
+from outwiker.core.defines import APP_DATA_DEBUG, APP_DATA_DISABLE_MINIMIZING
 from outwiker.core.application import Application
 from outwiker.core.system import (getOS, getPluginsDirList,
                                   getConfigPath, getSpecialDirList)
@@ -15,7 +15,7 @@ from outwiker.core.starter import Starter, StarterExit
 from outwiker.core.commands import registerActions
 from outwiker.core.logredirector import LogRedirector
 from outwiker.gui.actioncontroller import ActionController
-from outwiker.gui.guiconfig import GeneralGuiConfig
+from outwiker.gui.guiconfig import GeneralGuiConfig, TrayConfig
 
 
 class OutWiker(wx.App):
@@ -29,7 +29,6 @@ class OutWiker(wx.App):
         wx.App.__init__(self, *args, **kwds)
 
     def OnInit(self):
-        getOS().init()
         getOS().migrateConfig()
 
         self._fullConfigPath = getConfigPath()
@@ -46,18 +45,13 @@ class OutWiker(wx.App):
             config = GeneralGuiConfig(Application.config)
             Application.sharedData[APP_DATA_DEBUG] = config.debug.value
 
-        level = (logging.DEBUG
-                 if Application.sharedData.get(APP_DATA_DEBUG, False)
-                 else logging.WARNING)
-
-        redirector = LogRedirector(self.getLogFileName(self._fullConfigPath),
-                                   level)
-        redirector.init()
-        wx.Log.SetLogLevel(0)
+        self._initLogger()
 
         logger = logging.getLogger('outwiker')
+
+        logger.debug(u'Current working directory: {}'.format(os.getcwd()))
         for n, dirname in enumerate(getSpecialDirList(u'')):
-            logger.info(u'Special directory [{}]: {}'.format(n, dirname))
+            logger.debug(u'Special directory [{}]: {}'.format(n, dirname))
 
         from outwiker.gui.mainwindow import MainWindow
 
@@ -77,8 +71,29 @@ class OutWiker(wx.App):
         self.Bind(wx.EVT_QUERY_END_SESSION, self._onEndSession)
 
         starter.processGUI()
-
+        self._showMainWindow()
         return True
+
+    def _showMainWindow(self):
+        config = TrayConfig(Application.config)
+        if (config.startIconized.value and not
+                Application.sharedData.get(APP_DATA_DISABLE_MINIMIZING,
+                                           False)):
+            self.mainWnd.Iconize(True)
+        else:
+            self.mainWnd.Show()
+
+        self.mainWnd.taskBarIconController.updateTrayIcon()
+
+    def _initLogger(self):
+        level = (logging.DEBUG
+                 if Application.sharedData.get(APP_DATA_DEBUG, False)
+                 else logging.WARNING)
+
+        redirector = LogRedirector(self.getLogFileName(self._fullConfigPath),
+                                   level)
+        redirector.init()
+        wx.Log.SetLogLevel(0)
 
     def _onEndSession(self, event):
         self.Unbind(wx.EVT_QUERY_END_SESSION, handler=self._onEndSession)

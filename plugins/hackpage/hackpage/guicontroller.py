@@ -1,5 +1,8 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
+
 import wx
+
+from outwiker.gui.defines import MENU_TOOLS
 
 from hackpage.i18n import get_
 from hackpage.actions.changeuid import ChangeUIDAction
@@ -47,9 +50,9 @@ class GuiController(object):
         self._bind()
 
         if self._application.mainWindow is not None:
-            map(lambda action: self._application.actionController.register(
+            list(map(lambda action: self._application.actionController.register(
                 action(self._application, self._controller), None),
-                self._actions)
+                self._actions))
 
             self.createTools()
 
@@ -59,14 +62,13 @@ class GuiController(object):
         if mainWindow is None:
             return
 
-        # Menu for actions
+        menu_tools = mainWindow.menuController[MENU_TOOLS]
+        # Menu for action
         menu = wx.Menu()
-        self._mainSubmenuItem = mainWindow.mainMenu.toolsMenu.AppendSubMenu(
-            menu,
-            u'HackPage')
+        self._mainSubmenuItem = menu_tools.AppendSubMenu(menu, u'HackPage')
 
-        map(lambda action: self._application.actionController.appendMenuItem(
-            action.stringId, menu), self._actions)
+        list(map(lambda action: self._application.actionController.appendMenuItem(
+            action.stringId, menu), self._actions))
 
     def destroy(self):
         self._unbind()
@@ -74,9 +76,10 @@ class GuiController(object):
         mainWindow = self._application.mainWindow
 
         if mainWindow is not None:
-            map(lambda action: actionController.removeAction(action.stringId),
-                self._actions)
-            mainWindow.mainMenu.toolsMenu.RemoveItem(self._mainSubmenuItem)
+            menu_tools = mainWindow.menuController[MENU_TOOLS]
+            [*map(lambda action: actionController.removeAction(action.stringId),
+                  self._actions)]
+            menu_tools.Remove(self._mainSubmenuItem)
             self._mainSubmenuItem = None
 
     def __onTreePopupMenu(self, menu, page):

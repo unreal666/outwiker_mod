@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os.path
 import logging
@@ -6,25 +6,26 @@ import logging
 import wx
 import wx.aui
 
-import outwiker.core.commands as cmd
 from outwiker.core.application import Application
-
-from .guiconfig import MainWindowConfig
-
-from .mainmenu import MainMenu
-from .mainwndcontroller import MainWndController
-from .mainpanescontroller import MainPanesController
-from outwiker.gui.mainpanes.tagscloudmainpane import TagsCloudMainPane
-from outwiker.gui.mainpanes.attachmainpane import AttachMainPane
-from outwiker.gui.mainpanes.treemainpane import TreeMainPane
-from outwiker.gui.mainpanes.pagemainpane import PageMainPane
-from outwiker.gui.tabscontroller import TabsController
-from outwiker.gui.trayicon import getTrayIconController
+from outwiker.core.attachwatcher import AttachWatcher
+from outwiker.core.commands import MessageBox
+from outwiker.core.system import getOS
 from outwiker.core.system import getImagesDir
 
-from toolbars.generaltoolbar import GeneralToolBar
-from toolbars.pluginstoolbar import PluginsToolBar
-from toolbars.toolbarscontroller import ToolBarsController
+from .guiconfig import MainWindowConfig
+from .mainwndcontroller import MainWndController
+from .mainpanescontroller import MainPanesController
+from .mainpanes.tagscloudmainpane import TagsCloudMainPane
+from .mainpanes.attachmainpane import AttachMainPane
+from .mainpanes.treemainpane import TreeMainPane
+from .mainpanes.pagemainpane import PageMainPane
+from .tabscontroller import TabsController
+from .trayicon import getTrayIconController
+from .preferences.prefcontroller import PrefController
+from .menucontroller import MenuController
+from . import defines as guidefines
+
+from .toolbarscontroller import ToolBarsController
 
 from outwiker.actions.new import NewAction
 from outwiker.actions.open import OpenAction
@@ -68,14 +69,14 @@ from outwiker.pages.wiki.wikipagecontroller import WikiPageController
 from outwiker.pages.html.htmlpagecontroller import HtmlPageController
 from outwiker.pages.text.textpagecontroller import TextPageController
 from outwiker.pages.search.searchpagecontroller import SearchPageController
-from outwiker.gui.preferences.prefcontroller import PrefController
-from outwiker.core.system import getOS
 
 
 logger = logging.getLogger('outwiker.gui.mainwindow')
 
+
 class MainWindow(wx.Frame):
     def __init__(self, *args, **kwds):
+        logger.debug(u'MainWindow initializing begin')
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
 
@@ -85,33 +86,35 @@ class MainWindow(wx.Frame):
         # (например, копирования в буфер обмена) сообщение вернулось обратно
         self.__stdEventLoop = False
 
-        self.__setIcon()
+        logger.debug(u'MainWindow. Setup icon')
+        self._setIcon()
         self.SetTitle(u"OutWiker")
+        self._createMenu()
+        self._createStatusBar()
 
-        self.mainMenu = MainMenu()
-        self.SetMenuBar(self.mainMenu)
-
-        self.__createStatusBar()
-
+        logger.debug(u'MainWindow. Create the MainWndController')
         self.controller = MainWndController(self)
         self.controller.loadMainWindowParams()
 
         if self.mainWindowConfig.maximized.value:
             self.Maximize()
 
+        logger.debug(u'MainWindow. Create the AuiManager')
         self.auiManager = wx.aui.AuiManager(self)
-        self.__createAuiPanes()
-        self.__createToolbars()
+        self._createAuiPanes()
+        self._createToolbars()
 
+        logger.debug(u'MainWindow. Create the MainPanesController')
         self.__panesController = MainPanesController(Application, self)
 
-        self.__bindGuiEvents()
+        self._bindGuiEvents()
 
-        self.taskBarIconController = getTrayIconController(Application, self)
-        self.taskBarIconController.initialize()
-
+        logger.debug(u'MainWindow. Create the TabsController')
         self.tabsController = TabsController(self.pagePanel.panel.tabsCtrl,
                                              Application)
+
+        self.attachWatcher = AttachWatcher(Application,
+                                           guidefines.ATTACH_CHECK_PERIOD)
 
         self._coreControllers = [
             WikiPageController(Application),
@@ -119,45 +122,65 @@ class MainWindow(wx.Frame):
             TextPageController(Application),
             SearchPageController(Application),
             PrefController(Application),
+            self.attachWatcher,
         ]
 
+        logger.debug(u'MainWindow. Initialize the core controllers')
         self._initCoreControllers()
 
-    @property
-    def mainToolbar(self):
-        return self._mainToolbar
+        logger.debug(u'MainWindow. Create the tray icon')
+        self.taskBarIconController = getTrayIconController(Application, self)
 
-    @property
-    def pluginsToolbar(self):
-        '''
-        Added in outwiker.gui 1.4
-        '''
-        return self._pluginsToolbar
+        logger.debug(u'MainWindow initializing end')
 
-    def __createToolbars(self):
-        self._mainToolbar = GeneralToolBar(self, self.auiManager)
-        self._pluginsToolbar = PluginsToolBar(self, self.auiManager)
+    def _createMenu(self):
+        logger.debug(u'MainWindow. Create the main menu')
+        self._mainMenu = wx.MenuBar()
+        self.SetMenuBar(self._mainMenu)
+        self.menuController = MenuController(self._mainMenu)
 
-        self.GENERAL_TOOLBAR_STR = self._mainToolbar.name
-        self.PLUGINS_TOOLBAR_STR = self._pluginsToolbar.name
-        self.toolbars = ToolBarsController(self)
+        self.menuController.createSubMenu(guidefines.MENU_FILE,
+                                          _('File'))
 
-        self.toolbars[self.mainToolbar.name] = self.mainToolbar
-        self.toolbars[self._pluginsToolbar.name] = self._pluginsToolbar
+        self.menuController.createSubMenu(guidefines.MENU_EDIT,
+                                          _('Edit'))
+
+        self.menuController.createSubMenu(guidefines.MENU_TREE,
+                                          _('Tree'))
+
+        self.menuController.createSubMenu(guidefines.MENU_TOOLS,
+                                          _('Tools'))
+
+        self.menuController.createSubMenu(guidefines.MENU_BOOKMARKS,
+                                          _('Bookmarks'))
+
+        self.menuController.createSubMenu(guidefines.MENU_VIEW, _('View'))
+        self.menuController.createSubMenu(guidefines.MENU_VIEW_GOTO,
+                                          _('Go to'),
+                                          guidefines.MENU_VIEW)
+
+        self.menuController.createSubMenu(guidefines.MENU_HELP, _('Help'))
+
+    def _createToolbars(self):
+        self._toolbars = ToolBarsController(self, Application)
+        self._toolbars.createToolBar(guidefines.TOOLBAR_GENERAL, _('General'))
+        self._toolbars.createToolBar(guidefines.TOOLBAR_PLUGINS, _('Plugins'))
 
     def _initCoreControllers(self):
-        map(lambda controller: controller.initialize(), self._coreControllers)
+        [controller.initialize() for controller in self._coreControllers]
 
     def _destroyCoreControllers(self):
-        map(lambda controller: controller.clear(), self._coreControllers)
+        # TODO: the clear() methods replace to destroy()
+        [controller.clear() for controller in self._coreControllers]
         self._coreControllers = []
 
     def createGui(self):
         """
         Создать пункты меню, кнопки на панелях инструментов и т.п.
         """
+        logger.debug(u'MainWindow createGui started')
         self.__panesController.loadPanesSize()
-        self.__addActionsGui()
+        self._addActionsGui()
         self.controller.enableGui()
         self.controller.updateRecentMenu()
         self.__panesController.updateViewMenu()
@@ -165,10 +188,11 @@ class MainWindow(wx.Frame):
 
         if self.mainWindowConfig.fullscreen.value:
             Application.actionController.check(FullScreenAction.stringId, True)
+        logger.debug(u'MainWindow createGui ended')
 
-    def __createSwitchToMenu(self):
+    def _createSwitchToMenu(self):
         actionController = Application.actionController
-        menu = Application.mainWindow.mainMenu.switchToMenu
+        menu = self.menuController[guidefines.MENU_VIEW_GOTO]
 
         actionController.appendMenuItem(
             switchto.SwitchToMainPanelAction.stringId,
@@ -186,13 +210,50 @@ class MainWindow(wx.Frame):
             switchto.SwitchToTagsCloudAction.stringId,
             menu)
 
-    def __createFileMenu(self):
+    def _createEditMenu(self):
+        editMenu = self.menuController[guidefines.MENU_EDIT]
+
+        editMenu.Append(wx.ID_UNDO,
+                        _(u"Undo") + "\tCtrl+Z",
+                        "",
+                        wx.ITEM_NORMAL)
+
+        editMenu.Append(wx.ID_REDO,
+                        _(u"Redo") + "\tCtrl+Y",
+                        "",
+                        wx.ITEM_NORMAL)
+
+        editMenu.AppendSeparator()
+
+        editMenu.Append(wx.ID_CUT,
+                        _(u"Cut") + "\tCtrl+X",
+                        "",
+                        wx.ITEM_NORMAL)
+
+        editMenu.Append(wx.ID_COPY,
+                        _(u"Copy") + "\tCtrl+C",
+                        "",
+                        wx.ITEM_NORMAL)
+
+        editMenu.Append(wx.ID_PASTE,
+                        _(u"Paste") + "\tCtrl+V",
+                        "",
+                        wx.ITEM_NORMAL)
+
+        editMenu.AppendSeparator()
+
+        editMenu.Append(wx.ID_SELECTALL,
+                        _(u"Select All") + "\tCtrl+A",
+                        "",
+                        wx.ITEM_NORMAL)
+
+    def _createFileMenu(self):
         """
         Заполнить действиями меню Файл
         """
         imagesDir = getImagesDir()
-        toolbar = Application.mainWindow.mainToolbar
-        menu = Application.mainWindow.mainMenu.fileMenu
+        toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
+        menu = self.menuController[guidefines.MENU_FILE]
         actionController = Application.actionController
 
         # Создать...
@@ -249,13 +310,13 @@ class MainWindow(wx.Frame):
 
         menu.AppendSeparator()
 
-    def __createTreeMenu(self):
+    def _createTreeMenu(self):
         """
         Заполнить действиями меню Дерево
         """
         actionController = Application.actionController
-        menu = Application.mainWindow.mainMenu.treeMenu
-        toolbar = Application.mainWindow.mainToolbar
+        menu = self.menuController[guidefines.MENU_TREE]
+        toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
         imagesDir = getImagesDir()
 
         actionController.appendMenuItem(
@@ -315,10 +376,10 @@ class MainWindow(wx.Frame):
         actionController.appendMenuItem(EditPagePropertiesAction.stringId,
                                         menu)
 
-    def __createToolsMenu(self):
+    def _createToolsMenu(self):
         imagesDir = getImagesDir()
-        toolbar = Application.mainWindow.mainToolbar
-        menu = Application.mainWindow.mainMenu.toolsMenu
+        toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
+        menu = self.menuController[guidefines.MENU_TOOLS]
         actionController = Application.actionController
 
         actionController.appendMenuItem(AddTabAction.stringId, menu)
@@ -383,60 +444,57 @@ class MainWindow(wx.Frame):
         actionController.appendMenuItem(ReloadWikiAction.stringId, menu)
         actionController.appendMenuItem(SetStyleToBranchAction.stringId, menu)
 
-    def __createHelpMenu(self):
-        menu = Application.mainWindow.mainMenu.helpMenu
+    def _createHelpMenu(self):
+        menu = self.menuController[guidefines.MENU_HELP]
         actionController = Application.actionController
 
         actionController.appendMenuItem(OpenHelpAction.stringId, menu)
-
         actionController.appendMenuItem(AboutAction.stringId, menu)
-
         actionController.appendMenuItem(OpenPluginsFolderAction.stringId, menu)
 
-    def __addActionsGui(self):
+    def _addActionsGui(self):
         """
         Создать элементы интерфейса, привязанные к actions
         """
-        self.__createFileMenu()
-        self.__createTreeMenu()
-        self.__createToolsMenu()
-        self.__createHelpMenu()
-        self.__createSwitchToMenu()
+        self._createFileMenu()
+        self._createEditMenu()
+        self._createTreeMenu()
+        self._createToolsMenu()
+        self._createHelpMenu()
+        self._createSwitchToMenu()
         self.__panesController.createViewMenuItems()
 
         actionController = Application.actionController
 
-        Application.mainWindow.mainMenu.viewMenu.AppendSeparator()
+        viewMenu = self.menuController[guidefines.MENU_VIEW]
+        viewMenu.AppendSeparator()
 
         # Полноэкранный режим
         actionController.appendMenuCheckItem(FullScreenAction.stringId,
-                                             self.mainMenu.viewMenu)
+                                             viewMenu)
 
         # Вызов диалога настроек
-        Application.mainWindow.mainMenu.editMenu.AppendSeparator()
+        menu_edit = self.menuController[guidefines.MENU_EDIT]
+        menu_edit.AppendSeparator()
 
-        actionController.appendMenuItem(
-            PreferencesAction.stringId,
-            Application.mainWindow.mainMenu.editMenu)
+        actionController.appendMenuItem(PreferencesAction.stringId, menu_edit)
 
         # Добавление / удаление закладки
+        menu_bookmarks = self.menuController[guidefines.MENU_BOOKMARKS]
         actionController.appendMenuItem(
             AddBookmarkAction.stringId,
-            Application.mainWindow.mainMenu.bookmarksMenu)
+            menu_bookmarks)
 
-        Application.mainWindow.mainMenu.bookmarksMenu.AppendSeparator()
-
-    # Оставлено, чтобы не ломать совместимость с плагином WebPage
-    def updateShortcuts(self):
-        pass
+        menu_bookmarks.AppendSeparator()
 
     def UpdateAuiManager(self):
         """
         Обновление auiManager. Сделано для облегчения доступа
         """
-        self.auiManager.Update()
+        if self.auiManager:
+            self.auiManager.Update()
 
-    def __createAuiPanes(self):
+    def _createAuiPanes(self):
         """
         Создание плавающих панелей
         """
@@ -447,7 +505,7 @@ class MainWindow(wx.Frame):
                                                 self.auiManager,
                                                 Application)
 
-    def __createStatusBar(self):
+    def _createStatusBar(self):
         """
         Создание статусной панели
         """
@@ -459,37 +517,37 @@ class MainWindow(wx.Frame):
         self.statusbar.SetStatusWidths([-1, datetime_width])
         self.SetStatusBar(self.statusbar)
 
-    def __bindGuiEvents(self):
+    def _bindGuiEvents(self):
         """
         Подписаться на события меню, кнопок и т.п.
         """
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_UNDO)
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_REDO)
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_CUT)
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_COPY)
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_PASTE)
-        self.Bind(wx.EVT_MENU, self.__onStdEvent, id=wx.ID_SELECTALL)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_UNDO)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_REDO)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_CUT)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_COPY)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_PASTE)
+        self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_SELECTALL)
 
-    def __unbindGuiEvents(self):
+    def _unbindGuiEvents(self):
         """
         Подписаться на события меню, кнопок и т.п.
         """
-        self.Unbind(wx.EVT_MENU, id=wx.ID_UNDO, handler=self.__onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_REDO, handler=self.__onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_CUT, handler=self.__onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_COPY, handler=self.__onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_PASTE, handler=self.__onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_SELECTALL, handler=self.__onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_UNDO, handler=self._onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_REDO, handler=self._onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_CUT, handler=self._onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_COPY, handler=self._onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_PASTE, handler=self._onStdEvent)
+        self.Unbind(wx.EVT_MENU, id=wx.ID_SELECTALL, handler=self._onStdEvent)
 
-    def __saveParams(self):
+    def _saveParams(self):
         """
         Сохранить параметры в конфиг
         """
         try:
             if not self.IsIconized():
                 if (not self.IsFullScreen() and not self.IsMaximized()):
-                    (width, height) = self.GetSizeTuple()
-                    (xpos, ypos) = self.GetPositionTuple()
+                    (width, height) = self.GetSize()
+                    (xpos, ypos) = self.GetPosition()
 
                     if xpos < 0:
                         width += xpos
@@ -509,15 +567,15 @@ class MainWindow(wx.Frame):
                 self.mainWindowConfig.maximized.value = self.IsMaximized()
 
                 self.__panesController.savePanesParams()
-        except Exception, e:
-            cmd.MessageBox(_(u"Can't save config\n%s") % (unicode(e)),
-                           _(u"Error"), wx.ICON_ERROR | wx.OK)
+        except Exception as e:
+            MessageBox(_(u"Can't save config\n%s") % (str(e)),
+                       _(u"Error"), wx.ICON_ERROR | wx.OK)
 
-    def __setIcon(self):
+    def _setIcon(self):
         """
         Установки иконки главного окна
         """
-        icon = wx.EmptyIcon()
+        icon = wx.Icon()
         icon.CopyFromBitmap(wx.Bitmap(os.path.join(getImagesDir(),
                                                    "outwiker.ico"),
                                       wx.BITMAP_TYPE_ANY))
@@ -538,14 +596,14 @@ class MainWindow(wx.Frame):
         assert self.tagsCloudPanel is not None
 
         Application.plugins.clear()
-        self.__saveParams()
+        self._saveParams()
         self.toolbars.updatePanesInfo()
         self.destroyPagePanel(True)
         Application.actionController.saveHotKeys()
 
         self._destroyCoreControllers()
 
-        self.__unbindGuiEvents()
+        self._unbindGuiEvents()
 
         self.toolbars.destroyAllToolBars()
         self.tabsController.destroy()
@@ -560,17 +618,16 @@ class MainWindow(wx.Frame):
         self.taskBarIconController.destroy()
         self.controller.destroy()
         self.auiManager.Destroy()
+        self.auiManager = None
 
-        self.toolbars = None
-        self.SetMenuBar(None)
-        self.mainMenu.Destroy()
+        self._toolbars = None
 
         self.pagePanel = None
         self.treePanel = None
         self.attachPanel = None
         self.tagsCloudPanel = None
 
-        super(MainWindow, self).Destroy()
+        super().Destroy()
         logger.debug(u'End MainWindow.Destroy.')
 
     def destroyPagePanel(self, save):
@@ -583,7 +640,7 @@ class MainWindow(wx.Frame):
         else:
             self.pagePanel.panel.destroyWithoutSave()
 
-    def __onStdEvent(self, event):
+    def _onStdEvent(self, event):
         """
         Обработчик стандартных событий (копировать, вставить и т.п.)
         """
@@ -600,11 +657,11 @@ class MainWindow(wx.Frame):
         Установить параметры в зависимости от режима fullscreen
         """
         if fullscreen:
-            self.__toFullscreen()
+            self._toFullscreen()
         else:
-            self.__fromFullscreen()
+            self._fromFullscreen()
 
-    def __toFullscreen(self):
+    def _toFullscreen(self):
         """
         Переключение в полноэкранный режим
         """
@@ -619,7 +676,7 @@ class MainWindow(wx.Frame):
 
         self.__panesController.toFullscreen()
 
-    def __fromFullscreen(self):
+    def _fromFullscreen(self):
         """
         Возврат из полноэкранного режима
         """
@@ -630,3 +687,11 @@ class MainWindow(wx.Frame):
             self.ShowFullScreen(False)
 
         self.__panesController.fromFullscreen()
+
+    @property
+    def toolbars(self):
+        return self._toolbars
+
+    @property
+    def pageView(self):
+        return self.pagePanel.pageView

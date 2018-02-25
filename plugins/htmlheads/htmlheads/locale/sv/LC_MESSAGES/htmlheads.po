@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: outwiker\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-11 09:43+0400\n"
-"PO-Revision-Date: 2016-08-16 16:28+0300\n"
+"POT-Creation-Date: 2018-02-25 15:22+1000\n"
+"PO-Revision-Date: 2018-02-25 16:10+1000\n"
 "Last-Translator: Jenyay <jenyay.ilin@gmail.com>\n"
 "Language-Team: Swedish\n"
 "Language: sv_SE\n"
@@ -11,53 +11,47 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.8\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Crowdin-Project: outwiker\n"
 "X-Crowdin-Language: sv-SE\n"
 "X-Crowdin-File: htmlheads.pot\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: ../../..\n"
+"X-Poedit-SearchPath-0: .\n"
 
-#: actions.py:37
+#: actions.py:34
 msgid "Title (:title ...:)"
 msgstr "Titel (:title ...:)"
 
-#: actions.py:42
-msgid "HtmlHeads plugin. Insert (:title... :) command"
-msgstr "HtmlHeads-instick. Infoga (:title... :)-kommando"
-
-#: actions.py:59
+#: actions.py:52
 msgid "Description (:description ...:)"
 msgstr "Beskrivning (:description ...:)"
 
-#: actions.py:64
-msgid "HtmlHeads plugin. Insert (:description... :) command"
-msgstr "HtmlHeads-instick. Infoga (:description... :)-kommando"
-
-#: actions.py:81
+#: actions.py:70
 msgid "Keywords (:keywords ...:)"
 msgstr "Nyckelord (:keywords ...:)"
 
-#: actions.py:86
-msgid "HtmlHeads plugin. Insert (:keywords... :) command"
-msgstr "HtmlHeads-instick. Infoga (:keywords... :)-kommando"
-
-#: actions.py:102
+#: actions.py:88
 msgid "Custom head (:htmlhead:)"
 msgstr "Anpassat huvud (:htmlhead:)"
 
 #: actions.py:107
-msgid "HtmlHeads plugin. Insert (:htmlhead:) command"
-msgstr "HtmlHeads-instick. Infoga (:htmlhead:)-kommando"
+msgid "<html> tag attributes (:htmlattrs ...:)"
+msgstr "<html>-tag attributes (:htmlattrs ...:)"
 
-#: guicreator.py:42
+#: controller.py:65
 msgid "HTML Headers"
 msgstr "HTML-huvud"
 
-#: htmlheads.py:40
-msgid "Plugin adds wiki-commands (:title:), (:description:), (:keywords:) and (:htmlhead:)"
-msgstr "Insticket lägger till wiki-kommandona (:title:), (:description:), (:keywords:) och (:htmlhead:)"
+#: defines.py:6
+msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
+msgstr "http://jenyay.net/Outwiker/HtmlHeadsEn"
 
-#: htmlheads.py:42
+#: defines.py:10
 msgid ""
+"Plugin adds wiki-commands (:title:), (:description:), (:keywords:), (:"
+"htmlhead:) and (:htmlattrs:).\n"
+"\n"
 "<b>Usage:</b>\n"
 "(:title Page title:)\n"
 "\n"
@@ -66,11 +60,17 @@ msgid ""
 "(:keywords keyword_1, keyword_2, other keyword:)\n"
 "\n"
 "(:htmlhead:)\n"
-"&lt;meta http-equiv='Content-Type' content='text/html; charset=utf-8' /&gt;\n"
+"&lt;meta http-equiv='Content-Type' content='text/html; charset=utf-8' /"
+"&gt;\n"
 "\n"
 "&lt;meta name='robots' content='index,follow' /&gt;\n"
 "(:htmlheadend:)\n"
+"\n"
+"(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
 msgstr ""
+"Insticket lägger till wiki-kommandona (:title:), (:description:), (:"
+"keywords:), (:htmlhead:) och (:htmlattrs:).\n"
+"\n"
 "<b>Användning:</b>\n"
 "(:title Sidtitel:)\n"
 "\n"
@@ -79,11 +79,32 @@ msgstr ""
 "(:keywords nyckelord_1, nyckelord_2, annat nyckelord:)\n"
 "\n"
 "(:htmlhead:)\n"
-"&lt;meta http-equiv='Content-Type' content='text/html; charset=utf-8' /&gt;\n"
+"&lt;meta http-equiv='Content-Type' content='text/html; charset=utf-8' /"
+"&gt;\n"
 "\n"
 "&lt;meta name='robots' content='index,follow' /&gt;\n"
 "(:htmlheadend:)\n"
+"\n"
+"(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
+"\n"
 
-#: htmlheads.py:64
-msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
-msgstr "http://jenyay.net/Outwiker/HtmlHeadsEn"
+#: defines.py:29
+#, python-format
+msgid "{} plugin. Insert (:%s ...:) command"
+msgstr "{}-instick. Infoga (:%s ...:)-kommando"
+
+#~ msgid "HtmlHeads plugin. Insert (:description... :) command"
+#~ msgstr "HtmlHeads-instick. Infoga (:description... :)-kommando"
+
+#~ msgid "HtmlHeads plugin. Insert (:keywords... :) command"
+#~ msgstr "HtmlHeads-instick. Infoga (:keywords... :)-kommando"
+
+#~ msgid "HtmlHeads plugin. Insert (:htmlhead:) command"
+#~ msgstr "HtmlHeads-instick. Infoga (:htmlhead:)-kommando"
+
+#~ msgid ""
+#~ "Plugin adds wiki-commands (:title:), (:description:), (:keywords:) and (:"
+#~ "htmlhead:)"
+#~ msgstr ""
+#~ "Insticket lägger till wiki-kommandona (:title:), (:description:), (:"
+#~ "keywords:) och (:htmlhead:)"

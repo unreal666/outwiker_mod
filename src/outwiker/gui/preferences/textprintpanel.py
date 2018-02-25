@@ -2,7 +2,7 @@
 
 import wx
 
-import configelements
+from . import configelements
 from outwiker.core.application import Application
 from outwiker.core.config import FontOption
 from outwiker.gui.guiconfig import TextPrintConfig
@@ -21,6 +21,7 @@ class TextPrintPanel(BasePrefPanel):
 
         self.config = TextPrintConfig (Application.config)
         self.LoadState()
+        self.SetupScrolling()
 
 
     def __createGuiElements (self):

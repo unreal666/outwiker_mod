@@ -1,6 +1,5 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
 import os
 
 import wx
@@ -36,9 +35,10 @@ from outwiker.core.commands import MessageBox, pageExists, copyTextToClipboard
 from outwiker.core.attachment import Attachment
 from outwiker.core.config import IntegerOption
 from outwiker.core.tree import RootWikiPage
-from outwiker.gui.basepagepanel import BasePagePanel
-from outwiker.gui.dialogs.buttonsdialog import ButtonsDialog
-from outwiker.gui.guiconfig import EditorConfig
+from .basepagepanel import BasePagePanel
+from .dialogs.buttonsdialog import ButtonsDialog
+from .guiconfig import EditorConfig
+from .defines import MENU_EDIT, TOOLBAR_GENERAL
 
 
 class BaseTextPanel(BasePagePanel):
@@ -46,8 +46,6 @@ class BaseTextPanel(BasePagePanel):
     Базовый класс для представления текстовых страниц и им подобных
    (где есть текстовый редактор)
     """
-    __metaclass__ = ABCMeta
-
     def __init__(self, parent, application):
         super(BaseTextPanel, self).__init__(parent, application)
 
@@ -105,7 +103,7 @@ class BaseTextPanel(BasePagePanel):
         self._addSearchTools()
         self._addSpellTools()
 
-        editMenu = self._application.mainWindow.mainMenu.editMenu
+        editMenu = self._application.mainWindow.menuController[MENU_EDIT]
         sepMenuItem = editMenu.AppendSeparator()
         self._menuSeparators.append((editMenu, sepMenuItem))
 
@@ -117,7 +115,6 @@ class BaseTextPanel(BasePagePanel):
 
         self._onSetPage += self.__onSetPage
 
-    @abstractmethod
     def GetContentFromGui(self):
         """
         Получить из интерфейса контент, который будет сохранен в файл
@@ -125,28 +122,24 @@ class BaseTextPanel(BasePagePanel):
         """
         pass
 
-    @abstractmethod
     def GetSearchPanel(self):
         """
         Вернуть панель поиска
         """
         pass
 
-    @abstractmethod
     def SetCursorPosition(self, position):
         """
         Установить курсор в текстовом редакторе в положение position
         """
         pass
 
-    @abstractmethod
     def GetCursorPosition(self):
         """
         Возвращает положение курсора в текстовом редакторе
         """
         pass
 
-    @abstractmethod
     def GetEditor(self):
         """
         Return text editor from panel. It used for common polyactions.
@@ -245,7 +238,7 @@ class BaseTextPanel(BasePagePanel):
         try:
             self._getCursorPositionOption(page).value = self.GetCursorPosition()
         except IOError as e:
-            MessageBox(_(u"Can't save file %s") % (unicode(e.filename)),
+            MessageBox(_(u"Can't save file %s") % (str(e.filename)),
                        _(u"Error"),
                        wx.ICON_ERROR | wx.OK)
             return
@@ -257,7 +250,7 @@ class BaseTextPanel(BasePagePanel):
             page.content = self.GetContentFromGui()
         except IOError as e:
             # TODO: Проверить под Windows
-            MessageBox(_(u"Can't save file %s") % (unicode(e.filename)),
+            MessageBox(_(u"Can't save file %s") % (str(e.filename)),
                        _(u"Error"),
                        wx.ICON_ERROR | wx.OK)
 
@@ -292,8 +285,9 @@ class BaseTextPanel(BasePagePanel):
         """
 
         actionController = self._application.actionController
-        map(lambda item: actionController.getAction(item).setFunc(None),
-            self._baseTextPolyactions)
+        [actionController.getAction(item).setFunc(None)
+         for item
+         in self._baseTextPolyactions]
 
         self._application.onAttachmentPaste -= self.onAttachmentPaste
         self._application.onPreferencesDialogClose -= self.onPreferencesDialogClose
@@ -307,19 +301,22 @@ class BaseTextPanel(BasePagePanel):
         Убрать за собой элементы управления
         """
         assert self.mainWindow is not None
-        assert self.mainWindow.mainMenu.GetMenuCount() >= 3
         assert self.searchMenu is not None
 
+        mainMenu = self._application.mainWindow.menuController.getRootMenu()
+        assert mainMenu.GetMenuCount() >= 3
+
         actionController = self._application.actionController
-        map(lambda item: actionController.removeMenuItem(item),
-            self._baseTextPolyactions)
+        [actionController.removeMenuItem(item)
+         for item
+         in self._baseTextPolyactions]
 
         actionController.removeMenuItem(SearchAction.stringId)
         actionController.removeMenuItem(SearchAndReplaceAction.stringId)
         actionController.removeMenuItem(SearchNextAction.stringId)
         actionController.removeMenuItem(SearchPrevAction.stringId)
 
-        if self.mainWindow.GENERAL_TOOLBAR_STR in self.mainWindow.toolbars:
+        if TOOLBAR_GENERAL in self.mainWindow.toolbars:
             actionController.removeToolbarButton(SearchAction.stringId)
             actionController.removeToolbarButton(SearchAndReplaceAction.stringId)
             actionController.removeToolbarButton(SearchNextAction.stringId)
@@ -328,12 +325,12 @@ class BaseTextPanel(BasePagePanel):
 
         self._removeAllTools()
 
-        editMenu = self._application.mainWindow.mainMenu.editMenu
-        self.mainWindow.mainMenu.Remove(self.searchMenuIndex)
-        editMenu.RemoveItem(self.wordMenuItem)
-        editMenu.RemoveItem(self.linesMenuItem)
+        mainMenu.Remove(self.searchMenuIndex)
+        editMenu = self._application.mainWindow.menuController[MENU_EDIT]
+        editMenu.Remove(self.wordMenuItem)
+        editMenu.Remove(self.linesMenuItem)
 
-        map(lambda item: item[0].RemoveItem(item[1]), self._menuSeparators)
+        [item[0].Remove(item[1]) for item in self._menuSeparators]
 
         self.searchMenu = None
         self.wordMenuItem = None
@@ -351,38 +348,47 @@ class BaseTextPanel(BasePagePanel):
     def _addSearchTools(self):
         assert self.mainWindow is not None
         self.searchMenu = wx.Menu()
-        self.mainWindow.mainMenu.Insert(self.searchMenuIndex, self.searchMenu, _("Search"))
+        mainMenu = self._application.mainWindow.menuController.getRootMenu()
+        mainMenu.Insert(self.searchMenuIndex, self.searchMenu, _("Search"))
 
-        toolbar = self.mainWindow.toolbars[self.mainWindow.GENERAL_TOOLBAR_STR]
+        toolbar = self.mainWindow.toolbars[TOOLBAR_GENERAL]
 
         # Начать поиск на странице
         self._application.actionController.appendMenuItem(SearchAction.stringId, self.searchMenu)
-        self._application.actionController.appendToolbarButton(SearchAction.stringId,
-                                                               toolbar,
-                                                               os.path.join(self.imagesDir, "local_search.png"),
-                                                               fullUpdate=False)
+        self._application.actionController.appendToolbarButton(
+            SearchAction.stringId,
+            toolbar,
+            os.path.join(self.imagesDir, "local_search.png"),
+            fullUpdate=False)
 
         # Начать поиск и замену на странице
-        self._application.actionController.appendMenuItem(SearchAndReplaceAction.stringId, self.searchMenu)
-        self._application.actionController.appendToolbarButton(SearchAndReplaceAction.stringId,
-                                                               toolbar,
-                                                               os.path.join(self.imagesDir, "local_replace.png"),
-                                                               fullUpdate=False)
+        self._application.actionController.appendMenuItem(
+            SearchAndReplaceAction.stringId,
+            self.searchMenu)
+
+        self._application.actionController.appendToolbarButton(
+            SearchAndReplaceAction.stringId,
+            toolbar,
+            os.path.join(self.imagesDir, "local_replace.png"),
+            fullUpdate=False)
 
         # Продолжить поиск вперед на странице
-        self._application.actionController.appendMenuItem(SearchNextAction.stringId, self.searchMenu)
+        self._application.actionController.appendMenuItem(
+            SearchNextAction.stringId,
+            self.searchMenu)
 
         # Продолжить поиск назад на странице
-        self._application.actionController.appendMenuItem(SearchPrevAction.stringId, self.searchMenu)
+        self._application.actionController.appendMenuItem(
+            SearchPrevAction.stringId,
+            self.searchMenu)
 
     def _addSpellTools(self):
-        generalToolbar = self.mainWindow.toolbars[self.mainWindow.GENERAL_TOOLBAR_STR]
+        generalToolbar = self.mainWindow.toolbars[TOOLBAR_GENERAL]
+        editMenu = self._application.mainWindow.menuController[MENU_EDIT]
         self._application.actionController.getAction(SPELL_ON_OFF_ID).setFunc(self._spellOnOff)
 
-        self._application.actionController.appendMenuCheckItem(
-            SPELL_ON_OFF_ID,
-            self._application.mainWindow.mainMenu.editMenu
-        )
+        self._application.actionController.appendMenuCheckItem(SPELL_ON_OFF_ID,
+                                                               editMenu)
 
         self._application.actionController.appendToolbarCheckButton(
             SPELL_ON_OFF_ID,
@@ -479,8 +485,8 @@ class BaseTextPanel(BasePagePanel):
             self.wordMenu
         )
 
-        self.wordMenuItem = self._application.mainWindow.mainMenu.editMenu.AppendSubMenu(
-            self.wordMenu, _(u'Word'))
+        editMenu = self._application.mainWindow.menuController[MENU_EDIT]
+        self.wordMenuItem = editMenu.AppendSubMenu(self.wordMenu, _(u'Word'))
 
     def _addLinesTools(self):
         self.linesMenu = wx.Menu()
@@ -557,8 +563,9 @@ class BaseTextPanel(BasePagePanel):
             self.linesMenu
         )
 
-        self.linesMenuItem = self._application.mainWindow.mainMenu.editMenu.AppendSubMenu(
-            self.linesMenu, _(u'Lines'))
+        editMenu = self._application.mainWindow.menuController[MENU_EDIT]
+        self.linesMenuItem = editMenu.AppendSubMenu(self.linesMenu,
+                                                    _(u'Lines'))
 
     def _spellOnOff(self, checked):
         EditorConfig(self._application.config).spellEnabled.value = checked

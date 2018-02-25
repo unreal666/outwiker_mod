@@ -7,7 +7,7 @@ from outwiker.core.attachment import Attachment
 from outwiker.core.defines import PAGE_ATTACH_DIR
 from outwiker.libs.pyparsing import Literal
 
-from utils import concatenate, isImage
+from .utils import concatenate, isImage
 
 
 class AttachFactory (object):
@@ -22,8 +22,7 @@ class AttachImagesFactory (object):
         return AttachImagesToken (parser).getToken()
 
 
-class AttachToken (object):
-    __metaclass__ = ABCMeta
+class AttachToken (object, metaclass=ABCMeta):
     attachString = u"Attach:"
 
     def __init__ (self, parser):

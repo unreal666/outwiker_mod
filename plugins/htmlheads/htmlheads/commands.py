@@ -19,7 +19,7 @@ class TitleCommand (Command):
         """
         Возвращает имя команды, которую обрабатывает класс
         """
-        return u"title"
+        return 'title'
 
 
     def execute (self, params, content):
@@ -27,9 +27,9 @@ class TitleCommand (Command):
         Запустить команду на выполнение.
         Метод возвращает текст, который будет вставлен на место команды в вики-нотации
         """
-        title = u"<title>{}</title>".format (params)
+        title = '<title>{}</title>'.format (params)
         self.parser.appendToHead (title)
-        return u""
+        return ''
 
 
 class DescriptionCommand (Command):
@@ -48,7 +48,7 @@ class DescriptionCommand (Command):
         """
         Возвращает имя команды, которую обрабатывает класс
         """
-        return u"description"
+        return 'description'
 
 
     def execute (self, params, content):
@@ -56,9 +56,9 @@ class DescriptionCommand (Command):
         Запустить команду на выполнение.
         Метод возвращает текст, который будет вставлен на место команды в вики-нотации
         """
-        head = u'<meta name="description" content="{}"/>'.format (params)
+        head = '<meta name="description" content="{}"/>'.format (params)
         self.parser.appendToHead (head)
-        return u""
+        return ''
 
 
 class KeywordsCommand (Command):
@@ -77,7 +77,7 @@ class KeywordsCommand (Command):
         """
         Возвращает имя команды, которую обрабатывает класс
         """
-        return u"keywords"
+        return 'keywords'
 
 
     def execute (self, params, content):
@@ -85,9 +85,9 @@ class KeywordsCommand (Command):
         Запустить команду на выполнение.
         Метод возвращает текст, который будет вставлен на место команды в вики-нотации
         """
-        head = u'<meta name="keywords" content="{}"/>'.format (params)
+        head = '<meta name="keywords" content="{}"/>'.format (params)
         self.parser.appendToHead (head)
-        return u""
+        return ''
 
 
 class CustomHeadsCommand (Command):
@@ -106,7 +106,7 @@ class CustomHeadsCommand (Command):
         """
         Возвращает имя команды, которую обрабатывает класс
         """
-        return u"htmlhead"
+        return 'htmlhead'
 
 
     def execute (self, params, content):
@@ -114,10 +114,10 @@ class CustomHeadsCommand (Command):
         Запустить команду на выполнение.
         Метод возвращает текст, который будет вставлен на место команды в вики-нотации
         """
-        map (lambda head: self.parser.appendToHead (head.strip()),
-             content.split ("\n"))
+        list(map (lambda head: self.parser.appendToHead (head.strip()),
+             content.split ('\n')))
 
-        return u""
+        return ''
 
 
 class HtmlAttrsCommand (Command):
@@ -136,7 +136,7 @@ class HtmlAttrsCommand (Command):
         """
         Возвращает имя команды, которую обрабатывает класс
         """
-        return u"htmlattrs"
+        return 'htmlattrs'
 
 
     def execute (self, params, content):
@@ -145,4 +145,4 @@ class HtmlAttrsCommand (Command):
         Метод возвращает текст, который будет вставлен на место команды в вики-нотации
         """
         self.parser.appendToHtmlTag (params.strip())
-        return u""
+        return ''

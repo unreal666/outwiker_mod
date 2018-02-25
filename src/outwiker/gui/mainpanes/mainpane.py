@@ -5,11 +5,10 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import wx.aui
 
 
-class MainPane(object):
+class MainPane(object, metaclass=ABCMeta):
     """
     Базовый класс для хранения основных панелей главного окна
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, parent, auiManager, application):
         """
@@ -72,8 +71,8 @@ class MainPane(object):
         self._savePaneInfo(self.config.pane,
                            self._auiManager.GetPane(self.panel))
 
-        self.config.width.value = self.panel.GetSizeTuple()[0]
-        self.config.height.value = self.panel.GetSizeTuple()[1]
+        self.config.width.value = self.panel.GetSize()[0]
+        self.config.height.value = self.panel.GetSize()[1]
 
     def setFocus(self):
         self.panel.SetFocus()

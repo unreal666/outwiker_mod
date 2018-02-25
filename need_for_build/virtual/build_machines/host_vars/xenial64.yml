@@ -1,0 +1,6 @@
+---
+suffix: "_amd64"
+deb_suffix: "_amd64"
+python: "python3.5"
+homedir: "/home/ubuntu"
+remote_user: "ubuntu"

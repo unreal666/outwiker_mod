@@ -1,12 +1,14 @@
 ---
 - name: Build binary assembly for Linux
   hosts: all
-  remote_user: ubuntu
+  remote_user: "{{remote_user}}"
   vars_files:
       - vars/common.yml
   vars:
       sources_root: "../../../../"
       result_path: "{{ outwiker_dir }}/build/{{ version }}.{{ build }}/linux"
+      venv_path: "{{homedir}}/venv/outwiker"
+      venv_activate_command: "source {{venv_path}}/bin/activate"
   environment:
       PATH: "{{ ansible_env.PATH }}:{{homedir}}/.local/bin"
   tasks:
@@ -30,26 +32,37 @@
                 - "--exclude=build"
 
       - name: Install Python modules
-        pip: chdir={{ outwiker_dir }} requirements={{ item }} extra_args="--user"
+        pip:
+            virtualenv: "{{ venv_path }}"
+            virtualenv_command: "/usr/bin/{{python}} -m venv"
+            chdir: "{{ outwiker_dir }}"
+            extra_args: "--upgrade"
+            requirements: "{{ item }}"
         with_items:
             - "requirements.txt"
             - "requirements_dev.txt"
 
       - name: Build deb binary package
-        command: fab deb_binary:{{ is_stable }}
+        shell: |
+            {{venv_activate_command}}
+            fab deb_binary:{{ is_stable }}
         args:
             chdir: "{{ outwiker_dir }}"
+            executable: "/bin/bash"
 
       - name: Download deb packages
         fetch:
-            src: "{{ result_path }}/outwiker-{{ version }}+{{ build }}{{ suffix }}.deb"
+            src: "{{ result_path }}/outwiker-{{ version }}+{{ build }}{{ deb_suffix }}.deb"
             dest: "{{ save_to }}/"
             flat: true
 
       - name: Build binary assembly
-        command: fab linux_binary:{{ is_stable }}
+        shell: |
+            {{venv_activate_command}}
+            fab linux_binary:{{ is_stable }}
         args:
             chdir: "{{ outwiker_dir }}"
+            executable: "/bin/bash"
 
       - name: Rename result archive (7z)
         copy:
@@ -73,9 +86,12 @@
             - "{{ result_path }}/outwiker_linux{{ suffix }}.zip"
 
       - name: Build AppImage
-        command: fab appimage:{{ is_stable }}
+        shell: |
+            {{venv_activate_command}}
+            fab appimage:{{ is_stable }}
         args:
             chdir: "{{ outwiker_dir }}"
+            executable: "/bin/bash"
 
       - name: Download AppImage
         fetch:

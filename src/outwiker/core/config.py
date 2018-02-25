@@ -1,57 +1,76 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
-import ConfigParser
+import configparser
 import datetime
 import shutil
+import logging
+import os
 
 from outwiker.gui.stcstyle import StcStyle
+
+logger = logging.getLogger('outwiker.core.config')
 
 
 class Config(object):
     """
-    Shell for ConfigParser class
+    Shell for configparser class
     """
+
     def __init__(self, fname, readonly=False):
         """
-        fname - config file name
+            :
+                fname: config file name
+                readonly: True if config should be in readonly mode
         """
         self.readonly = readonly
         self.fname = fname
-        self.__config = ConfigParser.ConfigParser()
+        self._config = configparser.ConfigParser(interpolation=None)
 
         try:
-            self.__config.read(self.fname)
-        except ConfigParser.Error:
-            shutil.copyfile(self.fname, self.fname + ".bak")
-            with open(self.fname, "w") as fp:
+            self._config.read(self.fname, encoding='utf8')
+        except (UnicodeDecodeError, IOError, configparser.Error):
+            backup_fname = self.fname + ".bak"
+            logger.error('Invalid config file: {src}. The file will be copied to {backup} and cleaned.'.format(
+                src=fname,
+                backup=os.path.basename(backup_fname))
+            )
+
+            self._backup(self.fname, backup_fname)
+            with open(self.fname, "w", encoding='utf8') as fp:
                 fp.write(self.getDefaultContent())
 
-            self.__config.read(self.fname)
+            self._config.read(self.fname, encoding='utf8')
+
+    def _backup(self, fname, backup_fname):
+        shutil.copyfile(self.fname, backup_fname)
 
     def getDefaultContent(self):
         """
-        Значение, которое будет записано в конфиг по умолчанию
+        Return default value for config file.
+            Returns:
+                Empty string.
         """
         return u""
 
     def set(self, section, param, value):
         """
-        Установить значение параметра.
-        section - имя секции в файле конфига
-        param - имя параметра
-        value - устанавливаемое значение
+        Set parameter value. If section is absent in the config it will be added.
+            Args:
+                :section: section name in configuration file.
+                :param: parameter name.
+                :value: new value of param. value is converted to str.
+            Returns:
+                :True: if param was successful added to configuration file
+                :False: if config file was opened in readonly mode.
         """
         if self.readonly:
             return False
 
-        section_encoded = section.encode("utf8")
-        if not self.__config.has_section(section_encoded):
-            self.__config.add_section(section_encoded)
+        if not self._config.has_section(section):
+            self._config.add_section(section)
 
-        self.__config.set(section_encoded,
-                          param.encode("utf8"),
-                          unicode(value).encode("utf8"))
+        self._config.set(section, param, str(value))
 
         return self.save()
 
@@ -64,8 +83,8 @@ class Config(object):
         if self.readonly:
             return False
 
-        with open(self.fname, "wb") as fp:
-            self.__config.write(fp)
+        with open(self.fname, "w", encoding='utf8') as fp:
+            self._config.write(fp)
 
         return True
 
@@ -77,8 +96,7 @@ class Config(object):
         Возващает строку с прочитанным значением
         Может бросать исключения
         """
-        val = self.__config.get(section.encode("utf8"), param.encode("utf8"))
-        return unicode(val, "utf8", "replace")
+        return self._config.get(section, param)
 
     def getint(self, section, param):
         """
@@ -107,8 +125,7 @@ class Config(object):
         Удалить текцию из файла конфига
         section - имя удаляемой секции
         """
-        section_encoded = section.encode("utf8")
-        result1 = self.__config.remove_section(section_encoded)
+        result1 = self._config.remove_section(section)
         result2 = self.save()
 
         return result1 and result2
@@ -119,14 +136,8 @@ class Config(object):
         section - имя секции, которой принадлежит опция
         option - имя удаляемой опции
         """
-        section_encoded = section.encode("utf8")
-        option_encoded = option.encode("utf8")
-
-        result1 = self.__config.remove_option(section_encoded,
-                                              option_encoded)
-
+        result1 = self._config.remove_option(section, option)
         result2 = self.save()
-
         return result1 and result2
 
     def has_section(self, section):
@@ -134,15 +145,13 @@ class Config(object):
         Возвращает True, если векция с именем section существует
         и False в противном случае
         """
-        section_encoded = section.encode("utf8")
-        return self.__config.has_section(section_encoded)
+        return self._config.has_section(section)
 
 
-class BaseOption(object):
+class BaseOption(object, metaclass=ABCMeta):
     """
     Базовый класс для работы с отдельными записями конфига
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, config, section, param, defaultValue):
         """
@@ -215,6 +224,7 @@ class StringOption(BaseOption):
     """
     Класс для упрощения работы со строковыми опциями
     """
+
     def __init__(self, config, section, param, defaultValue):
         super(StringOption, self).__init__(config,
                                            section,
@@ -233,6 +243,7 @@ class BooleanOption(BaseOption):
     Булевская настройка.
     Элемент управления - wx.CheckBox
     """
+
     def __init__(self, config, section, param, defaultValue):
         super(BooleanOption, self).__init__(config,
                                             section,
@@ -250,6 +261,7 @@ class StcStyleOption(BaseOption):
     """
     Настрока для хранения стиля редактора StcStyledEditor
     """
+
     def __init__(self, config, section, param, defaultValue):
         """
         defaultValue - экземпляр класса StcStyle
@@ -299,6 +311,7 @@ class ListOption(BaseOption):
     По умолчанию элементы разделяются символом ";",
     но разделитель можно изменять
     """
+
     def __init__(self, config, section, param, defaultValue, separator=";"):
         super(ListOption, self).__init__(config, section, param, defaultValue)
         self.__separator = separator
@@ -317,6 +330,7 @@ class IntegerOption(BaseOption):
     Настройка для целых чисел.
     Элемент управления - wx.SpinCtrl
     """
+
     def __init__(self, config, section, param, defaultValue):
         super(IntegerOption, self).__init__(config,
                                             section,
@@ -334,6 +348,7 @@ class StringListSection(object):
     """
     Класс для хранения списка строк. Список хранится в отдельной секции
     """
+
     def __init__(self, config, section, paramname):
         """
         config - экземпляр класса Config
@@ -352,12 +367,12 @@ class StringListSection(object):
         result = []
         index = 0
         try:
-            while(1):
+            while (1):
                 option = self._paramname.format(number=index)
                 subpath = self._config.get(self._section, option)
                 result.append(subpath)
                 index += 1
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             pass
 
         return result

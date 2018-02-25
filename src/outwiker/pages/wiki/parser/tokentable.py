@@ -6,48 +6,48 @@ from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineSta
 from .utils import TagAttrsPattern, getAttributes
 
 
-class TableFactory (object):
+class TableFactory(object):
     @staticmethod
-    def make (parser):
+    def make(parser):
         return TableToken(parser).getToken()
 
 
-class TableToken (object):
+class TableToken(object):
     """
     Токен для таблиц
     """
     rowGroupsLabels = {'|||': 'thead', '||||': 'tfoot'}
 
-    def __init__ (self, parser):
+    def __init__(self, parser):
         self.parser = parser
 
 
-    def getToken (self):
+    def getToken(self):
         emptyToken = Empty().setParseAction(self.__initVars)
 
-        tableCell = Regex (r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)' + TagAttrsPattern.value, re.UNICODE)
+        tableCell = Regex(r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)' + TagAttrsPattern.value)
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
-        tableRow = LineStart() + Regex (r'\|{2,4}(?!\|)' + TagAttrsPattern.value, re.UNICODE) + \
-                   OneOrMore (tableCell) + Optional (LineEnd())
+        tableRow = LineStart() + Regex(r'\|{2,4}(?!\|)' + TagAttrsPattern.value) + \
+                   OneOrMore(tableCell) + Optional(LineEnd())
         tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
-        tableCaption = LineStart() + Regex (r'(?P<start>\|{5})' + TagAttrsPattern.value +
-                                            r'(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*', re.UNICODE) + Optional (LineEnd())
+        tableCaption = LineStart() + Regex(r'(?P<start>\|{5})' + TagAttrsPattern.value +
+                                            r'(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*') + Optional(LineEnd())
         tableCaption.leaveWhitespace().setParseAction(self.__convertTableCaption)
 
-        table = LineStart() + Regex (r'\|\| *(?P<params>.+)?', re.UNICODE) + Suppress (LineEnd()) + emptyToken + \
-                Suppress (Optional (tableCaption)) + OneOrMore (tableRow)
+        table = LineStart() + Regex(r'\|\| *(?P<params>.+)?') + Suppress(LineEnd()) + emptyToken + \
+                Suppress(Optional(tableCaption)) + OneOrMore(tableRow)
         table = table.setParseAction(self.__convertTable)('table')
 
         return table
 
-    def __initVars (self):
+    def __initVars(self):
         self.unitEnd = '\n'
         self.rowGroups = {'thead': u'', 'tfoot': u'', 'caption': u''}
 
 
-    def __convertTableCell (self, s, loc, toks):
+    def __convertTableCell(self, s, loc, toks):
         text = toks['text']
 
         isTh = False if toks['end'] != u'|||' else True
@@ -68,16 +68,16 @@ class TableToken (object):
 
         pattern = u'<th%s%s>%s</th>' if isTh else u'<td%s%s>%s</td>'
 
-        return pattern % (align, attrs, self.parser.parseWikiMarkup (text.strip()))
+        return pattern % (align, attrs, self.parser.parseWikiMarkup(text.strip()))
 
 
-    def __convertTableRow (self, s, loc, toks):
+    def __convertTableRow(self, s, loc, toks):
         rowStart = toks[0]
 
         if toks[-1] == '\n':
-            lastindex = len (toks) - 1
+            lastindex = len(toks) - 1
         else:
-            lastindex = len (toks)
+            lastindex = len(toks)
             self.unitEnd = ''
 
         attrs = getAttributes(toks)
@@ -91,15 +91,15 @@ class TableToken (object):
             return result
 
 
-    def __convertTableCaption (self, s, loc, toks):
+    def __convertTableCaption(self, s, loc, toks):
         attrs = getAttributes(toks)
 
-        self.rowGroups['caption'] = u'<caption%s>%s</caption>' % (attrs, self.parser.parseWikiMarkup (toks['text'].strip()))
+        self.rowGroups['caption'] = u'<caption%s>%s</caption>' % (attrs, self.parser.parseWikiMarkup(toks['text'].strip()))
 
         return None
 
 
-    def __convertTable (self, s, loc, toks):
+    def __convertTable(self, s, loc, toks):
         thead = self.rowGroups['thead']
         tfoot = self.rowGroups['tfoot']
         caption = self.rowGroups['caption']

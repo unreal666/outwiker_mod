@@ -8,166 +8,154 @@ from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.application import Application
 
 
-class FileSourceTest (unittest.TestCase):
-    def setUp (self):
-        dirlist = [u"../plugins/datagraph"]
+class FileSourceTest(unittest.TestCase):
+    def setUp(self):
+        dirlist = ["../plugins/datagraph"]
 
         self.loader = PluginsLoader(Application)
-        self.loader.load (dirlist)
+        self.loader.load(dirlist)
 
-        self._dataFile = NamedTemporaryFile(delete=False)
+        self._dataFile = NamedTemporaryFile(mode='w', delete=False, encoding='utf8')
 
-
-    def tearDown (self):
+    def tearDown(self):
         self.loader.clear()
         self._dataFile.close()
-        os.remove (self._dataFile.name)
+        os.remove(self._dataFile.name)
         self._dataFile = None
 
-
-    def testFileSource_empty_01 (self):
+    def testFileSource_empty_01(self):
         from datagraph.datasources import FileSource
-        data = u''''''
+        data = ''''''
 
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0, items)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0, items)
 
-
-    def testFileSource_empty_02 (self):
+    def testFileSource_empty_02(self):
         from datagraph.datasources import FileSource
-        data = u'''
+        data = '''
         
         
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testFileSource_single_01 (self):
+    def testFileSource_single_01(self):
         from datagraph.datasources import FileSource
-        data = u'''123'''
-        self._dataFile.write (data)
+        data = '''123'''
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testFileSource_single_02 (self):
+    def testFileSource_single_02(self):
         from datagraph.datasources import FileSource
-        data = u'''123    '''
-        self._dataFile.write (data)
+        data = '''123    '''
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testFileSource_single_03 (self):
+    def testFileSource_single_03(self):
         from datagraph.datasources import FileSource
-        data = u'''   123    '''
-        self._dataFile.write (data)
+        data = '''   123    '''
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testFileSource_single_04 (self):
+    def testFileSource_single_04(self):
         from datagraph.datasources import FileSource
-        data = u'''123
+        data = '''123
         
         '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testFileSource_single_05 (self):
+    def testFileSource_single_05(self):
         from datagraph.datasources import FileSource
-        data = u'''123
+        data = '''123
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testFileSource_one_col_01 (self):
+    def testFileSource_one_col_01(self):
         from datagraph.datasources import FileSource
-        data = u'''123
+        data = '''123
 234
 456'''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testFileSource_one_col_02 (self):
+    def testFileSource_one_col_02(self):
         from datagraph.datasources import FileSource
-        data = u'''123
+        data = '''123
 234
 456
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testFileSource_one_col_03 (self):
+    def testFileSource_one_col_03(self):
         from datagraph.datasources import FileSource
-        data = u'''123
+        data = '''123
 234
 456
 
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testFileSource_one_col_04 (self):
+    def testFileSource_one_col_04(self):
         from datagraph.datasources import FileSource
-        data = u'''
+        data = '''
     
 123
 234
@@ -175,42 +163,40 @@ class FileSourceTest (unittest.TestCase):
 
 1000
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 4)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'4560'])
-        self.assertEqual (items[3], [u'1000'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 4)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['4560'])
+        self.assertEqual(items[3], ['1000'])
 
-
-    def testFileSource_col_01 (self):
+    def testFileSource_col_01(self):
         from datagraph.datasources import FileSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101   99
 -10\t55    66
 20    30    40    '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 5)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 5)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
-        self.assertEqual (items[2], [u'456', u'101', u'99'])
-        self.assertEqual (items[3], [u'-10', u'55', u'66'])
-        self.assertEqual (items[4], [u'20', u'30', u'40'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
+        self.assertEqual(items[2], ['456', '101', '99'])
+        self.assertEqual(items[3], ['-10', '55', '66'])
+        self.assertEqual(items[4], ['20', '30', '40'])
 
-
-    def testFileSource_col_02 (self):
+    def testFileSource_col_02(self):
         from datagraph.datasources import FileSource
-        data = u'''
+        data = '''
 123    456    789
 234    100      111
 456    101   99
@@ -219,292 +205,269 @@ class FileSourceTest (unittest.TestCase):
 
 
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 5)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 5)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
-        self.assertEqual (items[2], [u'456', u'101', u'99'])
-        self.assertEqual (items[3], [u'-10', u'55', u'66'])
-        self.assertEqual (items[4], [u'20', u'30', u'40'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
+        self.assertEqual(items[2], ['456', '101', '99'])
+        self.assertEqual(items[3], ['-10', '55', '66'])
+        self.assertEqual(items[4], ['20', '30', '40'])
 
-
-    def testFileSource_col_03 (self):
+    def testFileSource_col_03(self):
         from datagraph.datasources import FileSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 2)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 2)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testFileSource_col_04 (self):
+    def testFileSource_col_04(self):
         from datagraph.datasources import FileSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101    99      78
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 2)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 2)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testFileSource_skiprows_01 (self):
+    def testFileSource_skiprows_01(self):
         from datagraph.datasources import FileSource
-        data = u'''
+        data = '''
 123    456    789
 234    100      111
 456    101    99
 '''
-        self._dataFile.write (data)
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name)
+        source = FileSource(self._dataFile.name)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testFileSource_skiprows_02 (self):
+    def testFileSource_skiprows_02(self):
         from datagraph.datasources import FileSource
-        data = u'''Абырвалг
+        data = '''Абырвалг
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        self._dataFile.write (data.encode (u"utf8"))
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name, skiprows=2)
+        source = FileSource(self._dataFile.name, skiprows=2)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testFileSource_skiprows_03 (self):
+    def testFileSource_skiprows_03(self):
         from datagraph.datasources import FileSource
-        data = u'''Абырвалг Абыр
+        data = '''Абырвалг Абыр
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        self._dataFile.write (data.encode (u"utf8"))
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name, skiprows=0)
+        source = FileSource(self._dataFile.name, skiprows=0)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
 
-        self.assertEqual (items[0], [u'Абырвалг', u'Абыр'])
+        self.assertEqual(items[0], ['Абырвалг', 'Абыр'])
 
-
-    def testFileSource_skiprows_04 (self):
+    def testFileSource_skiprows_04(self):
         from datagraph.datasources import FileSource
-        data = u'''Абырвалг Абыр
+        data = '''Абырвалг Абыр
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        self._dataFile.write (data.encode (u"utf8"))
+        self._dataFile.write(data)
         self._dataFile.flush()
-        source = FileSource (self._dataFile.name, skiprows=5)
+        source = FileSource(self._dataFile.name, skiprows=5)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testFileSource_invalid_01 (self):
+    def testFileSource_invalid_01(self):
         from datagraph.datasources import FileSource
-        source = FileSource (u'invalid_fname.txt')
+        source = FileSource('invalid_fname.txt')
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testFileSource_invalid_02 (self):
+    def testFileSource_invalid_02(self):
         from datagraph.datasources import FileSource
-        source = FileSource (u'../test/samplefiles/image.png')
+        source = FileSource('../test/samplefiles/image.png')
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testFileSource_invalid_03 (self):
+    def testFileSource_invalid_03(self):
         from datagraph.datasources import FileSource
-        source = FileSource (u'../test/samplefiles/invalid.exe')
+        source = FileSource('../test/samplefiles/invalid.exe')
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testFileSource_invalid_04 (self):
+    def testFileSource_invalid_04(self):
         from datagraph.datasources import FileSource
-        source = FileSource (u'../test/samplefiles/text_1251.txt')
+        source = FileSource('../test/samplefiles/text_1251.txt')
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
 
-
-class StringSourceTest (unittest.TestCase):
-    def setUp (self):
-        dirlist = [u"../plugins/datagraph"]
+class StringSourceTest(unittest.TestCase):
+    def setUp(self):
+        dirlist = ["../plugins/datagraph"]
 
         self.loader = PluginsLoader(Application)
-        self.loader.load (dirlist)
+        self.loader.load(dirlist)
 
-
-    def tearDown (self):
+    def tearDown(self):
         self.loader.clear()
 
-
-    def testStringSource_empty_01 (self):
+    def testStringSource_empty_01(self):
         from datagraph.datasources import StringSource
-        data = u''''''
-        source = StringSource (data)
+        data = ''''''
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testStringSource_empty_02 (self):
+    def testStringSource_empty_02(self):
         from datagraph.datasources import StringSource
-        data = u'''
+        data = '''
         
         
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)
 
-
-    def testStringSource_single_01 (self):
+    def testStringSource_single_01(self):
         from datagraph.datasources import StringSource
-        data = u'''123'''
-        source = StringSource (data)
+        data = '''123'''
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testStringSource_single_02 (self):
+    def testStringSource_single_02(self):
         from datagraph.datasources import StringSource
-        data = u'''123    '''
-        source = StringSource (data)
+        data = '''123    '''
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testStringSource_single_03 (self):
+    def testStringSource_single_03(self):
         from datagraph.datasources import StringSource
-        data = u'''   123    '''
-        source = StringSource (data)
+        data = '''   123    '''
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testStringSource_single_04 (self):
+    def testStringSource_single_04(self):
         from datagraph.datasources import StringSource
-        data = u'''123
+        data = '''123
         
         '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testStringSource_single_05 (self):
+    def testStringSource_single_05(self):
         from datagraph.datasources import StringSource
-        data = u'''123
+        data = '''123
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
-        self.assertEqual (items[0], [u'123'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0], ['123'])
 
-
-    def testStringSource_one_col_01 (self):
+    def testStringSource_one_col_01(self):
         from datagraph.datasources import StringSource
-        data = u'''123
+        data = '''123
 234
 456'''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testStringSource_one_col_02 (self):
+    def testStringSource_one_col_02(self):
         from datagraph.datasources import StringSource
-        data = u'''123
+        data = '''123
 234
 456
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testStringSource_one_col_03 (self):
+    def testStringSource_one_col_03(self):
         from datagraph.datasources import StringSource
-        data = u'''123
+        data = '''123
 234
 456
 
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'456'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['456'])
 
-
-    def testStringSource_one_col_04 (self):
+    def testStringSource_one_col_04(self):
         from datagraph.datasources import StringSource
-        data = u'''
+        data = '''
     
 123
 234
@@ -512,38 +475,36 @@ class StringSourceTest (unittest.TestCase):
 
 1000
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 4)
-        self.assertEqual (items[0], [u'123'])
-        self.assertEqual (items[1], [u'234'])
-        self.assertEqual (items[2], [u'4560'])
-        self.assertEqual (items[3], [u'1000'])
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 4)
+        self.assertEqual(items[0], ['123'])
+        self.assertEqual(items[1], ['234'])
+        self.assertEqual(items[2], ['4560'])
+        self.assertEqual(items[3], ['1000'])
 
-
-    def testStringSource_col_01 (self):
+    def testStringSource_col_01(self):
         from datagraph.datasources import StringSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101   99
 -10\t55    66
 20    30    40    '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 5)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 5)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
-        self.assertEqual (items[2], [u'456', u'101', u'99'])
-        self.assertEqual (items[3], [u'-10', u'55', u'66'])
-        self.assertEqual (items[4], [u'20', u'30', u'40'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
+        self.assertEqual(items[2], ['456', '101', '99'])
+        self.assertEqual(items[3], ['-10', '55', '66'])
+        self.assertEqual(items[4], ['20', '30', '40'])
 
-
-    def testStringSource_col_02 (self):
+    def testStringSource_col_02(self):
         from datagraph.datasources import StringSource
-        data = u'''
+        data = '''
 123    456    789
 234    100      111
 456    101   99
@@ -552,106 +513,100 @@ class StringSourceTest (unittest.TestCase):
 
 
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 5)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 5)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
-        self.assertEqual (items[2], [u'456', u'101', u'99'])
-        self.assertEqual (items[3], [u'-10', u'55', u'66'])
-        self.assertEqual (items[4], [u'20', u'30', u'40'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
+        self.assertEqual(items[2], ['456', '101', '99'])
+        self.assertEqual(items[3], ['-10', '55', '66'])
+        self.assertEqual(items[4], ['20', '30', '40'])
 
-
-    def testStringSource_col_03 (self):
+    def testStringSource_col_03(self):
         from datagraph.datasources import StringSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 2)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 2)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testStringSource_col_04 (self):
+    def testStringSource_col_04(self):
         from datagraph.datasources import StringSource
-        data = u'''123    456    789
+        data = '''123    456    789
 234    100      111
 456    101    99      78
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 2)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 2)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testStringSource_skiprows_01 (self):
+    def testStringSource_skiprows_01(self):
         from datagraph.datasources import StringSource
-        data = u'''
+        data = '''
 123    456    789
 234    100      111
 456    101    99
 '''
-        source = StringSource (data)
+        source = StringSource(data)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testStringSource_skiprows_02 (self):
+    def testStringSource_skiprows_02(self):
         from datagraph.datasources import StringSource
-        data = u'''Абырвалг
+        data = '''Абырвалг
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        source = StringSource (data, skiprows=2)
+        source = StringSource(data, skiprows=2)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 3)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 3)
 
-        self.assertEqual (items[0], [u'123', u'456', u'789'])
-        self.assertEqual (items[1], [u'234', u'100', u'111'])
+        self.assertEqual(items[0], ['123', '456', '789'])
+        self.assertEqual(items[1], ['234', '100', '111'])
 
-
-    def testStringSource_skiprows_03 (self):
+    def testStringSource_skiprows_03(self):
         from datagraph.datasources import StringSource
-        data = u'''Абырвалг Абыр
+        data = '''Абырвалг Абыр
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        source = StringSource (data, skiprows=0)
+        source = StringSource(data, skiprows=0)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 1)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 1)
 
-        self.assertEqual (items[0], [u'Абырвалг', u'Абыр'])
+        self.assertEqual(items[0], ['Абырвалг', 'Абыр'])
 
-
-    def testStringSource_skiprows_04 (self):
+    def testStringSource_skiprows_04(self):
         from datagraph.datasources import StringSource
-        data = u'''Абырвалг Абыр
+        data = '''Абырвалг Абыр
 ----
 123    456    789
 234    100      111
 456    101    99
 '''
-        source = StringSource (data, skiprows=5)
+        source = StringSource(data, skiprows=5)
 
-        items = list (source.getRowsIterator())
-        self.assertEqual (len (items), 0)
+        items = list(source.getRowsIterator())
+        self.assertEqual(len(items), 0)

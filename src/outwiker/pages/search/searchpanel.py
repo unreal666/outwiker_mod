@@ -334,7 +334,7 @@ class SearchPanel(BasePagePanel):
         sortStrategy = self.__getCurrentSortStrategy()
 
         resultPages_sorted = resultPages[:]
-        resultPages_sorted.sort (sortStrategy.sort)
+        resultPages_sorted.sort(key=sortStrategy.sort, reverse=sortStrategy.inverse)
 
         report = HtmlReport (resultPages_sorted,
                              self.__getSearchPhrase(),

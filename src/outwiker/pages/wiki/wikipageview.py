@@ -3,12 +3,12 @@
 import wx
 import os
 import re
-from StringIO import StringIO
+from io import StringIO
 
 from outwiker.actions.polyactionsid import *
 from outwiker.core.commands import insertCurrentDate
-from outwiker.gui.toolbars.simpletoolbar import SimpleToolBar
 
+from . import defines
 from .wikieditor import WikiEditor
 from .wikiconfig import WikiConfig
 from .basewikipageview import BaseWikiPageView
@@ -16,15 +16,15 @@ from .tableactions import (getInsertTableActionFunc,
                            getInsertTableRowsActionFunc,
                            getInsertTableCellActionFunc)
 
-from actions.fontsizebig import WikiFontSizeBigAction
-from actions.fontsizesmall import WikiFontSizeSmallAction
-from actions.nonparsed import WikiNonParsedAction
-from actions.thumb import WikiThumbAction
-from actions.link import insertLink
-from actions.attachlist import WikiAttachListAction
-from actions.childlist import WikiChildListAction
-from actions.include import WikiIncludeAction
-from actions.dates import WikiDateCreationAction, WikiDateEditionAction
+from .actions.fontsizebig import WikiFontSizeBigAction
+from .actions.fontsizesmall import WikiFontSizeSmallAction
+from .actions.nonparsed import WikiNonParsedAction
+from .actions.thumb import WikiThumbAction
+from .actions.link import insertLink
+from .actions.attachlist import WikiAttachListAction
+from .actions.childlist import WikiChildListAction
+from .actions.include import WikiIncludeAction
+from .actions.dates import WikiDateCreationAction, WikiDateEditionAction
 
 
 class WikiPageView(BaseWikiPageView):
@@ -32,7 +32,9 @@ class WikiPageView(BaseWikiPageView):
         super(WikiPageView, self).__init__(parent, application)
 
     def Clear(self):
-        super(WikiPageView, self).Clear()
+        super().Clear()
+        self.mainWindow.menuController.removeMenu(defines.MENU_WIKI_COMMANDS)
+        self.mainWindow.menuController.removeMenu(defines.MENU_WIKI_FORMAT)
 
     def getTextEditor(self):
         return WikiEditor
@@ -43,45 +45,20 @@ class WikiPageView(BaseWikiPageView):
     def _getMenuTitle(self):
         return _(u"Wiki")
 
+    def _getMenuId(self):
+        return defines.MENU_WIKI
+
     def _isHtmlCodeShown(self):
         return WikiConfig(self._application.config).showHtmlCodeOptions.value
 
-    def _createToolbars(self, mainWindow):
-        self._toolbar_general = SimpleToolBar(
-            mainWindow,
-            mainWindow.auiManager,
-            u"wiki_general_toolbar",
-            _(u"Wiki"))
-
-        self._toolbar_heading = SimpleToolBar(
-            mainWindow,
-            mainWindow.auiManager,
-            u"wiki_heading_toolbar",
-            _(u"Heading"))
-
-        self._toolbar_font = SimpleToolBar(
-            mainWindow,
-            mainWindow.auiManager,
-            u"wiki_font_toolbar",
-            _(u"Font"))
-
-        self._toolbar_align = SimpleToolBar(
-            mainWindow,
-            mainWindow.auiManager,
-            u"wiki_align_toolbar",
-            _(u"Align"))
-
-        self._toolbar_table = SimpleToolBar(
-            mainWindow,
-            mainWindow.auiManager,
-            u"wiki_table_toolbar",
-            _(u"Table"))
-
-        return [self._toolbar_general,
-                self._toolbar_heading,
-                self._toolbar_font,
-                self._toolbar_align,
-                self._toolbar_table]
+    def _getToolbarsInfo(self, mainWindow):
+        return [
+            (defines.TOOLBAR_WIKI_GENERAL, _(u"Wiki")),
+            (defines.TOOLBAR_WIKI_HEADING, _(u"Heading")),
+            (defines.TOOLBAR_WIKI_FONT, _(u"Font")),
+            (defines.TOOLBAR_WIKI_ALIGN, _(u"Align")),
+            (defines.TOOLBAR_WIKI_TABLE, _(u"Table")),
+        ]
 
     def _getAttachString(self, fnames):
         """
@@ -174,10 +151,14 @@ class WikiPageView(BaseWikiPageView):
         self.toolsMenu.AppendSubMenu(self._headingMenu, _(u"Heading"))
         self.toolsMenu.AppendSubMenu(self._fontMenu, _(u"Font"))
         self.toolsMenu.AppendSubMenu(self._alignMenu, _(u"Alignment"))
-        self.toolsMenu.AppendSubMenu(self._formatMenu, _(u"Formatting"))
+        self.mainWindow.menuController.addMenu(defines.MENU_WIKI_FORMAT,
+                                               self._formatMenu)
+
         self.toolsMenu.AppendSubMenu(self._tableMenu, _(u"Tables"))
         self.toolsMenu.AppendSubMenu(self._listMenu, _(u"Lists"))
         self.toolsMenu.AppendSubMenu(self._commandsMenu, _(u"Commands"))
+        self.mainWindow.menuController.addMenu(defines.MENU_WIKI_COMMANDS,
+                                               self._commandsMenu)
 
         self.__addCommandsTools()
 
@@ -223,7 +204,7 @@ class WikiPageView(BaseWikiPageView):
         """
         Добавить инструменты, связанные со шрифтами
         """
-        toolbar = self._toolbar_font
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_FONT]
         menu = self._fontMenu
         actionController = self._application.actionController
 
@@ -321,7 +302,7 @@ class WikiPageView(BaseWikiPageView):
             fullUpdate=False)
 
     def __addAlignTools(self):
-        toolbar = self._toolbar_align
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_ALIGN]
         menu = self._alignMenu
         actionController = self._application.actionController
 
@@ -373,7 +354,7 @@ class WikiPageView(BaseWikiPageView):
         """
         Добавить инструменты для заголовочных тегов <H>
         """
-        toolbar = self._toolbar_heading
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_HEADING]
         menu = self._headingMenu
         actionController = self._application.actionController
 
@@ -441,7 +422,7 @@ class WikiPageView(BaseWikiPageView):
         """
         Добавить инструменты, связанные со списками
         """
-        toolbar = self._toolbar_align
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_ALIGN]
         menu = self._listMenu
         actionController = self._application.actionController
 
@@ -468,14 +449,14 @@ class WikiPageView(BaseWikiPageView):
             fullUpdate=False)
 
         # Список определений
-        actionController.getAction (LIST_DEFINITIONS_STR_ID).setFunc (
-            lambda param: self._turnDefinitionList ())
+        actionController.getAction(LIST_DEFINITIONS_STR_ID).setFunc(
+            lambda param: self._turnDefinitionList())
 
-        actionController.appendMenuItem (LIST_DEFINITIONS_STR_ID, menu)
-        actionController.appendToolbarButton (
+        actionController.appendMenuItem(LIST_DEFINITIONS_STR_ID, menu)
+        actionController.appendToolbarButton(
             LIST_DEFINITIONS_STR_ID,
             toolbar,
-            os.path.join (self.imagesDir, "text_list_definition.png"),
+            os.path.join(self.imagesDir, "text_list_definition.png"),
             fullUpdate=False)
 
         # Уменьшить уровень вложенности
@@ -486,7 +467,7 @@ class WikiPageView(BaseWikiPageView):
 
     def __addFormatTools(self):
         menu = self._formatMenu
-        toolbar = self._toolbar_general
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_GENERAL]
         actionController = self._application.actionController
 
         # Текст, который не нужно разбирать википарсером
@@ -534,7 +515,7 @@ class WikiPageView(BaseWikiPageView):
         """
         Добавить остальные инструменты
         """
-        toolbar = self._toolbar_general
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_GENERAL]
         menu = self.toolsMenu
         actionController = self._application.actionController
 
@@ -613,7 +594,7 @@ class WikiPageView(BaseWikiPageView):
         """
         Добавить инструменты, связанные с таблицами
         """
-        toolbar = self._toolbar_table
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_TABLE]
         menu = self._tableMenu
         actionController = self._application.actionController
 
@@ -660,7 +641,7 @@ class WikiPageView(BaseWikiPageView):
             fullUpdate=False)
 
     def _addSeparator(self):
-        toolbar = self._toolbar_general
+        toolbar = self._application.mainWindow.toolbars[defines.TOOLBAR_WIKI_GENERAL]
         toolbar.AddSeparator()
 
     def _decreaseNestingListItems(self):
@@ -787,19 +768,19 @@ class WikiPageView(BaseWikiPageView):
                                 endSelection + appendSymbols)
 
 
-    def _turnDefinitionList (self):
+    def _turnDefinitionList(self):
         editor = self._application.mainWindow.pagePanel.pageView.codeEditor
 
         lefttext = u"{{>\n^^ "
         righttext = u"\n$$ \n<}}"
         selectedText = editor.GetSelectedText()
 
-        if len (selectedText) is 0:
+        if len(selectedText) is 0:
             selectedText = u"term"
 
         newtext = lefttext + selectedText + righttext
-        editor.replaceText (newtext)
+        editor.replaceText(newtext)
 
         currPos = editor.GetSelectionEnd()
         newpos = currPos - 4
-        editor.SetSelection (newpos, newpos)
+        editor.SetSelection(newpos, newpos)

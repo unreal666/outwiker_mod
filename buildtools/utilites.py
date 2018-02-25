@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-from __future__ import print_function
-
 import sys
 import os
 import os.path
@@ -15,11 +13,10 @@ def addToSysPath(path):
     """
     Add path to sys.path to use outwiker modules
     """
-    encoding = sys.getfilesystemencoding()
     cmd_folder = os.path.abspath(path)
 
-    syspath = [unicode(item, encoding)
-               if not isinstance(item, unicode)
+    syspath = [item
+               if not isinstance(item, str)
                else item for item in sys.path]
 
     if cmd_folder not in syspath:
@@ -28,16 +25,13 @@ def addToSysPath(path):
 
 def getPython():
     if os.name == 'posix':
-        return u'python2.7'
+        return u'python3'
     else:
-        return u'py -2'
+        return u'python'
 
 
 def execute(command):
-    if os.name == 'posix':
-        local(u'LD_PRELOAD=libwx_gtk2u_webview-3.0.so.0 ' + command)
-    else:
-        local(command)
+    local(command)
 
 
 def getCurrentUbuntuDistribName():
@@ -59,7 +53,7 @@ def tobool(value):
 
     true_list = [u'1', '1', u'true', 'true']
 
-    if isinstance(value, str) or isinstance(value, unicode):
+    if isinstance(value, str):
         return value.lower() in true_list
 
     return bool(value)
@@ -87,6 +81,23 @@ def print_warning(text):
 
 def print_error(text):
     print(Fore.RED + text)
+
+
+def get_linux_distrib_info():
+    fname = '/etc/lsb-release'
+    with open(fname) as fp:
+        lines = fp.readlines()
+
+    result = {}
+    for line in lines:
+        if '=' not in line:
+            continue
+
+        line = line.strip()
+        key, value = line.split('=')
+        result[key] = value
+
+    return result
 
 
 def _os_only(func, os_str, name):

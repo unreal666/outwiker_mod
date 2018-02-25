@@ -158,7 +158,7 @@ class TextEditor(TextEditorBase):
         self.textCtrl.SetSelBackground(1, selBackColor)
 
         self.textCtrl.SetCaretForeground(fontColor)
-        self.textCtrl.SetCaretLineBack(backColor)
+        self.textCtrl.SetCaretLineBackground(backColor)
 
         self._setHotKeys()
 
@@ -259,6 +259,17 @@ class TextEditor(TextEditorBase):
             self._styleSet = True
 
     def _onApplyStyle(self, event):
+        '''
+            Call back function for EVT_APPLY_STYLE
+
+            Args:
+                event: the object of wx.stc.StyledTextEvent
+            Returns:
+                None
+            Raises:
+                None
+        '''
+
         if event.text == self._getTextForParse():
             startByte = self._helper.calcBytePos(event.text, event.start)
             endByte = self._helper.calcBytePos(event.text, event.end)
@@ -281,14 +292,14 @@ class TextEditor(TextEditorBase):
 
             if event.stylebytes is not None:
                 self.textCtrl.StartStyling(startByte,
-                                           0xff ^ wx.stc.STC_INDICS_MASK)
+                                           int(0xff ^ wx.stc.STC_INDICS_MASK))
                 self.textCtrl.SetStyleBytes(lenBytes,
-                                            stylebytesstr[startByte:endByte])
+                                            stylebytesstr[startByte:endByte].encode())
 
             if event.indicatorsbytes is not None:
                 self.textCtrl.StartStyling(startByte, wx.stc.STC_INDICS_MASK)
                 self.textCtrl.SetStyleBytes(lenBytes,
-                                            stylebytesstr[startByte:endByte])
+                                            stylebytesstr[startByte:endByte].encode())
 
             self._styleSet = True
 

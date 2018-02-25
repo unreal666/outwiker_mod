@@ -1,9 +1,6 @@
-# -*- coding: UTF-8 -*-
-
-from abc import ABCMeta, abstractmethod
+# -*- coding: utf-8 -*-
 
 import wx
-import wx.combo
 
 from outwiker.core.application import Application
 from outwiker.gui.guiconfig import PageDialogConfig
@@ -16,9 +13,7 @@ from outwiker.core.events import (PageDialogInitParams,
                                   PageDialogDestroyParams)
 
 
-class BasePageDialog(TestedDialog):
-    __metaclass__ = ABCMeta
-
+class BasePageDialog (TestedDialog):
     def __init__(self, parentWnd, currentPage, parentPage):
         super(BasePageDialog, self).__init__(
             parent=parentWnd,
@@ -43,13 +38,11 @@ class BasePageDialog(TestedDialog):
                                            PageDialogInitParams(self))
 
         self._setDialogSize()
-
-        self.Center(wx.CENTRE_ON_SCREEN)
         self._generalPanel.titleTextCtrl.SetFocus()
 
     def _setDialogSize(self):
         self.Fit()
-        default_width, default_height = self.GetClientSizeTuple()
+        default_width, default_height = self.GetClientSize()
 
         width = self._config.width.value
         height = self._config.height.value
@@ -62,11 +55,9 @@ class BasePageDialog(TestedDialog):
 
         self.SetClientSize((width, height))
 
-    @abstractmethod
     def _validate(self):
         pass
 
-    @abstractmethod
     def _initController(self, controller):
         pass
 
@@ -75,11 +66,11 @@ class BasePageDialog(TestedDialog):
             return
 
         self.saveParams()
-        map(lambda controller: controller.saveParams(), self._controllers)
+        list(map(lambda controller: controller.saveParams(), self._controllers))
         event.Skip()
 
     def Destroy(self):
-        map(lambda controller: controller.clear(), self._controllers)
+        list(map(lambda controller: controller.clear(), self._controllers))
 
         self._application.onPageDialogDestroy(self._application.selectedPage,
                                               PageDialogDestroyParams(self))
@@ -156,7 +147,7 @@ class BasePageDialog(TestedDialog):
         self.Layout()
 
     def saveParams(self):
-        width, height = self.GetClientSizeTuple()
+        width, height = self.GetClientSize()
         self._config.width.value = width
         self._config.height.value = height
 

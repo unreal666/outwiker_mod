@@ -1,10 +1,12 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import wx
 
 from outwiker.actions.showhideattaches import ShowHideAttachesAction
 from outwiker.actions.showhidetree import ShowHideTreeAction
 from outwiker.actions.showhidetags import ShowHideTagsAction
+
+from outwiker.gui.defines import MENU_VIEW
 
 
 class MainPanesController(object):
@@ -23,9 +25,10 @@ class MainPanesController(object):
 
     def createViewMenuItems(self):
         actionController = self.__application.actionController
-        map(lambda action: actionController.appendMenuCheckItem(
+        viewMenu = self.__application.mainWindow.menuController[MENU_VIEW]
+        [actionController.appendMenuCheckItem(
             action.stringId,
-            self.__mainWindow.mainMenu.viewMenu), self.__actions)
+            viewMenu) for action in self.__actions]
 
     def __onPaneClose(self, event):
         paneName = event.GetPane().name
@@ -76,22 +79,20 @@ class MainPanesController(object):
         """
         Закрыть все панели
         """
-        map(lambda action: action.getPanel().close(), self.__getAllActions())
+        [action.getPanel().close() for action in self.__getAllActions()]
 
     def loadPanesSize(self):
         """
         Загрузить размеры всех панелей
         """
-        map(lambda action: action.getPanel().loadPaneSize(),
-            self.__getAllActions())
+        [action.getPanel().loadPaneSize() for action in self.__getAllActions()]
         self.auiManager.Update()
 
     def savePanesParams(self):
         """
         Сохранить размеры всех панелей
         """
-        map(lambda action: action.getPanel().saveParams(),
-            self.__getAllActions())
+        [action.getPanel().saveParams() for action in self.__getAllActions()]
 
     def updateViewMenu(self):
         """

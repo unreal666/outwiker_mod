@@ -1,91 +1,34 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-import urlparse
+import urllib.parse
 import subprocess
-from StringIO import StringIO
+from io import StringIO
 
 import wx
 
-from outwiker.core.system import getOS
 from outwiker.core.commands import MessageBox
 
-from externaltools.commandexec.commandparams import EXEC_BEGIN, PROTO_COMMAND
-from externaltools.config import ExternalToolsConfig
-from externaltools.i18n import get_
+from .commandparams import EXEC_BEGIN, PROTO_COMMAND
+from ..config import ExternalToolsConfig
+from ..i18n import get_
 
 
 class CommandController(object):
     def __init__(self, application):
         self._application = application
 
-        # Enable(:exec:) command only in the "new" OutWiker version.
-        # If Application have onLinkClick event
-        self._enableExecCommand = u'onLinkClick' in dir(self._application)
-
-        self._guiCreator = None
-
     def initialize(self):
         global _
         _ = get_()
 
-        if self._enableExecCommand:
-            from externaltools.commandexec.guicreator import GuiCreator
-
-            self._application.onWikiParserPrepare += self.__onWikiParserPrepare
-            self._application.onHoverLink += self._onHoverLink
-            self._application.onLinkClick += self.onLinkClick
-            self._application.onPageViewCreate += self.__onPageViewCreate
-            self._application.onPageViewDestroy += self.__onPageViewDestroy
-
-            self._guiCreator = GuiCreator(self._application)
-            self._guiCreator.initialize()
-
-            if self._isCurrentWikiPage:
-                self.__onPageViewCreate(self._application.selectedPage)
+        self._application.onWikiParserPrepare += self.__onWikiParserPrepare
+        self._application.onHoverLink += self._onHoverLink
+        self._application.onLinkClick += self.onLinkClick
 
     def destroy(self):
-        if self._enableExecCommand:
-            self._application.onWikiParserPrepare -= self.__onWikiParserPrepare
-            self._application.onHoverLink -= self._onHoverLink
-            self._application.onLinkClick -= self.onLinkClick
-            self._application.onPageViewCreate -= self.__onPageViewCreate
-            self._application.onPageViewDestroy -= self.__onPageViewDestroy
-
-            if self._isCurrentWikiPage:
-                self._guiCreator.removeTools()
-
-            self._guiCreator.destroy()
-
-    def __onPageViewCreate(self, page):
-        """Обработка события после создания представления страницы"""
-        assert self._application.mainWindow is not None
-
-        if page.getTypeString() == u"wiki":
-            self._guiCreator.createTools()
-
-    def __onPageViewDestroy(self, page):
-        """
-        Обработка события перед удалением вида страницы
-        """
-        assert self._application.mainWindow is not None
-
-        if page.getTypeString() == u"wiki":
-            self._guiCreator.removeTools()
-
-    def _getPageView(self):
-        """
-        Получить указатель на панель представления страницы
-        """
-        return self._application.mainWindow.pagePanel.pageView
-
-    @property
-    def _isCurrentWikiPage(self):
-        """
-        Возвращает True, если текущая страница - это викистраница,
-        и False в противном случае
-        """
-        return (self._application.selectedPage is not None and
-                self._application.selectedPage.getTypeString() == u"wiki")
+        self._application.onWikiParserPrepare -= self.__onWikiParserPrepare
+        self._application.onHoverLink -= self._onHoverLink
+        self._application.onLinkClick -= self.onLinkClick
 
     def __onWikiParserPrepare(self, parser):
         """
@@ -99,8 +42,10 @@ class CommandController(object):
         Return dictionary with params from url.
         Every value in dictionary is list
         """
-        if(url is None or
-                not url.startswith(EXEC_BEGIN)):
+        if isinstance(url, bytes):
+            url = url.decode('utf8')
+
+        if url is None or not url.startswith(EXEC_BEGIN):
             return {}
 
         startpos = url.find(u'?')
@@ -111,7 +56,7 @@ class CommandController(object):
         params = url[startpos + 1:]
 
         try:
-            paramsDict = urlparse.parse_qs(str(params))
+            paramsDict = urllib.parse.parse_qs(params)
         except ValueError:
             return {}
 
@@ -136,15 +81,13 @@ class CommandController(object):
         """
         assert commands
 
-        encoding = getOS().filesEncoding
-
         buf = StringIO()
         buf.write(u'>>> ')
-        buf.write(self._getParamText(unicode(commands[0].command, encoding)))
+        buf.write(self._getParamText(commands[0].command))
 
         for param in commands[0].params:
             buf.write(u' ')
-            buf.write(self._getParamText(unicode(param, encoding)))
+            buf.write(self._getParamText(param))
 
         if len(commands) > 1:
             buf.write(u' ...')
@@ -201,13 +144,9 @@ class CommandController(object):
         comindex = 1
         comparams = PROTO_COMMAND.format(number=comindex)
 
-        encoding = getOS().filesEncoding
-
         while comparams in urlparams:
-            command = unicode(urlparams[comparams][0], "utf8").encode(encoding)
-            params = [unicode(param, "utf8").encode(encoding)
-                      for param
-                      in urlparams[comparams][1:]]
+            command = urlparams[comparams][0]
+            params = [param for param in urlparams[comparams][1:]]
 
             result.append(ExecInfo(command, params))
 

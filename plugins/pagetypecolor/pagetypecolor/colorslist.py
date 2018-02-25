@@ -45,8 +45,7 @@ class ColorsList(object):
                     self._colors[typeString] = color_param.value
 
     def _getNewColor(self):
-        colors_list = map(lambda color: self._parseColor(color),
-                          self._colors.values())
+        colors_list = [self._parseColor(color) for color in list(self._colors.values())]
         color_tuple = find_farthest_color(colors_list)
         color_text = u'#{:02X}{:02X}{:02X}'.format(*color_tuple)
         return color_text
@@ -56,7 +55,7 @@ class ColorsList(object):
         Return tuple (R, G, B)
         '''
         color = wx.Colour()
-        color.SetFromString(color_str)
+        color.Set(color_str)
         return (color.Red(), color.Green(), color.Blue())
 
     def getColor(self, pageTypeString):

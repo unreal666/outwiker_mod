@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from xml.etree import ElementTree
 
@@ -6,7 +6,7 @@ from outwiker.core.appinfo import (AppInfo,
                                    AuthorInfo,
                                    VersionInfo,
                                    RequirementsInfo)
-from version import Version
+from .version import Version
 
 
 class XmlVersionParser (object):
@@ -26,7 +26,7 @@ class XmlVersionParser (object):
         Return AppInfo instance
         """
         try:
-            root = ElementTree.fromstring(text.encode('utf8'))
+            root = ElementTree.fromstring(text)
         except ElementTree.ParseError:
             appinfo = AppInfo(u'', None)
             return appinfo
@@ -57,14 +57,6 @@ class XmlVersionParser (object):
         if requirements_tag is None:
             return None
 
-        outwiker_version = None
-        try:
-            outwiker_version = Version.parse(
-                self._getTextValue(requirements_tag, u'outwiker')
-            )
-        except ValueError:
-            pass
-
         os_str = self._getTextValue(requirements_tag, u'os')
         if os_str is None:
             os_str = u''
@@ -73,19 +65,13 @@ class XmlVersionParser (object):
                    for current_os
                    in os_str.split(u',')
                    if len(current_os.strip()) != 0]
-        packages_versions = self._getPackagesVersions(requirements_tag)
-        return RequirementsInfo(outwiker_version, os_list, packages_versions)
 
-    def _getPackagesVersions(self, requirements_tag):
-        result = {}
-        packages_tag = requirements_tag.find('packages')
-        if packages_tag is not None:
-            for package in packages_tag:
-                name = package.tag
-                versions_text = package.text
-                result[name] = self._parsePackageVersions(versions_text)
+        api_str = self._getTextValue(requirements_tag, u'api')
+        if api_str is None:
+            api_str = u''
 
-        return result
+        api_versions = self._parsePackageVersions(api_str)
+        return RequirementsInfo(os_list, api_versions)
 
     def _parsePackageVersions(self, text):
         if text is None:
@@ -233,7 +219,7 @@ class XmlVersionParser (object):
         result = None
         result_tag = root.find(tagname)
         if result_tag is not None and result_tag.text is not None:
-            result = unicode(result_tag.text)
+            result = result_tag.text
 
         if result is None:
             result = u''

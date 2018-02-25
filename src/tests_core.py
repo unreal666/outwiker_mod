@@ -1,27 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 """
-Unit-тесты
+Unit-tests
 """
-
-import wx
-
 
 if __name__ == '__main__':
     from outwiker.core.application import Application
     Application.init("../test/testconfig.ini")
-
-    app = wx.App(redirect=False)
-
-    def emptyFunc():
-        pass
-
-    app.bindActivateApp = emptyFunc
-    app.unbindActivateApp = emptyFunc
-    loop = wx.EventLoop()
-    wx.EventLoop.SetActive(loop)
-    wx.Log.SetLogLevel(0)
 
     import unittest
 
@@ -80,6 +66,7 @@ if __name__ == '__main__':
     from test.test_iconcontroller import IconControllerTest
     from test.test_recenticonslist import RecentIconsListTest
     from test.test_dicttostr import DictToStrTest
+    from test.test_attachwatcher import AttachWatcherTest
 
     from test.spellchecker.test_dictsfinder import DictsFinderTest
     from test.spellchecker.test_spellchecker import SpellCheckerTest
@@ -89,7 +76,6 @@ if __name__ == '__main__':
 
     from test.test_xmlversionparser import XmlVersionParserTest
     from test.test_packageversion import (PackageCheckVersionTest,
-                                          PackageCheckVersionAnyTest,
-                                          CheckPackagesVersionTest)
+                                          PackageCheckVersionAnyTest)
 
     unittest.main()

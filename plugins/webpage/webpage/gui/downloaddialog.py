@@ -1,8 +1,10 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from threading import Event, Thread
 from tempfile import mkdtemp
-import urllib2
+import urllib.request
+import urllib.error
+import urllib.parse
 import os.path
 from shutil import rmtree
 
@@ -152,10 +154,9 @@ class DownloadDialogController(object):
                                                    text=text)
         self._logIndex += 1
 
-        self._dialog.logText.Value += logString
+        self._dialog.logText.AppendText(logString)
 
-        count = len(self._dialog.logText.Value)
-        self._dialog.logText.SetSelection(count, count)
+        count = self._dialog.logText.GetLastPosition()
         self._dialog.logText.ShowPosition(count)
 
     def resetLog(self):
@@ -309,13 +310,13 @@ class DownloadThread(Thread):
 
         try:
             downloader.start(self._url, controller)
-        except urllib2.URLError as error:
+        except urllib.error.URLError as error:
             self._error(_(u'Download error: {}\n').format(
-                unicode(error.reason))
+                str(error.reason))
             )
         except(IOError, ValueError) as e:
             self._error(_(u'Invalid URL or file format\n'))
-            self._error(unicode(e))
+            self._error(str(e))
         else:
             self._log(_(u'Finish downloading\n'))
 

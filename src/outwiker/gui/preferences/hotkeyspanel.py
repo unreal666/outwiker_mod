@@ -25,7 +25,7 @@ class HotKeysPanel(BasePrefPanel):
         self.__filterText.Bind(wx.EVT_TEXT, self.__onFilterEdit)
         self.__actionsList.Bind(wx.EVT_LISTBOX, self.__onActionSelect)
         self.__hotkeyCtrl.Bind(EVT_HOTKEY_EDIT, self.__onHotkeyEdit)
-        self._setScrolling()
+        self.SetupScrolling()
 
     def __onHotkeyEdit(self, event):
         newActionStrId = self.__getSelectedStrid()
@@ -135,7 +135,7 @@ class HotKeysPanel(BasePrefPanel):
 
         stridCurrent = self.__getSelectedStrid()
 
-        for strid, hotkeyCurrent in self.__hotkeys.iteritems():
+        for strid, hotkeyCurrent in self.__hotkeys.items():
             if stridCurrent == strid or hotkey is None:
                 continue
             if hotkey == hotkeyCurrent:
@@ -200,6 +200,6 @@ class HotKeysPanel(BasePrefPanel):
     def Save(self):
         actionController = Application.actionController
 
-        for strid, hotkey in self.__hotkeys.iteritems():
+        for strid, hotkey in self.__hotkeys.items():
             if actionController.getHotKey(strid) != hotkey:
                 actionController.setHotKey(strid, hotkey, True)

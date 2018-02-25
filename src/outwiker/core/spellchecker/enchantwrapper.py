@@ -5,8 +5,8 @@ import os.path
 from enchant import Dict, DictWithPWL, Broker
 import enchant.errors
 
-from dictsfinder import DictsFinder
-from defines import CUSTOM_DICT_LANG
+from .dictsfinder import DictsFinder
+from .defines import CUSTOM_DICT_LANG
 
 
 class EnchantWrapper (object):
@@ -36,7 +36,7 @@ class EnchantWrapper (object):
 
     def addToCustomDict (self, dictIndex, word):
         if dictIndex < len (self._customCheckers):
-            self._customCheckers[dictIndex].add_to_pwl (word)
+            self._customCheckers[dictIndex].add(word)
 
 
     def _createCustomDictLang (self, pathToDict):
@@ -112,8 +112,7 @@ class EnchantWrapper (object):
         for checker in self._checkers + self._customCheckers:
             suggest_set |= set (checker.suggest (word))
 
-        suggest = list (suggest_set)
-        suggest = filter (lambda item: len (item.strip()) > 0, suggest)
+        suggest = [item for item in suggest_set if len (item.strip()) > 0]
         suggest.sort()
 
         return suggest
