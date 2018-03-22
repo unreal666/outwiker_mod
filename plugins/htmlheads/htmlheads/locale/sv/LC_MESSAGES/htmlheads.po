@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: outwiker\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-25 15:22+1000\n"
-"PO-Revision-Date: 2018-02-25 16:10+1000\n"
+"POT-Creation-Date: 2018-03-01 05:31+1000\n"
+"PO-Revision-Date: 2018-03-01 05:37+1000\n"
 "Last-Translator: Jenyay <jenyay.ilin@gmail.com>\n"
 "Language-Team: Swedish\n"
 "Language: sv_SE\n"
@@ -16,7 +16,6 @@ msgstr ""
 "X-Crowdin-Language: sv-SE\n"
 "X-Crowdin-File: htmlheads.pot\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-Basepath: ../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
 #: actions.py:34
@@ -39,18 +38,18 @@ msgstr "Anpassat huvud (:htmlhead:)"
 msgid "<html> tag attributes (:htmlattrs ...:)"
 msgstr "<html>-tag attributes (:htmlattrs ...:)"
 
-#: controller.py:65
-msgid "HTML Headers"
-msgstr "HTML-huvud"
+#: actions.py:128
+msgid "Custom Style (:style ...:)"
+msgstr "Anpassad stil (:title ...:)"
 
-#: defines.py:6
+#: defines.py:5
 msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
 msgstr "http://jenyay.net/Outwiker/HtmlHeadsEn"
 
-#: defines.py:10
+#: defines.py:9
 msgid ""
-"Plugin adds wiki-commands (:title:), (:description:), (:keywords:), (:"
-"htmlhead:) and (:htmlattrs:).\n"
+"Plugin adds wiki-commands (:title:), (:description:), (:keywords:),\n"
+"\t(:htmlhead:), (:htmlattrs:) and (:style:).\n"
 "\n"
 "<b>Usage:</b>\n"
 "(:title Page title:)\n"
@@ -67,9 +66,13 @@ msgid ""
 "(:htmlheadend:)\n"
 "\n"
 "(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
+"\n"
+"(:style attr1=\"value\" attr2=\"value\":)\n"
+"body {background: #eee;}\n"
+"(:styleend:)\n"
 msgstr ""
-"Insticket lägger till wiki-kommandona (:title:), (:description:), (:"
-"keywords:), (:htmlhead:) och (:htmlattrs:).\n"
+"Insticket lägger till wiki-kommandona (:title:), (:description:),\n"
+"(:keywords:), (:htmlhead:), (:htmlattrs:) och (:style:).\n"
 "\n"
 "<b>Användning:</b>\n"
 "(:title Sidtitel:)\n"
@@ -87,8 +90,15 @@ msgstr ""
 "\n"
 "(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
 "\n"
+"(:style attr1=\"value\" attr2=\"value\":)\n"
+"body {background: #eee;}\n"
+"(:styleend:)\n"
 
-#: defines.py:29
+#: defines.py:33
+msgid "HTML Headers"
+msgstr "HTML-huvud"
+
+#: defines.py:34
 #, python-format
 msgid "{} plugin. Insert (:%s ...:) command"
 msgstr "{}-instick. Infoga (:%s ...:)-kommando"

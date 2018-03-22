@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Dummy function. It's needed for translation.
 def _(msg): return msg
 
@@ -7,7 +6,8 @@ PLUGIN_URL = _('http://jenyay.net/Outwiker/HtmlHeadsEn')
 PLUGIN_NAME_LOWERCASE = PLUGIN_NAME.lower()
 PREFIX_ID = PLUGIN_NAME + '_'
 
-PLUGIN_DESCRIPTION = _('''Plugin adds wiki-commands (:title:), (:description:), (:keywords:), (:htmlhead:) and (:htmlattrs:).
+PLUGIN_DESCRIPTION = _('''Plugin adds wiki-commands (:title:), (:description:), (:keywords:),
+	(:htmlhead:), (:htmlattrs:) and (:style:).
 
 <b>Usage:</b>
 (:title Page title:)
@@ -23,7 +23,12 @@ PLUGIN_DESCRIPTION = _('''Plugin adds wiki-commands (:title:), (:description:), 
 (:htmlheadend:)
 
 (:htmlattrs attr1="value" attr2="value":)
+
+(:style attr1="value" attr2="value":)
+body {background: #eee;}
+(:styleend:)
 ''')
 
-MENU_HTMLHEADS = 'Plugin_%s' % PLUGIN_NAME
+MENU_PLUGIN = 'Plugin_%s' % PLUGIN_NAME
+MENU_PLUGIN_TITLE = _('HTML Headers')
 ACTION_DESCRIPTION = _('{} plugin. Insert (:%s ...:) command').format(PLUGIN_NAME)

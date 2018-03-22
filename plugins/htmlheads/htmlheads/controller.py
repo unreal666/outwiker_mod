@@ -6,14 +6,8 @@ from outwiker.utilites.actionsguicontroller import (ActionsGUIController,
                                                     ActionGUIInfo)
 
 from .i18n import get_
-from .commands import (TitleCommand, DescriptionCommand,
-                       KeywordsCommand, CustomHeadsCommand,
-                       HtmlAttrsCommand)
-from .actions import (TitleAction,
-                      DescriptionAction,
-                      KeywordsAction,
-                      CustomHeadsAction,
-                      HtmlAttrsAction)
+from .commands import commands
+from .actions import actions
 from . import defines
 
 
@@ -23,22 +17,14 @@ class Controller(object):
     """
     def __init__(self, plugin, application):
         """
-        plugin - Владелец контроллера(экземпляр класса PluginSource)
+        plugin - Владелец контроллера (экземпляр класса PluginSource)
         application - экземпляр класса ApplicationParams
         """
         self._plugin = plugin
         self._application = application
 
-        self._commands = (TitleCommand,
-                          DescriptionCommand,
-                          KeywordsCommand,
-                          CustomHeadsCommand,
-                          HtmlAttrsCommand)
-        self._actions = (TitleAction,
-                         DescriptionAction,
-                         KeywordsAction,
-                         CustomHeadsAction,
-                         HtmlAttrsAction)
+        self._commands = commands
+        self._actions = actions
 
         self._GUIController = ActionsGUIController(
             self._application,
@@ -57,12 +43,11 @@ class Controller(object):
         self._initialize_guicontroller()
 
     def _initialize_guicontroller(self):
-        action_gui_info = list(ActionGUIInfo(action(self._application),
-                                             defines.MENU_HTMLHEADS,
-                                            )
-                               for action in self._actions)
+        action_gui_info = [ActionGUIInfo(action(self._application),
+                                         defines.MENU_PLUGIN)
+                           for action in self._actions]
 
-        new_menus = [(defines.MENU_HTMLHEADS, _('HTML Headers'), MENU_WIKI)]
+        new_menus = [(defines.MENU_PLUGIN, _(defines.MENU_PLUGIN_TITLE), MENU_WIKI)]
 
         if self._application.mainWindow is not None:
             self._GUIController.initialize(action_gui_info,
@@ -81,6 +66,6 @@ class Controller(object):
 
     def __onWikiParserPrepare(self, parser):
         """
-        Вызывается до разбора викитекста. Добавление команды(:counter:)
+        Вызывается до разбора викитекста. Добавление команд
         """
-        list(parser.addCommand(command(parser)) for command in self._commands)
+        [parser.addCommand(command(parser)) for command in self._commands]

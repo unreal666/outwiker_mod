@@ -1,8 +1,9 @@
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: HtmlHeads\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-25 15:22+1000\n"
+"POT-Creation-Date: 2018-03-01 05:31+1000\n"
 "PO-Revision-Date: 2018-02-25 14:15+1000\n"
 "Last-Translator: Eugeniy Ilin <jenyay.ilin@gmail.com>\n"
 "Language-Team: jenyay.net <jenyay.ilin@gmail.com>\n"
@@ -36,18 +37,18 @@ msgstr ""
 msgid "<html> tag attributes (:htmlattrs ...:)"
 msgstr ""
 
-#: controller.py:65
-msgid "HTML Headers"
+#: actions.py:128
+msgid "Custom Style (:style ...:)"
 msgstr ""
 
-#: defines.py:6
+#: defines.py:5
 msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
 msgstr ""
 
-#: defines.py:10
+#: defines.py:9
 msgid ""
-"Plugin adds wiki-commands (:title:), (:description:), (:keywords:), (:"
-"htmlhead:) and (:htmlattrs:).\n"
+"Plugin adds wiki-commands (:title:), (:description:), (:keywords:),\n"
+"\t(:htmlhead:), (:htmlattrs:) and (:style:).\n"
 "\n"
 "<b>Usage:</b>\n"
 "(:title Page title:)\n"
@@ -64,9 +65,17 @@ msgid ""
 "(:htmlheadend:)\n"
 "\n"
 "(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
+"\n"
+"(:style attr1=\"value\" attr2=\"value\":)\n"
+"body {background: #eee;}\n"
+"(:styleend:)\n"
 msgstr ""
 
-#: defines.py:29
+#: defines.py:33
+msgid "HTML Headers"
+msgstr ""
+
+#: defines.py:34
 #, python-format
 msgid "{} plugin. Insert (:%s ...:) command"
 msgstr ""

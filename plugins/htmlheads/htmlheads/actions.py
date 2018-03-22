@@ -114,3 +114,32 @@ class HtmlAttrsAction(BaseHeadAction):
 
     def run (self, params):
         self._getEditor().turnText('(:htmlattrs ', ':)')
+
+
+class StyleAction(BaseHeadAction):
+    """
+    Вставить команду (:style:)
+    """
+    stringId = '%sInsertStyle' % defines.PREFIX_ID
+
+
+    @property
+    def title (self):
+        return _('Custom Style (:style ...:)')
+
+
+    @property
+    def description (self):
+        return _(defines.ACTION_DESCRIPTION) % 'style'
+
+
+    def run (self, params):
+        self._getEditor().turnText('(:style:)\n', '\n(:styleend:)')
+
+
+actions = (TitleAction,
+           DescriptionAction,
+           KeywordsAction,
+           CustomHeadsAction,
+           HtmlAttrsAction,
+           StyleAction)

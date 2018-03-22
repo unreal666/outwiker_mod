@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HtmlHeads\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-25 15:57+1000\n"
-"PO-Revision-Date: 2018-02-25 15:57+1000\n"
+"POT-Creation-Date: 2018-03-01 05:31+1000\n"
+"PO-Revision-Date: 2018-03-01 05:38+1000\n"
 "Last-Translator: Eugeniy Ilin <jenyay.ilin@gmail.com>\n"
 "Language-Team: jenyay.net <jenyay.ilin@gmail.com>\n"
 "Language: en_GB\n"
@@ -11,11 +11,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
-"X-Poedit-Basepath: ../../..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Generator: Poedit 2.0.6\n"
 "X-Poedit-SearchPath-0: .\n"
-"X-Poedit-SearchPath-1: .\n"
 
 #: actions.py:34
 msgid "Title (:title ...:)"
@@ -37,18 +35,18 @@ msgstr "Довільний заголовок (:htmlhead:)"
 msgid "<html> tag attributes (:htmlattrs ...:)"
 msgstr "Атрибути тега <html> (:htmlattrs ...:)"
 
-#: controller.py:65
-msgid "HTML Headers"
-msgstr "Заголовки HTML"
+#: actions.py:128
+msgid "Custom Style (:style ...:)"
+msgstr "Користувацький стиль (:title ...:)"
 
-#: defines.py:6
+#: defines.py:5
 msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
 msgstr "http://jenyay.net/Outwiker/HtmlHeads"
 
-#: defines.py:10
+#: defines.py:9
 msgid ""
-"Plugin adds wiki-commands (:title:), (:description:), (:keywords:), (:"
-"htmlhead:) and (:htmlattrs:).\n"
+"Plugin adds wiki-commands (:title:), (:description:), (:keywords:),\n"
+"\t(:htmlhead:), (:htmlattrs:) and (:style:).\n"
 "\n"
 "<b>Usage:</b>\n"
 "(:title Page title:)\n"
@@ -64,9 +62,13 @@ msgid ""
 "(:htmlheadend:)\n"
 "\n"
 "(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
+"\n"
+"(:style attr1=\"value\" attr2=\"value\":)\n"
+"body {background: #eee;}\n"
+"(:styleend:)\n"
 msgstr ""
-"Додаток додає команди (:title:), (:description:), (:keywords:), (:htmlhead:) "
-"та (:htmlattrs:) для вікісторінок.\n"
+"Додаток додає команди (:title:), (:description:), (:keywords:),\n"
+"(:htmlhead:), (:htmlattrs:) та (:style:) для вікісторінок.\n"
 "\n"
 "<b>Використання:</b>\n"
 "(:title Заголовок сторінки:)\n"
@@ -83,8 +85,16 @@ msgstr ""
 "\n"
 "(:htmlattrs attr1=\"value\" attr2=\"value\":)\n"
 "\n"
+"(:style attr1=\"value\" attr2=\"value\":)\n"
+"body {background: #eee;}\n"
+"(:styleend:)\n"
+"\n"
 
-#: defines.py:29
+#: defines.py:33
+msgid "HTML Headers"
+msgstr "Заголовки HTML"
+
+#: defines.py:34
 #, python-format
 msgid "{} plugin. Insert (:%s ...:) command"
 msgstr "Додаток {}. Вставити команду (:%s ...:)"
