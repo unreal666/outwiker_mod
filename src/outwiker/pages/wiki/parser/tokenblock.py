@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from outwiker.libs.pyparsing import nestedExpr, originalTextFor
 
 
-class TextBlockToken (object):
+class TextBlockToken(object):
     """
     Класс, содержащий метод для оборачивания текста в теги текстового уровня
     """
@@ -18,24 +18,26 @@ class TextBlockToken (object):
         closing - закрывающийся тег(и)
         """
         def conversionParseAction(s, l, t):
-            return u"".join([
+            return ''.join([
                 opening,
-                self.parser.parseTextLevelMarkup(u''.join(t)),
+                self.parser.parseTextLevelMarkup(''.join(t)),
                 closing,
             ])
         return conversionParseAction
 
 
 class NestedBlockBase(object, metaclass=ABCMeta):
-    '''
+    """
     Base class for tokens of the nested blocks.
-    '''
-
+    """
     start = None
     end = None
     start_html = None
     end_html = None
     name = None
+    ignore = None
+    attrs_re = None
+    attrs_name = None
 
     def __init__(self, parser):
         self.parser = parser
@@ -54,7 +56,7 @@ class NestedBlockBase(object, metaclass=ABCMeta):
         token = originalTextFor(nestedExpr(opener=self.start,
                                            closer=self.end,
                                            content=None,
-                                           ignoreExpr=None
+                                           ignoreExpr=self.ignore
                                            ))
         token = token.setParseAction(self.convertToHTML(self.start_html, self.end_html))(self.name)
 
@@ -62,14 +64,17 @@ class NestedBlockBase(object, metaclass=ABCMeta):
 
 
 class SimpleNestedBlock(NestedBlockBase):
-    '''
+    """
     Base class to replace wiki tags to HTML tags for nested blocks.
-    '''
+    """
     def convertToHTML(self, opening, closing):
         """
         opening - opened HTML tag
         closing - closed HTML tag
         """
+        if self.attrs_re:
+            assert self.attrs_name is not None
+
         def conversionParseAction(s, l, t):
             text = s[t[0]:t[-1]]
             assert text.startswith(self.start)
@@ -77,8 +82,19 @@ class SimpleNestedBlock(NestedBlockBase):
 
             inner_text = text[len(self.start):-len(self.end)]
 
-            return u"".join([
-                opening,
+            if self.attrs_re:
+                match = self.attrs_re.search(inner_text)
+                if match:
+                    attrs = ' %s' % match.groupdict()[self.attrs_name]
+                    _opening = opening.format(attrs, attrs=attrs)
+                    inner_text = text[match.end() - match.start():]
+                else:
+                    _opening = opening
+            else:
+                _opening = opening
+
+            return ''.join([
+                _opening,
                 self.parser.parseWikiMarkup(inner_text),
                 closing,
             ])

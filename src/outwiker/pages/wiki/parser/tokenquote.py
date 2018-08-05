@@ -1,42 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from outwiker.libs.pyparsing import Forward, CharsNotIn, NotAny, ZeroOrMore, OneOrMore, Combine, Literal, Suppress, Regex
-from .utils import TagAttrsPattern, getAttributes
+import re
 
+from .tokenblock import SimpleNestedBlock
+from .tokenlinebreak import LineBreakToken
+from .utils import TagAttrsPattern
 
-class QuoteFactory (object):
+class QuoteFactory(object):
     """
     Фабрика для создания токена для цитат
     """
     @staticmethod
-    def make (parser):
+    def make(parser):
         return QuoteToken(parser).getToken()
 
 
-class QuoteToken(object):
-    quoteStart = '[>'
-    quoteEnd = '<]'
-
-    def __init__(self, parser):
-        self.parser = parser
-
-
-    def getToken(self):
-        anyExcept = Combine(ZeroOrMore(NotAny(Literal(QuoteToken.quoteStart) | Literal(QuoteToken.quoteEnd)) + CharsNotIn('', exact=1)))
-        anyExcept = anyExcept.leaveWhitespace().setParseAction(self.__parseText)
-        token = Forward()
-        token << (Suppress(QuoteToken.quoteStart) + Regex(TagAttrsPattern.value) +
-                  (OneOrMore(anyExcept + token) + anyExcept | anyExcept) +
-                  Suppress(QuoteToken.quoteEnd)).leaveWhitespace().setParseAction(self.__parse)("quote")
-        return token
-
-
-    def __parse(self, s, loc, toks):
-        text = u''.join(toks[1:len(toks)])
-        attrs = getAttributes(toks)
-
-        return '<blockquote%s>%s</blockquote>' % (attrs, text)
-
-
-    def __parseText(self, s, loc, toks):
-        return self.parser.parseWikiMarkup (u''.join(toks))
+class QuoteToken(SimpleNestedBlock):
+    start = '[>'
+    end = '<]'
+    start_html = '<blockquote{attrs}>'
+    end_html = '</blockquote>'
+    name = 'quote'
+    attrs_re = re.compile('^%s' % TagAttrsPattern.value)
+    attrs_name = TagAttrsPattern.name
+    ignore = LineBreakToken().getToken()

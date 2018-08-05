@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Iterable, Union
 
 import wx
 
 from outwiker.core.system import getOS
+from outwiker.gui.controls.colorpicker import ColorPicker, EVT_COLOURSELECT
 from outwiker.gui.testeddialog import TestedDialog
 from .csseditor import CSSEditor
 
@@ -17,7 +18,7 @@ class StyleDialog(TestedDialog):
                  example_html: str,
                  tag: str):
         '''
-        styles - dictionary. Key - style name, value - CSS content.
+        styles - dictionary: key - style name, value - CSS content.
         '''
         super().__init__(parent,
                          title=title,
@@ -49,11 +50,11 @@ class StyleDialog(TestedDialog):
                                     handler=self._onUpdate)
         self._text_color_check.Bind(wx.EVT_CHECKBOX,
                                     handler=self._onUpdate)
-        self._text_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED,
+        self._text_color_picker.Bind(EVT_COLOURSELECT,
                                      handler=self._onTextColorPicker)
         self._text_background_check.Bind(wx.EVT_CHECKBOX,
                                          handler=self._onUpdate)
-        self._text_background_picker.Bind(wx.EVT_COLOURPICKER_CHANGED,
+        self._text_background_picker.Bind(EVT_COLOURSELECT,
                                           handler=self._onTextBackgroundPicker)
         self._custom_CSS_check.Bind(wx.EVT_CHECKBOX,
                                     handler=self._onUpdate)
@@ -151,7 +152,7 @@ class StyleDialog(TestedDialog):
 
         # Text color
         self._text_color_check = wx.CheckBox(self, label=_('Text color'))
-        self._text_color_picker = wx.ColourPickerCtrl(self)
+        self._text_color_picker = ColorPicker(self)
 
         text_color_sizer = wx.FlexGridSizer(cols=2)
         text_color_sizer.AddGrowableCol(1)
@@ -167,8 +168,7 @@ class StyleDialog(TestedDialog):
 
         # Text background
         self._text_background_check = wx.CheckBox(self, label=_('Text background'))
-        self._text_background_picker = wx.ColourPickerCtrl(self,
-                                                           colour=wx.WHITE)
+        self._text_background_picker = ColorPicker(self, colour=wx.WHITE)
 
         text_background_sizer = wx.FlexGridSizer(cols=2)
         text_background_sizer.AddGrowableCol(1)
@@ -223,6 +223,12 @@ class StyleDialog(TestedDialog):
         self.enableTextColor(True)
         self._text_color_picker.SetColour(color)
 
+    def setCustomTextColors(self, colors: Iterable[Union[wx.Colour, str]]) -> None:
+        self._text_color_picker.SetCustomColours(colors)
+
+    def getCustomTextColors(self) -> Iterable[Union[wx.Colour, str]]:
+        return self._text_color_picker.GetCustomColours()
+
     def enableTextColor(self, enabled: bool) -> None:
         self._text_color_check.SetValue(enabled)
 
@@ -238,6 +244,12 @@ class StyleDialog(TestedDialog):
     def setBackgroundColor(self, color: wx.Colour) -> None:
         self.enableBackgroundColor(True)
         self._text_background_picker.SetColour(color)
+
+    def setCustomBackgroundColors(self, colors: Iterable[Union[wx.Colour, str]]) -> None:
+        self._text_background_picker.SetCustomColours(colors)
+
+    def getCustomBackgroundColors(self) -> Iterable[Union[wx.Colour, str]]:
+        return self._text_background_picker.GetCustomColours()
 
     def enableBackgroundColor(self, enabled: bool) -> None:
         self._text_background_check.SetValue(enabled)
