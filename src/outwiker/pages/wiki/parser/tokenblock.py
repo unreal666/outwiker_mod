@@ -36,8 +36,9 @@ class NestedBlockBase(object, metaclass=ABCMeta):
     end_html = None
     name = None
     ignore = None
-    attrs_re = None
-    attrs_name = None
+    var_part_re = None
+    var_part_name = None
+    var_part_pattern = None
 
     def __init__(self, parser):
         self.parser = parser
@@ -72,8 +73,8 @@ class SimpleNestedBlock(NestedBlockBase):
         opening - opened HTML tag
         closing - closed HTML tag
         """
-        if self.attrs_re:
-            assert self.attrs_name is not None
+        if self.var_part_re:
+            assert self.var_part_name is not None
 
         def conversionParseAction(s, l, t):
             text = s[t[0]:t[-1]]
@@ -81,18 +82,21 @@ class SimpleNestedBlock(NestedBlockBase):
             assert text.endswith(self.end)
 
             inner_text = text[len(self.start):-len(self.end)]
-            _opening = None
 
-            if self.attrs_re:
-                match = self.attrs_re.search(inner_text)
+            if self.var_part_re:
+                match = self.var_part_re.search(inner_text)
+                var_part = ''
+
                 if match:
-                    attrs = match.groupdict()[self.attrs_name]
-                    if attrs:
-                        attrs = ' %s' % attrs
-                        _opening = opening.format(attrs, attrs=attrs)
-                        inner_text = inner_text[match.end() - match.start():]
+                    var_part = match.groupdict()[self.var_part_name] or ''
 
-            if _opening is None:
+                    if var_part:
+                        if self.var_part_pattern:
+                            var_part = self.var_part_pattern % var_part
+
+                        inner_text = inner_text[match.end() - match.start():]
+                _opening = opening.format(var_part, var_part=var_part)
+            else:
                 _opening = opening
 
             return ''.join([

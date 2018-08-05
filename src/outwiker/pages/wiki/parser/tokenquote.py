@@ -18,9 +18,10 @@ class QuoteFactory(object):
 class QuoteToken(SimpleNestedBlock):
     start = '[>'
     end = '<]'
-    start_html = '<blockquote{attrs}>'
+    start_html = '<blockquote{var_part}>'
     end_html = '</blockquote>'
     name = 'quote'
-    attrs_re = re.compile('^%s' % TagAttrsPattern.value)
-    attrs_name = TagAttrsPattern.name
+    var_part_re = re.compile('^%s' % TagAttrsPattern.value)
+    var_part_name = TagAttrsPattern.name
+    var_part_pattern = ' %s'
     ignore = LineBreakToken().getToken()
