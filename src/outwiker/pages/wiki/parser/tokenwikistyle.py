@@ -99,7 +99,7 @@ class WikiStyleBase(object, metaclass=ABCMeta):
                     html_style not in self.parser.headItems):
                 self.parser.appendToHead(html_style)
 
-        classes_str = ' class="' + ' '.join(classes) + '"' if classes else ''
+        classes_str = ' class="%s"' % ' '.join(classes) if classes else ''
         style_str = ' style="' + style + '"' if style else ''
 
         content = self._prepareContent(t[1])
@@ -128,7 +128,7 @@ class WikiStyleBase(object, metaclass=ABCMeta):
 
         result = []
 
-        regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+        regex = re.compile(pattern, re.I | re.M | re.S)
         matches = regex.finditer(params)
 
         for match in matches:
@@ -195,7 +195,7 @@ class WikiStyleBlock(WikiStyleBase):
                 )
 
     def _getEndToken(self):
-        return LineStart() + Regex(r'%%[ \t]*') + LineEnd()
+        return LineStart() + Regex(r'%%[ \t]*$', flags=re.M)
 
     def _getTag(self):
         return 'div'
