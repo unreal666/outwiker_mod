@@ -160,6 +160,7 @@ class WikiPageView(BaseWikiPageView):
         self.toolsMenu.AppendSubMenu(self._headingMenu, _("Heading"))
         self.toolsMenu.AppendSubMenu(self._fontMenu, _("Font"))
         self.toolsMenu.AppendSubMenu(self._alignMenu, _("Alignment"))
+        self.toolsMenu.AppendSubMenu(self._formatMenu, _("Formatting"))
         self.mainWindow.menuController.addMenu(defines.MENU_WIKI_FORMAT,
                                                self._formatMenu)
 
