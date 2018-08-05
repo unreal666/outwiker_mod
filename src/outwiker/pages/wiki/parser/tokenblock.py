@@ -81,16 +81,18 @@ class SimpleNestedBlock(NestedBlockBase):
             assert text.endswith(self.end)
 
             inner_text = text[len(self.start):-len(self.end)]
+            _opening = None
 
             if self.attrs_re:
                 match = self.attrs_re.search(inner_text)
                 if match:
-                    attrs = ' %s' % match.groupdict()[self.attrs_name]
-                    _opening = opening.format(attrs, attrs=attrs)
-                    inner_text = text[match.end() - match.start():]
-                else:
-                    _opening = opening
-            else:
+                    attrs = match.groupdict()[self.attrs_name]
+                    if attrs:
+                        attrs = ' %s' % attrs
+                        _opening = opening.format(attrs, attrs=attrs)
+                        inner_text = inner_text[match.end() - match.start():]
+
+            if _opening is None:
                 _opening = opening
 
             return ''.join([
