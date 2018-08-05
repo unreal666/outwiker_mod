@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import traceback
 
@@ -22,10 +22,10 @@ from .tokencommand import CommandFactory
 from .tokentext import TextFactory
 from .tokenquote import QuoteFactory
 from .tokendefinitionlist import DefinitionListFactory
+from .tokenwikistyle import WikiStyleInlineFactory, WikiStyleBlockFactory
 
 from ..thumbnails import Thumbnails
 from outwiker.libs.pyparsing import NoMatch
-from outwiker.core.system import getOS
 
 
 class Parser(object):
@@ -81,6 +81,8 @@ class Parser(object):
         if not hasattr(self, 'lineJoin'): self.lineJoin = LineJoinFactory.make(self)
         if not hasattr(self, 'command'): self.command = CommandFactory.make(self)
         if not hasattr(self, 'text'): self.text = TextFactory.make(self)
+        if not hasattr(self, 'wikistyle_inline'): self.wikistyle_inline = WikiStyleInlineFactory.make(self)
+        if not hasattr(self, 'wikistyle_block'): self.wikistyle_block = WikiStyleBlockFactory.make(self)
 
         # Common wiki tokens
         self.wikiTokens = [
@@ -113,6 +115,8 @@ class Parser(object):
             self.definitionList,
             self.table,
             self.headings,
+            self.wikistyle_block,
+            self.wikistyle_inline,
             self.command,
         ]
 
@@ -137,6 +141,7 @@ class Parser(object):
             self.lineBreak,
             self.lineJoin,
             self.noformat,
+            self.wikistyle_inline,
         ]
 
         # Tokens for using inside headings
@@ -164,6 +169,7 @@ class Parser(object):
             self.strike,
             self.horline,
             self.align,
+            self.wikistyle_inline,
             self.command,
         ]
 
@@ -191,6 +197,8 @@ class Parser(object):
             self.underlined,
             self.strike,
             self.horline,
+            self.wikistyle_block,
+            self.wikistyle_inline,
             self.command,
         ]
 
@@ -220,6 +228,7 @@ class Parser(object):
             self.quote,
             self.definitionList,
             self.attaches,
+            self.wikistyle_inline,
             self.command,
         ]
 
@@ -229,12 +238,8 @@ class Parser(object):
         self._headingMarkup = None
         self._textLevelMarkup = None
 
-    def _createMarkup(self, tokensList):
-        markup = NoMatch()
-        for token in tokensList:
-            markup |= token
-
-        return markup
+    def _createMarkup(self, tokens_list):
+        return Markup(tokens_list)
 
     @property
     def head(self):
@@ -359,3 +364,13 @@ class Parser(object):
     def removeCommand(self, commandName):
         if commandName in self.commands:
             del self.commands[commandName]
+
+
+class Markup(object):
+    def __init__(self, tokens_list):
+        self._markup = NoMatch()
+        for token in tokens_list:
+            self._markup |= token
+
+    def transformString(self, text):
+        return self._markup.transformString(text)

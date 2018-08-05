@@ -1,43 +1,42 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import unittest
 
 from outwiker.core.pluginsloader import PluginsLoader
-from outwiker.core.application import Application
 from outwiker.core.htmlimproverfactory import HtmlImproverFactory
+from test.basetestcases import BaseOutWikerMixin
 
 
-class ParagraphHtmlImproverTest (unittest.TestCase):
-
+class ParagraphHtmlImproverTest (unittest.TestCase, BaseOutWikerMixin):
     def setUp(self):
+        self.initApplication()
         dirlist = ["../plugins/htmlformatter"]
 
-        self.loader = PluginsLoader(Application)
-        self.loader.load (dirlist)
+        self.loader = PluginsLoader(self.application)
+        self.loader.load(dirlist)
 
-        factory = HtmlImproverFactory (Application)
+        factory = HtmlImproverFactory(self.application)
         self.improver = factory['pimprover']
 
     def tearDown(self):
         self.loader.clear()
+        self.destroyApplication()
 
     def test_empty(self):
         src = ''
         expectedResult = ''
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_text_single_line (self):
+    def test_text_single_line(self):
         src = 'Абырвалг'
         expectedResult = '<p>Абырвалг</p>'
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_text_br (self):
+    def test_text_br(self):
         src = '''Абырвалг
 Foo
 Bar'''
@@ -45,12 +44,11 @@ Bar'''
 Foo<br/>
 Bar</p>'''
 
-        result = self.improver.run (src)
+        result = self.improver.run(src)
 
-        self.assertEqual (expectedResult, result)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_text_p_01 (self):
+    def test_text_p_01(self):
         src = '''Абырвалг
 
 Второй параграф'''
@@ -58,12 +56,11 @@ Bar</p>'''
         expectedResult = '''<p>Абырвалг</p>
 <p>Второй параграф</p>'''
 
-        result = self.improver.run (src)
+        result = self.improver.run(src)
 
-        self.assertEqual (expectedResult, result)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_text_p_02 (self):
+    def test_text_p_02(self):
         src = '''Абырвалг
 
 Второй параграф
@@ -76,12 +73,11 @@ Bar</p>'''
         expectedResult = '''<p>Абырвалг</p>
 <p>Второй параграф</p>'''
 
-        result = self.improver.run (src)
+        result = self.improver.run(src)
 
-        self.assertEqual (expectedResult, result)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_improve_01 (self):
+    def test_improve_01(self):
         src = r"""<h2>Attach links</h2>Attach:file.odt<br/><a href="__attach/file.odt">file.odt</a><br/><a href="__attach/file.odt">alternative text</a><br/><a href="__attach/file with spaces.pdf">file with spaces.pdf</a><h2>Images</h2>"""
 
         expectedResult = r"""<h2>Attach links</h2>
@@ -91,12 +87,11 @@ Bar</p>'''
 <a href="__attach/file with spaces.pdf">file with spaces.pdf</a></p>
 <h2>Images</h2>"""
 
-        result = self.improver.run (src)
+        result = self.improver.run(src)
 
-        self.assertEqual (expectedResult, result)
+        self.assertEqual(expectedResult, result)
 
-
-    def test_pre_01 (self):
+    def test_pre_01(self):
         src = r"""qweqweqw qweqwe
 qwewqeqwe wqe
 
@@ -130,11 +125,10 @@ qwewqeqwe wqe</p>
 sdfsdf<br/>
 sdf sdfsdf sdf</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_pre_02 (self):
+    def test_pre_02(self):
         src = r"""Абырвалг<pre><br/><h1>111</h1></pre>Абырвалг<pre><br/><h1>111</h1></pre>"""
 
         expectedResult = r"""<p>Абырвалг</p>
@@ -145,11 +139,10 @@ sdf sdfsdf sdf</p>"""
 
 <pre><br/><h1>111</h1></pre>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_pre_03 (self):
+    def test_pre_03(self):
         src = r"""Абырвалг
 <pre>111</pre>
 Абырвалг
@@ -163,11 +156,10 @@ sdf sdfsdf sdf</p>"""
 
 <pre>222</pre>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_pre_04 (self):
+    def test_pre_04(self):
         src = r"""Абырвалг
 <   pre   >111
 Абырвалг
@@ -182,11 +174,10 @@ sdf sdfsdf sdf</p>"""
 
 <pre>222</pre>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_script_01 (self):
+    def test_script_01(self):
         src = r"""Абырвалг
 
 <script>Абырвалг
@@ -203,11 +194,10 @@ qwerty
 фыва
 </script>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_script_02 (self):
+    def test_script_02(self):
         src = r"""Абырвалг
 <script>Абырвалг
 йцукен
@@ -223,11 +213,10 @@ qwerty
 фыва
 </script>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_script_03 (self):
+    def test_script_03(self):
         src = r"""Абырвалг
 <   script   >111
 Абырвалг
@@ -242,12 +231,11 @@ qwerty
 
 <script>222</script>"""
 
-        result = self.improver.run (src)
+        result = self.improver.run(src)
 
-        self.assertEqual (expectedResult, result, result)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_script_pre_01 (self):
+    def test_script_pre_01(self):
         src = r"""Абырвалг
 <script>Абырвалг
 <pre>
@@ -267,11 +255,10 @@ qwerty
 фыва
 </script>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_script_pre_02 (self):
+    def test_script_pre_02(self):
         src = r"""Абырвалг
 <script>Абырвалг
 <pre>
@@ -293,22 +280,20 @@ qwerty
 
 <p>Абырвалг</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_blockquote_01 (self):
+    def test_blockquote_01(self):
         src = r"""<blockquote>Абырвалг</blockquote>"""
 
         expectedResult = r"""<blockquote>
 <p>Абырвалг</p>
 </blockquote>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_blockquote_02 (self):
+    def test_blockquote_02(self):
         src = r"""Абзац 1<blockquote>Абырвалг</blockquote>Абзац 2"""
 
         expectedResult = r"""<p>Абзац 1</p>
@@ -317,11 +302,10 @@ qwerty
 </blockquote>
 <p>Абзац 2</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_blockquote_03 (self):
+    def test_blockquote_03(self):
         src = r"""Абзац 1
 
 <blockquote>Абырвалг</blockquote>
@@ -334,11 +318,10 @@ qwerty
 </blockquote>
 <p>Абзац 2</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_blockquote_04 (self):
+    def test_blockquote_04(self):
         src = r"""Абзац 1
 
 <blockquote>
@@ -353,11 +336,10 @@ qwerty
 </blockquote>
 <p>Абзац 2</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_table_01 (self):
+    def test_table_01(self):
         src = r"""Абзац 1<table><tr><td>Ячейка таблицы</td></tr></table>Абзац 2"""
 
         expectedResult = r"""<p>Абзац 1
@@ -368,11 +350,10 @@ qwerty
 </table>
 Абзац 2</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_table_02 (self):
+    def test_table_02(self):
         src = r"""Абзац 1
 <table><tr><td>Ячейка таблицы</td></tr></table>
 Абзац 2"""
@@ -385,11 +366,10 @@ qwerty
 </table>
 Абзац 2</p>"""
 
-        result = self.improver.run (src)
-        self.assertEqual (expectedResult, result, result)
+        result = self.improver.run(src)
+        self.assertEqual(expectedResult, result, result)
 
-
-    def test_table_03 (self):
+    def test_table_03(self):
         src = r"""Абзац 1
 
 <table><tr><td>Ячейка таблицы</td></tr></table>

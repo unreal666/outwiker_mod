@@ -14,6 +14,7 @@ from outwiker.pages.html.actions.switchcoderesult import SwitchCodeResultAction
 from outwiker.core.defines import (PAGE_MODE_TEXT,
                                    PAGE_MODE_PREVIEW,
                                    PAGE_MODE_HTML)
+from outwiker.gui.defines import TOOLBAR_ORDER_TEXT
 
 
 class BaseWikiPageView (BaseHtmlPanel):
@@ -25,7 +26,6 @@ class BaseWikiPageView (BaseHtmlPanel):
         # Редактор с просмотром получившегося HTML (если есть)
         self.htmlCodeWindow = None
 
-        self._hashKey = u"md5_hash"
         self.__WIKI_MENU_INDEX = 7
 
         # Список используемых полиморфных действий
@@ -38,7 +38,9 @@ class BaseWikiPageView (BaseHtmlPanel):
 
         self._toolbars = self._getToolbarsInfo(self.mainWindow)
         for toolbar_id, title in self._toolbars:
-            self.mainWindow.toolbars.createToolBar(toolbar_id, title)
+            self.mainWindow.toolbars.createToolBar(toolbar_id,
+                                                   title,
+                                                   order=TOOLBAR_ORDER_TEXT)
 
         self.notebook.SetPageText(0, self._getPageTitle())
 
@@ -143,7 +145,7 @@ class BaseWikiPageView (BaseHtmlPanel):
         self._application.onPageModeChange -= self.onTabChanged
 
         for toolbar_info in self._toolbars:
-            self.mainWindow.toolbars.updatePanesInfo()
+            # self.mainWindow.toolbars.updatePanesInfo()
             self.mainWindow.toolbars.destroyToolBar(toolbar_info[0])
 
         super().Clear()
@@ -157,10 +159,12 @@ class BaseWikiPageView (BaseHtmlPanel):
         actionController = self._application.actionController
 
         # Удалим элементы меню
-        [actionController.removeMenuItem(action.stringId) for action in self.__wikiNotationActions]
+        for action in self.__wikiNotationActions:
+            actionController.removeMenuItem(action.stringId)
 
         # Удалим элементы меню полиморфных действий
-        [actionController.removeMenuItem(strid) for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.removeMenuItem(strid)
 
         actionController.removeMenuItem(WikiOpenHtmlCodeAction.stringId)
         actionController.removeMenuItem(WikiUpdateHtmlAction.stringId)
@@ -171,12 +175,12 @@ class BaseWikiPageView (BaseHtmlPanel):
             for action in self.__wikiNotationActions:
                 actionController.removeToolbarButton(action.stringId)
 
-            [actionController.removeToolbarButton(strid)
-             for strid in self.__polyActions]
+            for strid in self.__polyActions:
+                actionController.removeToolbarButton(strid)
 
         # Обнулим функции действия в полиморфных действиях
-        [actionController.getAction(strid).setFunc(None)
-         for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.getAction(strid).setFunc(None)
 
     @property
     def toolsMenu(self):
@@ -184,7 +188,7 @@ class BaseWikiPageView (BaseHtmlPanel):
 
     def __createHtmlCodePanel(self, parentSizer):
         # Окно для просмотра получившегося кода HTML
-        self.htmlCodeWindow = HtmlTextEditor(self.notebook, -1)
+        self.htmlCodeWindow = HtmlTextEditor(self.notebook)
         self.htmlCodeWindow.SetReadOnly(True)
         parentSizer.Add(self.htmlCodeWindow, 1,
                         wx.TOP | wx.BOTTOM | wx.EXPAND, 2)

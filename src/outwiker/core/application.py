@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
-from outwiker.core.i18n import init_i18n, getLanguageFromConfig
 from outwiker.core.config import Config
 from outwiker.core.event import Event, CustomEvents
 from outwiker.core.recent import RecentWiki
@@ -299,13 +296,31 @@ class ApplicationParams(object):
         #     params - instance if the AttachListChangedParams class
         self.onAttachListChanged = Event()
 
-    def init(self, configFilename):
+    def init(self, fullConfigPath):
         """
         Initialize config and locale
         """
-        self.config = Config(configFilename)
+        self.fullConfigPath = fullConfigPath
+        self.config = Config(fullConfigPath)
         self.recentWiki = RecentWiki(self.config)
-        self.__initLocale()
+
+    def clear(self):
+        if self.wikiroot is not None:
+            self.__unbindWikiEvents(self.wikiroot)
+
+        self._unbindAllEvents()
+        self.wikiroot = None
+        self.config = None
+        self.mainWindow = None
+
+    def _unbindAllEvents(self):
+        for member_name in sorted(dir(self)):
+            member = getattr(self, member_name)
+            if isinstance(member, Event):
+                member.clear()
+
+        for key in list(self.customEvents.getKeys()):
+            self.customEvents.clear(key)
 
     @property
     def wikiroot(self):
@@ -323,6 +338,7 @@ class ApplicationParams(object):
         self.onWikiClose(self.__wikiroot)
 
         if self.__wikiroot is not None:
+            self.__wikiroot.save()
             self.__unbindWikiEvents(self.__wikiroot)
 
         self.__wikiroot = value
@@ -397,17 +413,6 @@ class ApplicationParams(object):
         if (self.__wikiroot is not None and
                 self.__wikiroot.selectedPage != page):
             self.__wikiroot.selectedPage = page
-
-    def __initLocale(self):
-        """
-        Locale initialization
-        """
-        language = getLanguageFromConfig(self.config)
-
-        try:
-            init_i18n(language)
-        except IOError:
-            logging.warning(u"Can't load language: {}".format(language))
 
     def getEvent(self, name):
         """Return build-in event or custom event"""

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+import os.path
+
+
 '''
 Various names and constants
 '''
@@ -13,6 +17,9 @@ PAGE_CONTENT_FILE = u'__page.text'
 
 # Page options (properties)
 PAGE_OPT_FILE = u'__page.opt'
+
+# Registry file (cache)
+REGISTRY_FILE = '__cache.tmp'
 
 # Base name for icons
 PAGE_ICON_NAME = u'__icon'
@@ -49,10 +56,18 @@ IMAGES_FOLDER_NAME = u'images'
 STYLES_FOLDER_NAME = u"styles"
 PLUGINS_FOLDER_NAME = u"plugins"
 SPELL_FOLDER_NAME = u"spell"
+STYLES_BLOCK_FOLDER_NAME = os.path.join("textstyles", 'block')
+STYLES_INLINE_FOLDER_NAME = os.path.join("textstyles", 'inline')
 
 PAGE_MODE_TEXT = 0
 PAGE_MODE_PREVIEW = 1
 PAGE_MODE_HTML = 2
+
+CONFIG_TOOLBARS_SECTION = 'Toolbars'
+CONFIG_TOOLBARS_VISIBLE_SUFFIX = '_visible'
+
+REGISTRY_SECTION_PAGES = '__pages'
+REGISTRY_PAGE_CURSOR_POSITION = 'cursorposition'
 
 
 # To translate this words with xgettext

@@ -6,8 +6,9 @@ from .pagelist import PageList
 
 
 class PageListPopup(wx.PopupTransientWindow):
-    def __init__(self, parent):
+    def __init__(self, parent, mainWindow):
         super(PageListPopup, self).__init__(parent)
+        self._mainWindow = mainWindow
 
         self.SetWindowStyle(wx.BORDER_SUNKEN)
         self.__pagelist = PageList(self)
@@ -36,25 +37,18 @@ class PageListPopup(wx.PopupTransientWindow):
         курсора, но не вылезало за пределы окна
         """
         mousePosition = wx.GetMousePosition()
-        displaySize = wx.GetDisplaySize()
 
         width, height = self.GetSize()
+        parent_window_rect = self._mainWindow.GetScreenRect()
 
-        # Проверяем разные четверти
-        # Слева вверху
-        if ((mousePosition.x - width) >= 0 and
-                (mousePosition.y - height) >= 0):
-            return (mousePosition.x - width, mousePosition.y - height)
+        if mousePosition.x < parent_window_rect.x + parent_window_rect.width / 2:
+            popup_x = mousePosition.x
+        else:
+            popup_x = mousePosition.x - width
 
-        # Справа вверху
-        if ((mousePosition.x + width) < displaySize.x and
-                (mousePosition.y - height) >= 0):
-            return (mousePosition.x, mousePosition.y - height)
+        if mousePosition.y < parent_window_rect.y + parent_window_rect.height / 2:
+            popup_y = mousePosition.y
+        else:
+            popup_y = mousePosition.y - height
 
-        # Слева снизу
-        if ((mousePosition.x - width) >= 0 and
-                (mousePosition.y + height) < displaySize.y):
-            return (mousePosition.x - width, mousePosition.y)
-
-        # Осталось только справа внизу
-        return (mousePosition.x, mousePosition.y)
+        return (popup_x, popup_y)

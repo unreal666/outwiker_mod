@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 
@@ -7,7 +7,7 @@ from outwiker.libs.pyparsing import Regex
 
 class CommandFactory (object):
     @staticmethod
-    def make (parser):
+    def make(parser):
         return CommandToken(parser).getToken()
 
 
@@ -26,14 +26,13 @@ class CommandToken (object):
             \(:\s*(?P=name)end(?P<hasend>)\s*:\))?    # Конец команды "(:nameend:)"
             """
 
-    def __init__ (self, parser):
+    def __init__(self, parser):
         self.parser = parser
 
-    def getToken (self):
-        return Regex (self.regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE | re.VERBOSE).setParseAction (self.execute)("command")
+    def getToken(self):
+        return Regex(self.regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE | re.VERBOSE).setParseAction(self.execute)("command")
 
-
-    def execute (self, s, l, t):
+    def execute(self, s, l, t):
         """
         Найти нужную команду и выполнить ее
         """
@@ -48,14 +47,14 @@ class CommandToken (object):
             return t[0]
 
         if params is None:
-            params = u""
+            params = ""
 
         if content is None:
-            content = u""
+            content = ""
 
         argcount = command.execute.__code__.co_argcount
 
         if argcount != 4:
-            return command.execute (params, content)
+            return command.execute(params, content)
         else:
-            return command.execute (params, content, {"hasCmdend": hasCmdend, "cmd_name": name,})
+            return command.execute(params, content, {"hasCmdend": hasCmdend, "cmd_name": name,})

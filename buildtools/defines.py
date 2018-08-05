@@ -47,6 +47,7 @@ PLUGINS_DIR = u'plugins'
 PLUGIN_VERSIONS_FILENAME = u'plugin.xml'
 OUTWIKER_VERSIONS_FILENAME = u'versions.xml'
 NEED_FOR_BUILD_DIR = u'need_for_build'
+COVERAGE_PARAMS = '--rcfile="../.coveragerc"'
 
 FILES_FOR_UPLOAD_UNSTABLE_WIN = [
     u'outwiker_win_unstable.exe',
@@ -110,5 +111,9 @@ VM_BUILD_PARAMS = {
     # u'artful64': {
     #     u'vagrant_path': 'need_for_build/virtual/build_machines/artful64',
     #     u'host': u'192.168.101.66',
+    # },
+    # u'trusty64': {
+    #     u'vagrant_path': 'need_for_build/virtual/build_machines/trusty64',
+    #     u'host': u'192.168.101.67',
     # },
 }

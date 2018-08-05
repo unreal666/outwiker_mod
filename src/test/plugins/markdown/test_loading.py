@@ -1,17 +1,18 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-from test.plugins.baseloading import BasePluginLoadingTest
+import unittest
+
+from test.basetestcases import PluginLoadingMixin
 
 
-class MarkdownLoadingTest (BasePluginLoadingTest):
-    def getPluginDir (self):
+class MarkdownLoadingTest (PluginLoadingMixin, unittest.TestCase):
+    def getPluginDir(self):
         """
         Must return path to plugin
         """
         return "../plugins/markdown"
 
-
-    def getPluginName (self):
+    def getPluginName(self):
         """
         Must return plugin name
         """

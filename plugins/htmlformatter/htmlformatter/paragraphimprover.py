@@ -1,10 +1,9 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 from io import StringIO
 
 from outwiker.core.htmlimprover import HtmlImprover
-
 
 
 class ParagraphHtmlImprover(HtmlImprover):
@@ -19,7 +18,6 @@ class ParagraphHtmlImprover(HtmlImprover):
 
         return result
 
-
     def _prepareText(self, text):
         result = text
 
@@ -30,7 +28,6 @@ class ParagraphHtmlImprover(HtmlImprover):
         result = re.sub(pattern, "", result, flags=re.I | re.M)
 
         return result
-
 
     def _improveRedability(self, text):
         result = text
@@ -87,6 +84,30 @@ class ParagraphHtmlImprover(HtmlImprover):
         append_eol_after = r"(<(?:hr(?: [^>]*?)?/?|br\s*/?|/\s*(?:h\d|p|script|[uo]l|table))>)\n*"
         result = re.sub(append_eol_after, "\\1\n", result, flags=re.I | re.M)
 
+        # Normalize <p>...</p> inside <div>
+        append_p_inside = r"(?P<tag><div.*?>)"
+        # append_p_inside = r"(?P<start><div.*?>)(?P<content>.*?)(?P<end></div>)"
+        # append_p_inside = r"(?P<start><div((?!</div>).)*?>)(?P<content>((?!</div>).)*?</p>.*?)(?P<end></div>)"
+        result = re.sub(append_p_inside,
+                        "\\g<tag><p>",
+                        result,
+                        flags=re.I | re.M)
+        result = result.replace('</div>', '</p></div>')
+
+        # Remove <p> tag before div elements
+        remove_p_before = r"<p>(?=<div.*?>)"
+        result = re.sub(remove_p_before, "", result, flags=re.I)
+
+        # Remove </p> after div element
+        result = result.replace('</div></p>', '</div>\n')
+
+        # Remove <p> inside <div> for single paragraph
+        remove_single_p = r"(?P<start><div((?!</div>).)*?>)<p>(?P<content>((?!</div>|<p>).)*?)</p>(?P<end></div>)"
+        result = re.sub(remove_single_p,
+                        "\\g<start>\\g<content>\\g<end>",
+                        result,
+                        flags=re.I | re.M | re.S)
+
         # Remove </p> at the begin
         remove_p_start = r"^</p>"
         result = re.sub(remove_p_start, "", result, flags=re.I)
@@ -97,15 +118,13 @@ class ParagraphHtmlImprover(HtmlImprover):
 
         return result
 
-
     def _addLineBreaks(self, text):
         return text.replace(u"\n", "<br/>")
-
 
     def _coverParagraphs(self, text):
         paragraphs = (par.strip()
                       for par
-                      in text.split (u'\n\n')
+                      in text.split(u'\n\n')
                       if len(par.strip()) != 0)
 
         buf = StringIO()

@@ -7,6 +7,7 @@ import wx
 from outwiker.actions.polyactionsid import *
 from outwiker.core.commands import insertCurrentDate
 from outwiker.core.defines import PAGE_MODE_TEXT, PAGE_MODE_PREVIEW
+from outwiker.gui.defines import TOOLBAR_ORDER_TEXT
 from outwiker.gui.htmltexteditor import HtmlTextEditor
 from outwiker.gui.tabledialog import TableDialog
 from outwiker.gui.tablerowsdialog import TableRowsDialog
@@ -37,7 +38,9 @@ class HtmlPageView(BaseHtmlPanel):
             (defines.TOOLBAR_HTML_TABLE, _(u"Table")),
         ]
         for toolbar_id, title in self._toolbars:
-            self.mainWindow.toolbars.createToolBar(toolbar_id, title)
+            self.mainWindow.toolbars.createToolBar(toolbar_id,
+                                                   title,
+                                                   order=TOOLBAR_ORDER_TEXT)
 
         # Список используемых полиморфных действий
         self.__polyActions = [
@@ -111,7 +114,6 @@ class HtmlPageView(BaseHtmlPanel):
         self._application.onPageModeChange -= self.onTabChanged
         self._removeActionTools()
 
-        self.mainWindow.toolbars.updatePanesInfo()
         for toolbar_info in self._toolbars:
             self.mainWindow.toolbars.destroyToolBar(toolbar_info[0])
 
@@ -121,33 +123,38 @@ class HtmlPageView(BaseHtmlPanel):
         actionController = self._application.actionController
 
         # Удалим элементы меню
-        [actionController.removeMenuItem(action.stringId) for action in self.__htmlNotationActions]
+        for action in self.__htmlNotationActions:
+            actionController.removeMenuItem(action.stringId)
 
         # Удалим элементы меню полиморфных действий
-        [actionController.removeMenuItem(strid) for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.removeMenuItem(strid)
 
         actionController.removeMenuItem(HtmlAutoLineWrap.stringId)
         actionController.removeMenuItem(SwitchCodeResultAction.stringId)
 
         # Удалим кнопки с панелей инструментов
-        [actionController.removeToolbarButton(
-            action.stringId) for action in self.__htmlNotationActions]
+        for action in self.__htmlNotationActions:
+            actionController.removeToolbarButton(action.stringId)
 
-        [actionController.removeToolbarButton(strid) for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.removeToolbarButton(strid)
 
         actionController.removeToolbarButton(HtmlAutoLineWrap.stringId)
 
         # Обнулим функции действия в полиморфных действиях
-        [actionController.getAction(strid).setFunc(None) for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.getAction(strid).setFunc(None)
 
     def _enableActions(self, enabled):
         actionController = self._application.actionController
 
-        [actionController.enableTools(action.stringId,
-                                                        enabled) for action in self.__htmlNotationActions]
+        for action in self.__htmlNotationActions:
+            actionController.enableTools(action.stringId, enabled)
 
         # Активируем / дизактивируем полиморфные действия
-        [actionController.enableTools(strid, enabled) for strid in self.__polyActions]
+        for strid in self.__polyActions:
+            actionController.enableTools(strid, enabled)
 
     def UpdateView(self, page):
         self.__updateLineWrapTools()

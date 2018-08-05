@@ -1,16 +1,18 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-import unittest
 from tempfile import mkdtemp
 import os
+import unittest
 
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.application import Application
 from test.utils import removeDir
+from test.basetestcases import BaseOutWikerGUIMixin
 
 
-class SnippetsLoaderTest(unittest.TestCase):
+class SnippetsLoaderTest(unittest.TestCase, BaseOutWikerGUIMixin):
     def setUp(self):
+        self.initApplication()
         dirlist = ["../plugins/snippets"]
 
         self.loader = PluginsLoader(Application)
@@ -20,6 +22,7 @@ class SnippetsLoaderTest(unittest.TestCase):
     def tearDown(self):
         self.loader.clear()
         removeDir(self._dir_snippets)
+        self.destroyApplication()
 
     def _create(self, fname):
         with open(fname, 'w'):

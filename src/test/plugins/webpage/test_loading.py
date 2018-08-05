@@ -1,18 +1,20 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-from test.plugins.baseloading import BasePluginLoadingTest
+import unittest
+
+from test.basetestcases import PluginLoadingMixin
 
 
-class WebPageLoadingTest (BasePluginLoadingTest):
-    def getPluginDir (self):
+class WebPageLoadingTest (PluginLoadingMixin, unittest.TestCase):
+    def getPluginDir(self):
         """
         Должен возвращать путь до папки с тестируемым плагином
         """
         return "../plugins/webpage"
 
-
-    def getPluginName (self):
+    def getPluginName(self):
         """
-        Должен возвращать имя плагина, по которому его можно найти в PluginsLoader
+        Должен возвращать имя плагина,
+        по которому его можно найти в PluginsLoader
         """
         return "WebPage"

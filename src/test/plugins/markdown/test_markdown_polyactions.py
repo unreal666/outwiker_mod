@@ -1,22 +1,26 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
+
+import unittest
 
 from outwiker.core.application import Application
 from outwiker.core.pluginsloader import PluginsLoader
 
-from test.actions.test_editor_polyactions import BaseEditorPolyactionsTest
+from test.actions.test_editor_polyactions import BaseEditorPolyactionsFixture
 
 
-class MarkdownPolyactionsTest (BaseEditorPolyactionsTest):
+class MarkdownPolyactionsTest(BaseEditorPolyactionsFixture, unittest.TestCase):
     """Test polyactions for Markdown pages"""
     def setUp(self):
+        super().setUp()
+
+    def _postInitApplication(self):
         dirlist = ["../plugins/markdown"]
         self.loader = PluginsLoader(Application)
         self.loader.load(dirlist)
-        super(MarkdownPolyactionsTest, self).setUp()
 
     def tearDown(self):
         self.loader.clear()
-        super(MarkdownPolyactionsTest, self).tearDown()
+        super().tearDown()
 
     def _createPage(self):
         from markdown.markdownpage import MarkdownPageFactory

@@ -1,18 +1,17 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
+import unittest
 
-
-from test.guitests.basemainwnd import BaseMainWndTest
-from outwiker.core.application import Application
 from outwiker.pages.wiki.wikipage import WikiPageFactory
 from outwiker.pages.html.htmlpage import HtmlPageFactory
 from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.core.commands import getClipboardText
+from test.basetestcases import BaseOutWikerGUIMixin
 from outwiker.actions.polyactionsid import *
 
 
-class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
+class BaseEditorPolyactionsFixture(BaseOutWikerGUIMixin, metaclass=ABCMeta):
     @abstractmethod
     def _createPage(self):
         pass
@@ -21,15 +20,24 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def _getEditor(self):
         pass
 
+    def _postInitApplication(self):
+        pass
+
     def setUp(self):
-        BaseMainWndTest.setUp(self)
+        self.initApplication()
+        self._postInitApplication()
+        self.wikiroot = self.createWiki()
         self.page = self._createPage()
-        Application.wikiroot = self.wikiroot
-        Application.selectedPage = self.page
+        self.application.wikiroot = self.wikiroot
+        self.application.selectedPage = self.page
+
+    def tearDown(self):
+        self.destroyApplication()
+        self.destroyWiki(self.wikiroot)
 
     def test_LineDuplicate_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3'
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -42,7 +50,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_LineDuplicate_02(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3'
         editor.SetText(text)
         editor.SetSelection(15, 15)
@@ -55,7 +63,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_LineDuplicate_03(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = ''
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -68,7 +76,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_MoveLinesDown_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -81,7 +89,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_MoveLinesDown_02(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(0, 15)
@@ -94,7 +102,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_MoveLinesUp_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(15, 15)
@@ -107,7 +115,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_MoveLinesUp_02(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(10, 21)
@@ -120,7 +128,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_MoveLinesUpDown_empty(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = ''
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -135,7 +143,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_DeleteCurrentLine_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -148,7 +156,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_DeleteCurrentLine_02(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4'
         editor.SetText(text)
         editor.SetSelection(10, 10)
@@ -161,7 +169,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_DeleteCurrentLine_03_empty(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = ''
         editor.SetText(text)
         editor.SetSelection(0, 0)
@@ -174,7 +182,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_GotoNextWord_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'слово слово2 ещеоднослово'
         editor.SetText(text)
         editor.GotoPos(0)
@@ -190,7 +198,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_GotoPrevWord_01(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = 'слово слово2 ещеоднослово'
         editor.SetText(text)
         editor.GotoPos(25)
@@ -206,7 +214,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
 
     def test_GotoWord_empty(self):
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         text = ''
         editor.SetText(text)
         editor.GotoPos(0)
@@ -220,7 +228,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -230,7 +238,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_02(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -240,7 +248,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_03(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(3)
 
@@ -250,7 +258,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_04(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(5)
 
@@ -260,7 +268,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_05(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(6)
 
@@ -270,7 +278,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_06(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(7)
 
@@ -280,7 +288,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_07(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(13)
 
@@ -290,7 +298,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_08(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(14)
 
@@ -300,7 +308,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordStart_09(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(25)
 
@@ -310,7 +318,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -320,7 +328,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_02(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -330,7 +338,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_03(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(1)
 
@@ -340,7 +348,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_04(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(6)
 
@@ -350,7 +358,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_05(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(12)
 
@@ -360,7 +368,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_06(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(13)
 
@@ -370,7 +378,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_07(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(14)
 
@@ -380,7 +388,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_GoToWordEnd_08(self):
         text = 'слово слово2 ещеоднослово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(25)
 
@@ -390,7 +398,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
 
         actionController.getAction(CLIPBOARD_COPY_LINE).run(None)
@@ -401,7 +409,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_02(self):
         text = '\n'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -413,7 +421,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_03(self):
         text = 'Строка 1'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -425,7 +433,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_04(self):
         text = 'Строка 1\n'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -437,7 +445,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_05(self):
         text = 'Строка 1\nСтрока 2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(9)
 
@@ -449,7 +457,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyLineToClipboard_06(self):
         text = 'Строка 1\nСтрока 2\n'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(9)
 
@@ -461,7 +469,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -475,7 +483,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_02(self):
         text = 'Строка 1'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -489,7 +497,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_03(self):
         text = 'Строка 1\n'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -503,7 +511,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_04(self):
         text = 'Строка 1\nСтрока 2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -517,7 +525,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_05(self):
         text = 'Строка 1\nСтрока 2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(9)
 
@@ -531,7 +539,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutLineToClipboard_06(self):
         text = 'Строка 1\nСтрока 2\nСтрока 3'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(9)
 
@@ -545,7 +553,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -556,7 +564,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_02(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -567,7 +575,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_03(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(2)
 
@@ -578,7 +586,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_04(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(5)
 
@@ -589,7 +597,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_05(self):
         text = ' слово '
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(1)
 
@@ -600,7 +608,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CopyWordToClipboard_06(self):
         text = ' слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(7)
 
@@ -611,7 +619,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_01(self):
         text = ''
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -625,7 +633,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_02(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -639,7 +647,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_03(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(2)
 
@@ -653,7 +661,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_04(self):
         text = 'слово'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(5)
 
@@ -667,7 +675,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_05(self):
         text = 'слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(0)
 
@@ -681,7 +689,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_06(self):
         text = 'слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(5)
 
@@ -695,7 +703,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_07(self):
         text = 'слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(6)
 
@@ -709,7 +717,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_08(self):
         text = 'слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(8)
 
@@ -723,7 +731,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
     def test_CutWordToClipboard_09(self):
         text = 'слово слово2'
         editor = self._getEditor()
-        actionController = Application.actionController
+        actionController = self.application.actionController
         editor.SetText(text)
         editor.GotoPos(12)
 
@@ -735,7 +743,7 @@ class BaseEditorPolyactionsTest (BaseMainWndTest, metaclass=ABCMeta):
         self.assertEqual(newtext, 'слово ')
 
 
-class WikiEditorPolyactionsTest (BaseEditorPolyactionsTest):
+class WikiEditorPolyactionsTest(BaseEditorPolyactionsFixture, unittest.TestCase):
     """
     Test polyactions for wiki pages
     """
@@ -743,10 +751,10 @@ class WikiEditorPolyactionsTest (BaseEditorPolyactionsTest):
         return WikiPageFactory().create(self.wikiroot, "Викистраница", [])
 
     def _getEditor(self):
-        return Application.mainWindow.pagePanel.pageView.codeEditor
+        return self.application.mainWindow.pagePanel.pageView.codeEditor
 
 
-class HtmlEditorPolyactionsTest (BaseEditorPolyactionsTest):
+class HtmlEditorPolyactionsTest(BaseEditorPolyactionsFixture, unittest.TestCase):
     """
     Test polyactions for HTML pages
     """
@@ -754,10 +762,10 @@ class HtmlEditorPolyactionsTest (BaseEditorPolyactionsTest):
         return HtmlPageFactory().create(self.wikiroot, "HTML-страница", [])
 
     def _getEditor(self):
-        return Application.mainWindow.pagePanel.pageView.codeEditor
+        return self.application.mainWindow.pagePanel.pageView.codeEditor
 
 
-class TextEditorPolyactionsTest (BaseEditorPolyactionsTest):
+class TextEditorPolyactionsTest(BaseEditorPolyactionsFixture, unittest.TestCase):
     """
     Test polyactions for text pages
     """
@@ -767,4 +775,4 @@ class TextEditorPolyactionsTest (BaseEditorPolyactionsTest):
                                         [])
 
     def _getEditor(self):
-        return Application.mainWindow.pagePanel.pageView.textEditor
+        return self.application.mainWindow.pagePanel.pageView.textEditor

@@ -24,8 +24,8 @@ ApplyStyleEvent, EVT_APPLY_STYLE = wx.lib.newevent.NewEvent()
 class TextEditor(TextEditorBase):
     _fontConfigSection = "Font"
 
-    def __init__(self, parent, *args, **kwds):
-        super(TextEditor, self).__init__(parent)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self._config = EditorConfig(Application.config)
 
@@ -209,7 +209,6 @@ class TextEditor(TextEditorBase):
                                        wx.stc.STC_SCMOD_ALT,
                                        wx.stc.STC_CMD_LINEENDDISPLAY)
 
-
     def __setMarginWidth(self, editor):
         """
         Установить размер левой области, где пишутся номера строк в
@@ -289,7 +288,6 @@ class TextEditor(TextEditorBase):
 
             stylebytesstr = "".join([chr(byte) for byte in self.__stylebytes])
 
-
             if event.stylebytes is not None:
                 self.textCtrl.StartStyling(startByte,
                                            int(0xff ^ wx.stc.STC_INDICS_MASK))
@@ -307,7 +305,7 @@ class TextEditor(TextEditorBase):
         langlist = self._getDictsFromConfig()
         spellDirList = outwiker.core.system.getSpellDirList()
 
-        spellChecker = SpellChecker(Application, langlist, spellDirList)
+        spellChecker = SpellChecker(langlist, spellDirList)
         spellChecker.addCustomDict(os.path.join(spellDirList[-1], CUSTOM_DICT_FILE_NAME))
 
         return spellChecker

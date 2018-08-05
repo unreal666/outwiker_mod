@@ -45,6 +45,7 @@ from buildtools.defines import (
     VM_BUILD_PARAMS,
     LINUX_BUILD_DIR,
     WINDOWS_BUILD_DIR,
+    COVERAGE_PARAMS,
 )
 from buildtools.versions import (getOutwikerVersion,
                                  getOutwikerVersionStr,
@@ -283,21 +284,26 @@ def run(args=u''):
 
 
 @task
-def test(section=u'', *args):
+def test(*args):
     '''
     Run the unit tests
     '''
-    _runTests(u'src', u'tests_', section, *args)
-    if len(section) == 0:
-        test_build(section, *args)
+    command = getPython() if args else 'coverage run {}'.format(COVERAGE_PARAMS)
+
+    with lcd('src'):
+        local('{command} runtests.py {args}'.format(
+            command=command, args=' '.join(args)))
+
+    if len(args) == 0:
+        test_build()
 
 
 @task
-def test_build(section=u'', *args):
+def test_build(*args):
     '''
     Run the build unit tests
     '''
-    _runTests(u'.', u'test_build_', section, *args)
+    _runTests(u'.', u'test_build_', '', *args)
 
 
 def _runTests(testdir, prefix, section=u'', *args):
@@ -349,7 +355,7 @@ def deb_binary_clear():
 @task
 def clear():
     '''
-    Remove artefacts after all assemblies
+    Remove artifacts after all assemblies
     '''
     plugins_clear()
     sources_clear()
@@ -560,7 +566,7 @@ def _add_git_tag(tagname):
 @task
 def build(is_stable=False):
     '''
-    Create artefacts for current version.
+    Create artifacts for current version.
     '''
     if is_stable:
         build(False)
@@ -677,7 +683,7 @@ def vm_prepare():
     '''
     vm_run()
     with lcd(u'need_for_build/virtual/build_machines'):
-        local(u'ansible-playbook prepare_build_machines.yml')
+        local(u'ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook prepare_build_machines.yml')
 
 
 @task
@@ -697,7 +703,7 @@ def vm_linux_binary(is_stable=0):
         os.makedirs(path_to_result)
 
     with lcd(u'need_for_build/virtual/build_machines'):
-        local(u'ansible-playbook build_linux_binaries.yml --extra-vars "version={version} build={build} save_to={save_to} is_stable={is_stable}"'.format(
+        local(u'ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook build_linux_binaries.yml --extra-vars "version={version} build={build} save_to={save_to} is_stable={is_stable}"'.format(
             version=version[0],
             build=version[1],
             save_to=path_to_result,
@@ -710,3 +716,10 @@ def vm_linux_binary(is_stable=0):
 def appimage(is_stable=0):
     builder = BuilderAppImage(is_stable=tobool(is_stable))
     builder.build()
+
+
+@task
+def coverage():
+    with lcd('src'):
+        local('coverage report {} -i'.format(COVERAGE_PARAMS))
+        local('coverage html {} -i'.format(COVERAGE_PARAMS))

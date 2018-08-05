@@ -37,7 +37,6 @@ _build
 doxydoc
 profiles/*.profile
 test/*.profile
-.coverage
 htmlcov
 src/tests.log
 src/plugins/*
@@ -53,3 +52,5 @@ serverinfo.py
 *.log
 .vscode
 Pipfile.lock
+.pytest_cache
+__cache.tmp

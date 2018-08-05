@@ -6,7 +6,6 @@ import logging
 import wx
 import wx.aui
 
-from outwiker.core.application import Application
 from outwiker.core.attachwatcher import AttachWatcher
 from outwiker.core.commands import MessageBox
 from outwiker.core.system import getOS
@@ -69,18 +68,25 @@ from outwiker.pages.wiki.wikipagecontroller import WikiPageController
 from outwiker.pages.html.htmlpagecontroller import HtmlPageController
 from outwiker.pages.text.textpagecontroller import TextPageController
 from outwiker.pages.search.searchpagecontroller import SearchPageController
+from outwiker.gui.controls.toolbar2 import ToolBar2Container
 
 
 logger = logging.getLogger('outwiker.gui.mainwindow')
 
 
 class MainWindow(wx.Frame):
-    def __init__(self, *args, **kwds):
-        logger.debug(u'MainWindow initializing begin')
-        kwds["style"] = wx.DEFAULT_FRAME_STYLE
-        wx.Frame.__init__(self, *args, **kwds)
+    def __init__(self, application):
+        super().__init__(None)
+        self._application = application
 
-        self.mainWindowConfig = MainWindowConfig(Application.config)
+        # Variables to accurate watch for main window state
+        self._realSize = None
+        self._realPosition = None
+        self._realMaximized = False
+
+        logger.debug(u'MainWindow initializing begin')
+
+        self.mainWindowConfig = MainWindowConfig(self._application.config)
 
         # Флаг, обозначающий, что в цикле обработки стандартных сообщений
         # (например, копирования в буфер обмена) сообщение вернулось обратно
@@ -93,35 +99,51 @@ class MainWindow(wx.Frame):
         self._createStatusBar()
 
         logger.debug(u'MainWindow. Create the MainWndController')
-        self.controller = MainWndController(self)
+        self.controller = MainWndController(self, self._application)
         self.controller.loadMainWindowParams()
 
         if self.mainWindowConfig.maximized.value:
             self.Maximize()
 
+        self._mainSizer = wx.FlexGridSizer(cols=1)
+        self._mainSizer.AddGrowableCol(0)
+        self._mainSizer.AddGrowableRow(1)
+        self._toolbarContainer = ToolBar2Container(self)
+        self._mainContentPanel = wx.Panel(self)
+
+        self._mainSizer.Add(self._toolbarContainer, flag=wx.EXPAND)
+        self._mainSizer.Add(self._mainContentPanel, flag=wx.EXPAND)
+        self.SetSizer(self._mainSizer)
+
         logger.debug(u'MainWindow. Create the AuiManager')
-        self.auiManager = wx.aui.AuiManager(self)
+
+        self.auiManager = wx.aui.AuiManager(
+            self._mainContentPanel,
+            flags=wx.aui.AUI_MGR_DEFAULT |
+            wx.aui.AUI_MGR_LIVE_RESIZE |
+            wx.aui.AUI_MGR_ALLOW_FLOATING)
+
         self._createAuiPanes()
         self._createToolbars()
 
         logger.debug(u'MainWindow. Create the MainPanesController')
-        self.__panesController = MainPanesController(Application, self)
+        self.__panesController = MainPanesController(self._application, self)
 
         self._bindGuiEvents()
 
         logger.debug(u'MainWindow. Create the TabsController')
         self.tabsController = TabsController(self.pagePanel.panel.tabsCtrl,
-                                             Application)
+                                             self._application)
 
-        self.attachWatcher = AttachWatcher(Application,
+        self.attachWatcher = AttachWatcher(self._application,
                                            guidefines.ATTACH_CHECK_PERIOD)
 
         self._coreControllers = [
-            WikiPageController(Application),
-            HtmlPageController(Application),
-            TextPageController(Application),
-            SearchPageController(Application),
-            PrefController(Application),
+            WikiPageController(self._application),
+            HtmlPageController(self._application),
+            TextPageController(self._application),
+            SearchPageController(self._application),
+            PrefController(self._application),
             self.attachWatcher,
         ]
 
@@ -129,7 +151,8 @@ class MainWindow(wx.Frame):
         self._initCoreControllers()
 
         logger.debug(u'MainWindow. Create the tray icon')
-        self.taskBarIconController = getTrayIconController(Application, self)
+        self.taskBarIconController = getTrayIconController(self._application,
+                                                           self)
 
         logger.debug(u'MainWindow initializing end')
 
@@ -162,9 +185,28 @@ class MainWindow(wx.Frame):
         self.menuController.createSubMenu(guidefines.MENU_HELP, _('Help'))
 
     def _createToolbars(self):
-        self._toolbars = ToolBarsController(self, Application)
-        self._toolbars.createToolBar(guidefines.TOOLBAR_GENERAL, _('General'))
-        self._toolbars.createToolBar(guidefines.TOOLBAR_PLUGINS, _('Plugins'))
+        toolbars_menu = self.menuController.createSubMenu(
+            guidefines.MENU_TOOLBARS,
+            _(u"Toolbars"),
+            guidefines.MENU_VIEW)
+
+        self._toolbars = ToolBarsController(
+            toolbars_menu,
+            self._toolbarContainer,
+            self._application.config
+        )
+
+        self._toolbars.createToolBar(
+            guidefines.TOOLBAR_GENERAL,
+            _('General'),
+            order=guidefines.TOOLBAR_ORDER_GENERAL
+        )
+
+        self._toolbars.createToolBar(
+            guidefines.TOOLBAR_PLUGINS,
+            _('Plugins'),
+            order=guidefines.TOOLBAR_ORDER_PLUGINS_OTHER
+        )
 
     def _initCoreControllers(self):
         [controller.initialize() for controller in self._coreControllers]
@@ -187,11 +229,12 @@ class MainWindow(wx.Frame):
         self.treePanel.panel.addButtons()
 
         if self.mainWindowConfig.fullscreen.value:
-            Application.actionController.check(FullScreenAction.stringId, True)
+            self._application.actionController.check(FullScreenAction.stringId,
+                                                     True)
         logger.debug(u'MainWindow createGui ended')
 
     def _createSwitchToMenu(self):
-        actionController = Application.actionController
+        actionController = self._application.actionController
         menu = self.menuController[guidefines.MENU_VIEW_GOTO]
 
         actionController.appendMenuItem(
@@ -254,7 +297,7 @@ class MainWindow(wx.Frame):
         imagesDir = getImagesDir()
         toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
         menu = self.menuController[guidefines.MENU_FILE]
-        actionController = Application.actionController
+        actionController = self._application.actionController
 
         # Создать...
         actionController.appendMenuItem(
@@ -314,7 +357,7 @@ class MainWindow(wx.Frame):
         """
         Заполнить действиями меню Дерево
         """
-        actionController = Application.actionController
+        actionController = self._application.actionController
         menu = self.menuController[guidefines.MENU_TREE]
         toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
         imagesDir = getImagesDir()
@@ -380,7 +423,7 @@ class MainWindow(wx.Frame):
         imagesDir = getImagesDir()
         toolbar = self.toolbars[guidefines.TOOLBAR_GENERAL]
         menu = self.menuController[guidefines.MENU_TOOLS]
-        actionController = Application.actionController
+        actionController = self._application.actionController
 
         actionController.appendMenuItem(AddTabAction.stringId, menu)
         actionController.appendMenuItem(CloseTabAction.stringId, menu)
@@ -446,7 +489,7 @@ class MainWindow(wx.Frame):
 
     def _createHelpMenu(self):
         menu = self.menuController[guidefines.MENU_HELP]
-        actionController = Application.actionController
+        actionController = self._application.actionController
 
         actionController.appendMenuItem(OpenHelpAction.stringId, menu)
         actionController.appendMenuItem(AboutAction.stringId, menu)
@@ -464,7 +507,7 @@ class MainWindow(wx.Frame):
         self._createSwitchToMenu()
         self.__panesController.createViewMenuItems()
 
-        actionController = Application.actionController
+        actionController = self._application.actionController
 
         viewMenu = self.menuController[guidefines.MENU_VIEW]
         viewMenu.AppendSeparator()
@@ -498,12 +541,18 @@ class MainWindow(wx.Frame):
         """
         Создание плавающих панелей
         """
-        self.pagePanel = PageMainPane(self, self.auiManager, Application)
-        self.treePanel = TreeMainPane(self, self.auiManager, Application)
-        self.attachPanel = AttachMainPane(self, self.auiManager, Application)
-        self.tagsCloudPanel = TagsCloudMainPane(self,
+        self.pagePanel = PageMainPane(self._mainContentPanel,
+                                      self.auiManager,
+                                      self._application)
+        self.treePanel = TreeMainPane(self._mainContentPanel,
+                                      self.auiManager,
+                                      self._application)
+        self.attachPanel = AttachMainPane(self._mainContentPanel,
+                                          self.auiManager,
+                                          self._application)
+        self.tagsCloudPanel = TagsCloudMainPane(self._mainContentPanel,
                                                 self.auiManager,
-                                                Application)
+                                                self._application)
 
     def _createStatusBar(self):
         """
@@ -527,38 +576,30 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_COPY)
         self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_PASTE)
         self.Bind(wx.EVT_MENU, self._onStdEvent, id=wx.ID_SELECTALL)
-
-    def _unbindGuiEvents(self):
-        """
-        Подписаться на события меню, кнопок и т.п.
-        """
-        self.Unbind(wx.EVT_MENU, id=wx.ID_UNDO, handler=self._onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_REDO, handler=self._onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_CUT, handler=self._onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_COPY, handler=self._onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_PASTE, handler=self._onStdEvent)
-        self.Unbind(wx.EVT_MENU, id=wx.ID_SELECTALL, handler=self._onStdEvent)
+        self.Bind(wx.EVT_SIZE, self._onSizeMove)
+        self.Bind(wx.EVT_MOVE, self._onSizeMove)
 
     def _saveParams(self):
         """
         Сохранить параметры в конфиг
         """
+        self._updateRealSize()
         try:
             if not self.IsIconized():
-                if (not self.IsFullScreen() and not self.IsMaximized()):
-                    (width, height) = self.GetSize()
-                    (xpos, ypos) = self.GetPosition()
-
-                    self.mainWindowConfig.width.value = width
-                    self.mainWindowConfig.height.value = height
-
-                    self.mainWindowConfig.xPos.value = xpos
-                    self.mainWindowConfig.yPos.value = ypos
-
                 self.mainWindowConfig.fullscreen.value = self.IsFullScreen()
-                self.mainWindowConfig.maximized.value = self.IsMaximized()
-
                 self.__panesController.savePanesParams()
+
+            if self._realSize:
+                (width, height) = self._realSize
+                self.mainWindowConfig.width.value = width
+                self.mainWindowConfig.height.value = height
+
+            if self._realPosition:
+                (xpos, ypos) = self._realPosition
+                self.mainWindowConfig.xPos.value = xpos
+                self.mainWindowConfig.yPos.value = ypos
+
+            self.mainWindowConfig.maximized.value = self._realMaximized
         except Exception as e:
             MessageBox(_(u"Can't save config\n%s") % (str(e)),
                        _(u"Error"), wx.ICON_ERROR | wx.OK)
@@ -580,44 +621,21 @@ class MainWindow(wx.Frame):
         """
         logger.debug(u'Begin MainWindow.Destroy.')
 
-        assert self.toolbars is not None
-        assert self.__panesController is not None
-        assert self.pagePanel is not None
-        assert self.treePanel is not None
-        assert self.attachPanel is not None
-        assert self.tagsCloudPanel is not None
-
-        Application.plugins.clear()
+        self._application.plugins.clear()
         self._saveParams()
-        self.toolbars.updatePanesInfo()
         self.destroyPagePanel(True)
-        Application.actionController.saveHotKeys()
+
+        self._application.clear()
+        self._application.actionController.destroy()
+        self._application = None
 
         self._destroyCoreControllers()
 
-        self._unbindGuiEvents()
-
-        self.toolbars.destroyAllToolBars()
-        self.tabsController.destroy()
-
-        self.auiManager.UnInit()
-
-        self.pagePanel.close()
-        self.__panesController.closePanes()
-        self.__panesController = None
-
-        self.statusbar.Close()
         self.taskBarIconController.destroy()
         self.controller.destroy()
+
+        self.auiManager.UnInit()
         self.auiManager.Destroy()
-        self.auiManager = None
-
-        self._toolbars = None
-
-        self.pagePanel = None
-        self.treePanel = None
-        self.attachPanel = None
-        self.tagsCloudPanel = None
 
         super().Destroy()
         logger.debug(u'End MainWindow.Destroy.')
@@ -643,6 +661,18 @@ class MainWindow(wx.Frame):
             if target is not None:
                 target.ProcessEvent(event)
                 self.__stdEventLoop = False
+
+    def _updateRealSize(self):
+        if not self.IsIconized():
+            self._realMaximized = self.IsMaximized()
+
+        if (not self.IsIconized() and not self.IsFullScreen() and not self.IsMaximized()):
+            self._realSize = self.GetSize()
+            self._realPosition = self.GetPosition()
+
+    def _onSizeMove(self, event):
+        self._updateRealSize()
+        event.Skip()
 
     def setFullscreen(self, fullscreen):
         """

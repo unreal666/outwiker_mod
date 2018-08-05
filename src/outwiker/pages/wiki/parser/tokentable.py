@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import re
-
 from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineStart, Suppress, Empty, OnlyOnce
 from .utils import TagAttrsPattern, getAttributes
 
@@ -20,7 +18,6 @@ class TableToken(object):
 
     def __init__(self, parser):
         self.parser = parser
-
 
     def getToken(self):
         emptyToken = Empty().setParseAction(self.__initVars)
@@ -44,32 +41,30 @@ class TableToken(object):
 
     def __initVars(self):
         self.unitEnd = '\n'
-        self.rowGroups = {'thead': u'', 'tfoot': u'', 'caption': u''}
-
+        self.rowGroups = {'thead': '', 'tfoot': '', 'caption': ''}
 
     def __convertTableCell(self, s, loc, toks):
         text = toks['text']
 
-        isTh = False if toks['end'] != u'|||' else True
+        isTh = False if toks['end'] != '|||' else True
 
-        leftAlign = text[-1] in u' \t'
-        rightAlign = text[0] in u' \t'
+        leftAlign = text[-1] in ' \t'
+        rightAlign = text[0] in ' \t'
 
-        align = u''
+        align = ''
 
         attrs = getAttributes(toks)
 
         if leftAlign and rightAlign:
-            align = u' align="center"'
+            align = ' align="center"'
         elif isTh and leftAlign:
-            align = u' align="left"'
+            align = ' align="left"'
         elif rightAlign:
-            align = u' align="right"'
+            align = ' align="right"'
 
-        pattern = u'<th%s%s>%s</th>' if isTh else u'<td%s%s>%s</td>'
+        pattern = '<th%s%s>%s</th>' if isTh else '<td%s%s>%s</td>'
 
         return pattern % (align, attrs, self.parser.parseWikiMarkup(text.strip()))
-
 
     def __convertTableRow(self, s, loc, toks):
         rowStart = toks[0]
@@ -82,31 +77,29 @@ class TableToken(object):
 
         attrs = getAttributes(toks)
 
-        result = u''.join([u'<tr', attrs, u'>']) + u''.join(toks[1: lastindex]) + u'</tr>'
+        result = ''.join(['<tr', attrs, '>']) + ''.join(toks[1: lastindex]) + '</tr>'
 
         if rowStart in TableToken.rowGroupsLabels:
             self.rowGroups[TableToken.rowGroupsLabels[rowStart]] += result
-            return u''
+            return ''
         else:
             return result
-
 
     def __convertTableCaption(self, s, loc, toks):
         attrs = getAttributes(toks)
 
-        self.rowGroups['caption'] = u'<caption%s>%s</caption>' % (attrs, self.parser.parseWikiMarkup(toks['text'].strip()))
+        self.rowGroups['caption'] = '<caption%s>%s</caption>' % (attrs, self.parser.parseWikiMarkup(toks['text'].strip()))
 
         return None
-
 
     def __convertTable(self, s, loc, toks):
         thead = self.rowGroups['thead']
         tfoot = self.rowGroups['tfoot']
         caption = self.rowGroups['caption']
 
-        if thead != u'':
-            thead = u''.join([u'<thead>', thead, u'</thead>'])
-        if tfoot != u'':
-            tfoot = u''.join([u'<tfoot>', tfoot, u'</tfoot>'])
+        if thead != '':
+            thead = ''.join(['<thead>', thead, '</thead>'])
+        if tfoot != '':
+            tfoot = ''.join(['<tfoot>', tfoot, '</tfoot>'])
 
-        return u'<table %s>' % toks[0][2:].strip() + caption + thead + tfoot + u''.join(toks[1:]) + u'</table>' + self.unitEnd
+        return '<table %s>' % toks[0][2:].strip() + caption + thead + tfoot + ''.join(toks[1:]) + '</table>' + self.unitEnd

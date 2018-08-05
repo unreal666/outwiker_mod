@@ -1,25 +1,44 @@
 <?xml version="1.1" encoding="UTF-8" ?>
 <info>
 	<name>OutWiker</name>
-	<updates>http://jenyay.net/uploads/Outwiker/Unstable/versions.xml</updates>
+	<updates>https://jenyay.net/uploads/Outwiker/Unstable/versions.xml</updates>
 
 	<data lang="en">
-		<website>http://jenyay.net/Outwiker/UnstableEn</website>
+		<website>https://jenyay.net/Outwiker/UnstableEn</website>
 
 		<changelog>
+			<version number="3.0.0.846" status="dev" date="July 31, 2018">
+				<change>Add new wiki commands for styles.</change>
+				<change>Migrate to wxPython 4.0.3.</change>
+			</version>
+
+			<version number="2.1.0.844" status="dev" date="June 16, 2018">
+				<change>Change the storage format for certain properties of the notes tree pages.</change>
+				<change>Fix errors.</change>
+			</version>
+
+			<version number="2.1.0.842" status="dev" date="May 26, 2018">
+				<change>Accelerated plug-ins loading.</change>
+				<change>GUI fixes.</change>
+			</version>
+
+			<version number="2.1.0.840" status="dev" date="April 22, 2018">
+				<change>New toolbars.</change>
+			</version>
+
 			<version number="2.1.0.838" status="dev" date="March 20, 2018">
-				<change>Add a new page style "rifle_green_and_red"</change>
+				<change>Add a new page style "rifle_green_and_red".</change>
 				<change>Fixed errors.</change>
 			</version>
 
 			<version number="2.1.0.836" status="dev" date="February 15, 2018">
-				<change>Migrate to Python 3.x and wxPython 4.0.0</change>
+				<change>Migrate to Python 3.x and wxPython 4.0.0.</change>
 				<change>Add watching for attached files for selected page.</change>
 			</version>
 
 			<version number="2.1.0.834" status="dev" date="December 17, 2017">
 				<change>32-bit binary builds for Linux are no longer created.</change>
-				<change>Created AppImage packages for Linux</change>
+				<change>Created AppImage packages for Linux.</change>
 				<change>Fixed errors.</change>
 			</version>
 
@@ -50,9 +69,28 @@
 	</data>
 
 	<data lang="ru">
-		<website>http://jenyay.net/Outwiker/Unstable</website>
+		<website>https://jenyay.net/Outwiker/Unstable</website>
 
 		<changelog>
+			<version number="3.0.0.846" status="dev" date="31.07.2018">
+				<change>Добавлены новые команды для викистилей.</change>
+				<change>Миграция на wxPython 4.0.3.</change>
+			</version>
+
+			<version number="2.1.0.844" status="dev" date="16.06.2018">
+				<change>Изменение формата хранения некоторых настроек страниц в дереве заметок.</change>
+				<change>Исправление ошибок.</change>
+			</version>
+
+			<version number="2.1.0.842" status="dev" date="26.05.2018">
+				<change>Ускорена загрузка плагинов.</change>
+				<change>Исправления в интерфейсе.</change>
+			</version>
+
+			<version number="2.1.0.840" status="dev" date="22.04.2018">
+				<change>Новые панели инструментов.</change>
+			</version>
+
 			<version number="2.1.0.838" status="dev" date="20.03.2018">
 				<change>Добавлен новый стиль страниц "rifle_green_and_red".</change>
 				<change>Исправление ошибок.</change>

@@ -1,24 +1,25 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import unittest
 
-from outwiker.core.application import Application
 from outwiker.core.config import StringOption
 from outwiker.core.pluginsloader import PluginsLoader
+from test.basetestcases import BaseOutWikerGUIMixin
 
 
-class PageTypeColor_ColorsListTest(unittest.TestCase):
+class PageTypeColor_ColorsListTest(unittest.TestCase, BaseOutWikerGUIMixin):
     def setUp(self):
+        self.initApplication()
         plugins_dirs = ["../plugins/pagetypecolor"]
-        self._application = Application
 
-        self.loader = PluginsLoader(self._application)
+        self.loader = PluginsLoader(self.application)
         self.loader.load(plugins_dirs)
         self._clearConfig()
 
     def tearDown(self):
         self._clearConfig()
         self.loader.clear()
+        self.destroyApplication()
 
     def test_empty(self):
         from pagetypecolor.colorslist import ColorsList
@@ -26,9 +27,9 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
 
         pagetype = 'wiki'
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
 
-        color_param = StringOption(self._application.config,
+        color_param = StringOption(self.application.config,
                                    PageTypeColorConfig.SECTION,
                                    pagetype,
                                    None)
@@ -39,7 +40,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
     def test_init(self):
         from pagetypecolor.colorslist import ColorsList
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
 
         pageTypeList = colorslist.getPageTypes()
@@ -54,7 +55,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
 
         from pagetypecolor.colorslist import ColorsList
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
 
         pageTypeList = colorslist.getPageTypes()
@@ -68,10 +69,10 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
         from pagetypecolor.colorslist import ColorsList
         from pagetypecolor.config import PageTypeColorConfig
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
 
-        color_param = StringOption(self._application.config,
+        color_param = StringOption(self.application.config,
                                    PageTypeColorConfig.SECTION,
                                    pagetype,
                                    None)
@@ -84,13 +85,13 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
         color = '#AABBCC'
         pagetype = 'wiki'
 
-        color_param = StringOption(self._application.config,
+        color_param = StringOption(self.application.config,
                                    PageTypeColorConfig.SECTION,
                                    pagetype,
                                    None)
         color_param.value = color
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
 
         self.assertEqual(colorslist.getColor(pagetype), color)
@@ -101,7 +102,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
         color = '#AABBCC'
         pagetype = 'wiki'
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
         colorslist.setColor(pagetype, color)
 
@@ -113,7 +114,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
         color = '#AABBCC'
         pagetype = 'wiki'
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.setColor(pagetype, color)
 
         self.assertEqual(colorslist.getColor(pagetype), color)
@@ -124,10 +125,10 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
         color = '#AABBCC'
         pagetype = 'wiki'
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.setColor(pagetype, color)
 
-        colorslist_new = ColorsList(self._application)
+        colorslist_new = ColorsList(self.application)
         colorslist_new.load()
 
         self.assertEqual(colorslist_new.getColor(pagetype), color)
@@ -139,7 +140,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
 
         pagetype = 'markdown'
 
-        colorslist = ColorsList(self._application)
+        colorslist = ColorsList(self.application)
         colorslist.load()
         color_param = colorslist.getColor(pagetype)
 
@@ -149,7 +150,7 @@ class PageTypeColor_ColorsListTest(unittest.TestCase):
     def _clearConfig(self):
         from pagetypecolor.config import PageTypeColorConfig
 
-        self._application.config.remove_section(PageTypeColorConfig.SECTION)
+        self.application.config.remove_section(PageTypeColorConfig.SECTION)
 
     def _loadMarkdownPlugin(self):
         self.loader.clear()

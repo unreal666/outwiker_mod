@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
@@ -26,7 +26,7 @@ class MainPane(object, metaclass=ABCMeta):
 
     def _savePaneInfo(self, param, paneInfo):
         """
-        Сохранить в конфиг информацию о dockable-панели(AuiPaneInfo)
+        Сохранить в конфиг информацию о dockable-панели (AuiPaneInfo)
         """
         string_info = self._auiManager.SavePaneInfo(paneInfo)
         param.value = string_info

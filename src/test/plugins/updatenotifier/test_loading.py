@@ -1,9 +1,11 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-from test.plugins.baseloading import BasePluginLoadingTest
+import unittest
+
+from test.basetestcases import PluginLoadingMixin
 
 
-class UpdateNotifierLoadingTest (BasePluginLoadingTest):
+class UpdateNotifierLoadingTest (PluginLoadingMixin, unittest.TestCase):
 
     def getPluginDir(self):
         """
@@ -13,6 +15,7 @@ class UpdateNotifierLoadingTest (BasePluginLoadingTest):
 
     def getPluginName(self):
         """
-        Должен возвращать имя плагина, по которому его можно найти в PluginsLoader
+        Должен возвращать имя плагина,
+        по которому его можно найти в PluginsLoader
         """
         return "UpdateNotifier"

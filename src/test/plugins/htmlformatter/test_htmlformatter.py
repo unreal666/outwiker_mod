@@ -1,32 +1,31 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import unittest
 
 from outwiker.core.pluginsloader import PluginsLoader
-from outwiker.core.application import Application
 from outwiker.core.htmlimproverfactory import HtmlImproverFactory
+from test.basetestcases import BaseOutWikerMixin
 
 
-
-class HtmlFormatterTest (unittest.TestCase):
+class HtmlFormatterTest (unittest.TestCase, BaseOutWikerMixin):
     """Тесты плагина HtmlFormatter"""
-    def setUp (self):
+
+    def setUp(self):
+        self.initApplication()
         dirlist = ["../plugins/htmlformatter"]
 
-        self.loader = PluginsLoader(Application)
-        self.loader.load (dirlist)
+        self.loader = PluginsLoader(self.application)
+        self.loader.load(dirlist)
 
-
-    def tearDown (self):
+    def tearDown(self):
         self.loader.clear()
+        self.destroyApplication()
 
+    def testPluginLoad(self):
+        self.assertEqual(len(self.loader), 1)
 
-    def testPluginLoad (self):
-        self.assertEqual (len (self.loader), 1)
-
-
-    def testFactory (self):
+    def testFactory(self):
         from htmlformatter.paragraphimprover import ParagraphHtmlImprover
-        factory = HtmlImproverFactory (Application)
+        factory = HtmlImproverFactory(self.application)
 
-        self.assertEqual (type (factory['pimprover']), ParagraphHtmlImprover)
+        self.assertEqual(type(factory['pimprover']), ParagraphHtmlImprover)
