@@ -71,22 +71,6 @@ class ParagraphHtmlImprover(HtmlImprover):
         remove_p_after = r'(<(?:' + opentags + r')(?: [^>]*?)?>|</(?:' + closetags + r')>)\s*</p>'
         result = re.sub(remove_p_after, r'\1', result, flags=re.I | re.M)
 
-        # Remove empty paragraphs
-        empty_par = r'<p></p>'
-        result = re.sub(empty_par, '', result, flags=re.I | re.M)
-
-        # Remove <br> on the paragraph end
-        final_linebreaks = r'<br\s*/?>\s*(</p>)'
-        result = re.sub(final_linebreaks, r'\1', result, flags=re.I | re.M)
-
-        # Append line breaks before some elements (to improve readability)
-        append_eol_before = r'\n*(<(?:li|h\d|/?[uo]l|hr|p|script|/?table|/?tr|td)[ >])'
-        result = re.sub(append_eol_before, r'\n\1', result, flags=re.I | re.M)
-
-        # Append line breaks after some elements (to improve readability)
-        append_eol_after = r'(<(?:hr(?: [^>]*?)?/?|br\s*/?|/\s*(?:h\d|p|script|[uo]l|table))>)\n*'
-        result = re.sub(append_eol_after, r'\1\n', result, flags=re.I | re.M)
-
         # Normalize <p>...</p> inside <div>
         append_p_inside = r'(?P<tag><div.*?>)'
         # append_p_inside = r'(?P<start><div.*?>)(?P<content>.*?)(?P<end></div>)'
@@ -97,10 +81,6 @@ class ParagraphHtmlImprover(HtmlImprover):
                         flags=re.I | re.M)
         result = result.replace('</div>', '</p></div>')
 
-        # Remove empty paragraphs
-        # empty_par = r'<p></p>'
-        # result = re.sub(empty_par, '', result, flags=re.I | re.M)
-
         # Remove <p> tag before div elements
         remove_p_before = r'<p>(?=<div.*?>)'
         result = re.sub(remove_p_before, '', result, flags=re.I)
@@ -109,11 +89,27 @@ class ParagraphHtmlImprover(HtmlImprover):
         result = result.replace('</div></p>', '</div>\n')
 
         # Remove <p> inside <div> for single paragraph
-        # remove_single_p = r"(?P<start><div((?!</div>).)*?>)<p>(?P<content>((?!(?:</div>)|(?:<p>)).)*?)</p>(?P<end></div>)"
-        # result = re.sub(remove_single_p,
-        #                 "\\g<start>\\g<content>\\g<end>",
-        #                 result,
-        #                 flags=re.I | re.M | re.S)
+        remove_single_p = r"(?P<start><div((?!</div>).)*?>)<p>(?P<content>((?!</div>|<p>).)*?)</p>(?P<end></div>)"
+        result = re.sub(remove_single_p,
+                        "\\g<start>\\g<content>\\g<end>",
+                        result,
+                        flags=re.I | re.M | re.S)
+
+        # Remove empty paragraphs
+        empty_par = r'<p></p>'
+        result = re.sub(empty_par, '', result, flags=re.I | re.M)
+
+        # Remove <br> on the paragraph end
+        final_linebreaks = r'<br\s*/?>\s*(?=</p>)'
+        result = re.sub(final_linebreaks, r'', result, flags=re.I | re.M)
+
+        # Append line breaks before some elements (to improve readability)
+        append_eol_before = r'\n*(<(?:li|h\d|/?[uo]l|hr|p|script|/?table|/?tr|td)[ >])'
+        result = re.sub(append_eol_before, r'\n\1', result, flags=re.I | re.M)
+
+        # Append line breaks after some elements (to improve readability)
+        append_eol_after = r'(<(?:hr(?: [^>]*?)?/?|br\s*/?|/\s*(?:h\d|p|script|[uo]l|table))>)\n*'
+        result = re.sub(append_eol_after, r'\1\n', result, flags=re.I | re.M)
 
         # Remove </p> at the begin and <p> at the end
         remove_p_start_end = r'^</p>|<p>$'
