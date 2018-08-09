@@ -34,7 +34,7 @@ class ThumbnailToken(object):
                              (?:width\s*?=\s*?(?P<width>\d+)
                              |height\s*?=\s*?(?P<height>\d+)
                              |maxsize\s*?=\s*?(?P<maxsize>\d+))\s*?
-                             (?:px)?
+                             (?P<unit>px|in|[cm]m|p[tc]|e[mx]|ch|rem|v[wh]|vmin|vmax|%)?
                              |thumb\s*?
                            )
                            (?:\s+?(?P<mode>soft))?
@@ -47,8 +47,9 @@ class ThumbnailToken(object):
 
     def __convertThumb(self, s, l, t):
         if t["mode"] == "soft":
-            template = '<a href="{0}/{1}"><img src="{0}/{1}" style="{2}:{3}px"/></a>'
-            template2 = '<a href="{0}/{1}"><img src="{0}/{1}" style="max-width:{2}px;max-height:{2}px"/></a>'
+            unit = t["unit"] or 'px'
+            template = '<a href="{0}/{1}"><img src="{0}/{1}" style="{4}:{2}{3}"/></a>'
+            template2 = '<a href="{0}/{1}"><img src="{0}/{1}" style="max-width:{2}{3};max-height:{2}{3}"/></a>'
 
         fname = t["fname"]
 
@@ -56,7 +57,7 @@ class ThumbnailToken(object):
             size = int(t["width"])
 
             if t["mode"] == "soft":
-                return template.format(PAGE_ATTACH_DIR, fname, "width", size)
+                return template.format(PAGE_ATTACH_DIR, fname, size, unit, "width")
 
             func = self.thumbmaker.createThumbByWidth
 
@@ -64,24 +65,20 @@ class ThumbnailToken(object):
             size = int(t["height"])
 
             if t["mode"] == "soft":
-                return template.format(PAGE_ATTACH_DIR, fname, "height", size)
+                return template.format(PAGE_ATTACH_DIR, fname, size, unit, "height")
 
             func = self.thumbmaker.createThumbByHeight
 
-        elif t["maxsize"] is not None:
-            size = int(t["maxsize"])
-
-            if t["mode"] == "soft":
-                return template2.format(PAGE_ATTACH_DIR, fname, size)
-
-            func = self.thumbmaker.createThumbByMaxSize
-
         else:
-            config = WikiConfig(self.parser.config)
-            size = config.thumbSizeOptions.value
+            if t["maxsize"] is not None:
+                size = int(t["maxsize"])
+
+            else:
+                config = WikiConfig(self.parser.config)
+                size = config.thumbSizeOptions.value
 
             if t["mode"] == "soft":
-                return template2.format(PAGE_ATTACH_DIR, fname, size)
+                return template2.format(PAGE_ATTACH_DIR, fname, size, unit)
 
             func = self.thumbmaker.createThumbByMaxSize
 
