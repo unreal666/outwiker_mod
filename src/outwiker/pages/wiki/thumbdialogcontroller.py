@@ -77,7 +77,7 @@ class ThumbDialogController (object):
         fileText = u"Attach:{fname}".format (fname=fname) if len (fname) > 0 else u""
         softModeText = u" soft" if softMode else u""
         nolinkText = u" nolink" if nolink else u""
-        unitText = u"%s" % ThumbDialog.UNIT_ITEMS[unit] if softMode and unit else u""
+        unitText = u"%s" % ThumbDialog.UNIT_ITEMS[unit] if softMode and unit > 0 else u""
 
         result = u"%thumb{scale}{unit}{softmode}{nolink}%{fname}%%".format (
                     scale=scaleText,
