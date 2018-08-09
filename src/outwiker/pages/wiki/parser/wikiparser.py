@@ -122,6 +122,7 @@ class Parser(object):
 
         # Tokens for using inside links
         self.linkTokens = [
+            self.thumb,
             self.attachImages,
             self.urlImage,
             self.text,

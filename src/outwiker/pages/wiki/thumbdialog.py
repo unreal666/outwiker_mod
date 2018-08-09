@@ -57,6 +57,10 @@ class ThumbDialog (wx.Dialog):
     def unit (self):
         return self.unitCombo.GetSelection()
 
+    @property
+    def nolink (self):
+        return self.nolinkCheckBox.GetValue()
+
 
     def __createGui (self):
         # Элементы для выбор имени файла
