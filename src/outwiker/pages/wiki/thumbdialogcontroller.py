@@ -36,6 +36,7 @@ class ThumbDialogController (object):
             selectedFile = u""
 
         self._dialog = self._createDialog (self._parent, filesList, selectedFile)
+        self.__onStateChanged()
         resultDlg = self._dialog.ShowModal()
 
         self.result = self.__generateText (self._dialog)
@@ -48,7 +49,6 @@ class ThumbDialogController (object):
     def _createDialog (self, parent, filesList, selectedFile):
         dialog = ThumbDialog (parent, filesList, selectedFile)
 
-        self.__prevStateSoftMode = dialog.softMode
         dialog.filesListCombo.Bind (wx.EVT_COMBOBOX, handler=self.__onfileSelected)
         dialog.softmodeCheckBox.Bind (wx.EVT_CHECKBOX, handler=self.__onStateChanged)
 
@@ -60,6 +60,7 @@ class ThumbDialogController (object):
         fname = dialog.fileName
         scaleType = dialog.scaleType
         softMode = dialog.softMode
+        unit = dialog.unit
 
         if size == 0:
             scaleText = u""
@@ -72,29 +73,38 @@ class ThumbDialogController (object):
         else:
             raise NotImplementedError
 
-        if len (fname) > 0:
-            fileText = u"Attach:{fname}".format (fname=fname)
-        else:
-            fileText = u""
+        fileText = u"Attach:{fname}".format (fname=fname) if len (fname) > 0 else u""
+        softModeText = u" soft" if softMode else u""
+        unitText = u"%s" % ThumbDialog.UNIT_ITEMS[unit] if softMode and unit else u""
 
-        if softMode:
-            softModeText = u" soft"
-        else:
-            softModeText = u""
-
-        result = u"%thumb{scale}{softmode}%{fname}%%".format (scale=scaleText, softmode=softModeText, fname=fileText)
+        result = u"%thumb{scale}{unit}{softmode}%{fname}%%".format (
+                    scale=scaleText,
+                    softmode=softModeText,
+                    fname=fileText,
+                    unit=unitText)
         return result
 
 
     def __onfileSelected (self, event):
         if self._dialog.fileName.lower().endswith (u".svg"):
+            self.__prevStateSoftMode = self._dialog.softMode
             self._dialog.softMode = True
             self._dialog.softmodeCheckBox.Enable(False)
         else:
             self._dialog.softMode = self.__prevStateSoftMode
             self._dialog.softmodeCheckBox.Enable(True)
 
+        self.__changeStateUnit()
 
-    def __onStateChanged (self, event):
+
+    def __onStateChanged (self, event=None):
         self.__prevStateSoftMode = self._dialog.softMode
         # self.__prevStateSoftMode = self._dialog.softMode = not self._dialog.softMode
+        self.__changeStateUnit()
+
+
+    def __changeStateUnit (self):
+        if self._dialog.softMode:
+            self._dialog.unitCombo.Enable(True)
+        else:
+            self._dialog.unitCombo.Enable(False)

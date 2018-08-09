@@ -7,6 +7,8 @@ class ThumbDialog (wx.Dialog):
     WIDTH = 0
     HEIGHT = 1
     MAX_SIZE = 2
+    UNIT_ITEMS = [u"", u"%", u"ch", u"cm", u"em", u"ex", u"in", u"mm", u"pc",
+                  u"pt", u"px", u"rem", u"vh", u"vmin", u"vw", 'vh']
 
     def __init__ (self, parent, filesList, selectedFile):
         """
@@ -51,11 +53,16 @@ class ThumbDialog (wx.Dialog):
         return self.softmodeCheckBox.SetValue(value)
 
 
+    @property
+    def unit (self):
+        return self.unitCombo.GetSelection()
+
+
     def __createGui (self):
         # Элементы для выбор имени файла
         filenameLabel = wx.StaticText (self, label=_(u"File name"))
         self.filesListCombo = wx.ComboBox (self,
-                                           choices = [u""] + self.__filesList,
+                                           choices=[u""] + self.__filesList,
                                            style=wx.CB_READONLY)
         self.filesListCombo.SetSelection (0)
         self.filesListCombo.SetMinSize ((250, -1))
@@ -69,7 +76,7 @@ class ThumbDialog (wx.Dialog):
 
         scaleItems = [_(u"Width"), _(u"Height"), _(u"Max size")]
         self.scaleCombo = wx.ComboBox (self,
-                                       choices = scaleItems,
+                                       choices=scaleItems,
                                        style=wx.CB_READONLY)
         self.scaleCombo.SetSelection (0)
         self.scaleCombo.SetMinSize ((250, -1))
@@ -80,6 +87,15 @@ class ThumbDialog (wx.Dialog):
 
         # Элемент для установки soft-режима
         self.softmodeCheckBox = wx.CheckBox (self, label=_(u"Soft Mode"))
+
+        # Элемент для установки режима "Без ссылки"
+        self.nolinkCheckBox = wx.CheckBox (self, label=_(u"Without Link"))
+
+        # Единицы измерения для soft-режима
+        self.unitCombo = wx.ComboBox (self,
+                                      choices=self.UNIT_ITEMS,
+                                      style=wx.CB_READONLY,
+                                      )
 
         okCancel = self.CreateButtonSizer (wx.OK | wx.CANCEL)
 
@@ -104,7 +120,11 @@ class ThumbDialog (wx.Dialog):
         mainSizer.AddStretchSpacer()
         mainSizer.AddStretchSpacer()
 
-        mainSizer.Add (self.softmodeCheckBox, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
+        innerSizer = wx.FlexGridSizer(rows=0, cols=3, vgap=0, hgap=0)
+        innerSizer.Add (self.softmodeCheckBox, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
+        innerSizer.Add (self.nolinkCheckBox, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
+        innerSizer.Add (self.unitCombo, 0, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, border=4)
+        mainSizer.Add (innerSizer, 0, flag=wx.ALL | wx.EXPAND, border=4)
         mainSizer.AddStretchSpacer()
 
         mainSizer.AddStretchSpacer()
