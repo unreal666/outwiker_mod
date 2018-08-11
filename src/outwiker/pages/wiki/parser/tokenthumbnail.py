@@ -31,9 +31,9 @@ class ThumbnailToken(object):
         result = Regex(r"""%\s*?
                            (?:
                              (?:thumb\s+)?
-                             (?:width\s*?=\s*?(?P<width>\d+)
-                             |height\s*?=\s*?(?P<height>\d+)
-                             |maxsize\s*?=\s*?(?P<maxsize>\d+))\s*?
+                             (?:width\s*?=\s*?(?P<width>\d+(?:\.\d+)?)
+                             |height\s*?=\s*?(?P<height>\d+(?:\.\d+)?)
+                             |maxsize\s*?=\s*?(?P<maxsize>\d+(?:\.\d+)?))\s*?
                              (?P<unit>px|in|[cm]m|p[tc]|e[mx]|ch|rem|v[wh]|vmin|vmax|%)?
                              |thumb\s*?
                            )
@@ -61,7 +61,7 @@ class ThumbnailToken(object):
         fname = t["fname"]
 
         if t["width"] is not None:
-            size = int(t["width"])
+            size = self.__convertSize(t["width"])
 
             if t["soft"]:
                 return template.format(PAGE_ATTACH_DIR, fname, size, unit, "width")
@@ -69,7 +69,7 @@ class ThumbnailToken(object):
             func = self.thumbmaker.createThumbByWidth
 
         elif t["height"] is not None:
-            size = int(t["height"])
+            size = self.__convertSize(t["height"])
 
             if t["soft"]:
                 return template.format(PAGE_ATTACH_DIR, fname, size, unit, "height")
@@ -78,7 +78,7 @@ class ThumbnailToken(object):
 
         else:
             if t["maxsize"] is not None:
-                size = int(t["maxsize"])
+                size = self.__convertSize(t["maxsize"])
             else:
                 config = WikiConfig(self.parser.config)
                 size = config.thumbSizeOptions.value
@@ -95,3 +95,9 @@ class ThumbnailToken(object):
             return _("<b>Can't create thumbnail for \"{}\"</b>").format(fname)
 
         return template.format(thumb.replace("\\", "/"), PAGE_ATTACH_DIR, fname)
+
+    def __convertSize(self, text):
+        float_value = float(text)
+        int_value = int(float_value)
+
+        return int_value if float_value == int_value else float_value
