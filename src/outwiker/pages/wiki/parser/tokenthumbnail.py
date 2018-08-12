@@ -32,6 +32,10 @@ class ThumbnailToken(object):
                            (?:
                              (?:thumb\s+)?
                              (?:width\s*?=\s*?(?P<width>\d+(?:\.\d+)?)
+                               (?P<unit2>px|in|[cm]m|p[tc]|e[mx]|ch|rem|v[wh]|vmin|vmax|%)?
+                               (
+                                 \s+height\s*?=\s*?(?P<height2>\d+(?:\.\d+)?)
+                               )?
                              |height\s*?=\s*?(?P<height>\d+(?:\.\d+)?)
                              |maxsize\s*?=\s*?(?P<maxsize>\d+(?:\.\d+)?))\s*?
                              (?P<unit>px|in|[cm]m|p[tc]|e[mx]|ch|rem|v[wh]|vmin|vmax|%)?
@@ -52,6 +56,7 @@ class ThumbnailToken(object):
             if not t["nolink"]:
                 template = '<a href="{0}/{1}"><img src="{0}/{1}" style="{4}:{2}{3}"/></a>'
                 template2 = '<a href="{0}/{1}"><img src="{0}/{1}" style="max-width:{2}{3};max-height:{2}{3}"/></a>'
+                template3 = '<a href="{0}/{1}"><img src="{0}/{1}" style="width:{2}{3};height:{4}{5}"/></a>'
             else:
                 template = '<img src="{0}/{1}" style="{4}:{2}{3}"/>'
                 template2 = '<img src="{0}/{1}" style="max-width:{2}{3};max-height:{2}{3}"/>'
@@ -64,6 +69,13 @@ class ThumbnailToken(object):
             size = self.__convertSize(t["width"])
 
             if t["soft"]:
+
+                if t["height2"] is not None:
+                    height = self.__convertSize(t["height2"])
+                    unit2 = t["unit2"] or 'px'
+
+                    return template3.format(PAGE_ATTACH_DIR, fname, size, unit2, height, unit)
+
                 return template.format(PAGE_ATTACH_DIR, fname, size, unit, "width")
 
             func = self.thumbmaker.createThumbByWidth
