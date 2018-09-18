@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HtmlHeads\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-01 05:31+1000\n"
+"POT-Creation-Date: 2018-09-15 11:10+1000\n"
 "PO-Revision-Date: 2018-02-25 14:15+1000\n"
 "Last-Translator: Eugeniy Ilin <jenyay.ilin@gmail.com>\n"
 "Language-Team: jenyay.net <jenyay.ilin@gmail.com>\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: utf-8\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.1.1\n"
 "X-Poedit-SearchPath-0: .\n"
 
 #: actions.py:34
@@ -41,14 +41,15 @@ msgstr ""
 msgid "Custom Style (:style ...:)"
 msgstr ""
 
-#: defines.py:5
+#: defines.py:14
 msgid "http://jenyay.net/Outwiker/HtmlHeadsEn"
 msgstr ""
 
-#: defines.py:9
+#: defines.py:16
 msgid ""
-"Plugin adds wiki-commands (:title:), (:description:), (:keywords:),\n"
-"\t(:htmlhead:), (:htmlattrs:) and (:style:).\n"
+"Plugin adds wiki-commands (:title:), (:description:), (:"
+"keywords:),\n"
+"(:htmlhead:), (:htmlattrs:) and (:style:).\n"
 "\n"
 "<b>Usage:</b>\n"
 "(:title Page title:)\n"
@@ -58,8 +59,8 @@ msgid ""
 "(:keywords keyword_1, keyword_2, other keyword:)\n"
 "\n"
 "(:htmlhead:)\n"
-"&lt;meta http-equiv='Content-Type' content='text/html; charset=utf-8' /"
-"&gt;\n"
+"&lt;meta http-equiv='Content-Type' content='text/html; "
+"charset=utf-8' /&gt;\n"
 "\n"
 "&lt;meta name='robots' content='index,follow' /&gt;\n"
 "(:htmlheadend:)\n"
@@ -71,11 +72,11 @@ msgid ""
 "(:styleend:)\n"
 msgstr ""
 
-#: defines.py:33
+#: defines.py:39
 msgid "HTML Headers"
 msgstr ""
 
-#: defines.py:34
+#: defines.py:40
 #, python-format
 msgid "{} plugin. Insert (:%s ...:) command"
 msgstr ""

@@ -1,13 +1,20 @@
-# Dummy function. It's needed for translation.
-def _(msg): return msg
+from .i18n import get_
 
 PLUGIN_NAME = 'HtmlHeads'
-PLUGIN_URL = _('http://jenyay.net/Outwiker/HtmlHeadsEn')
 PLUGIN_NAME_LOWERCASE = PLUGIN_NAME.lower()
 PREFIX_ID = PLUGIN_NAME + '_'
 
-PLUGIN_DESCRIPTION = _('''Plugin adds wiki-commands (:title:), (:description:), (:keywords:),
-	(:htmlhead:), (:htmlattrs:) and (:style:).
+MENU_PLUGIN = 'Plugin_%s' % PLUGIN_NAME
+
+def translate():
+    _ = get_()
+
+    global PLUGIN_URL, PLUGIN_DESCRIPTION, MENU_PLUGIN_TITLE, ACTION_DESCRIPTION
+
+    PLUGIN_URL = _('http://jenyay.net/Outwiker/HtmlHeadsEn')
+
+    PLUGIN_DESCRIPTION = _('''Plugin adds wiki-commands (:title:), (:description:), (:keywords:),
+(:htmlhead:), (:htmlattrs:) and (:style:).
 
 <b>Usage:</b>
 (:title Page title:)
@@ -29,6 +36,5 @@ body {background: #eee;}
 (:styleend:)
 ''')
 
-MENU_PLUGIN = 'Plugin_%s' % PLUGIN_NAME
-MENU_PLUGIN_TITLE = _('HTML Headers')
-ACTION_DESCRIPTION = _('{} plugin. Insert (:%s ...:) command').format(PLUGIN_NAME)
+    MENU_PLUGIN_TITLE = _('HTML Headers')
+    ACTION_DESCRIPTION = _('{} plugin. Insert (:%s ...:) command').format(PLUGIN_NAME)
