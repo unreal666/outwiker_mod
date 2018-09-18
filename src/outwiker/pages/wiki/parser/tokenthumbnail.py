@@ -69,14 +69,13 @@ class ThumbnailToken(object):
             size = self.__convertSize(t["width"])
 
             if t["soft"]:
+                unit2 = t["unit2"] or 'px'
 
                 if t["height2"] is not None:
                     height = self.__convertSize(t["height2"])
-                    unit2 = t["unit2"] or 'px'
-
                     return template3.format(PAGE_ATTACH_DIR, fname, size, unit2, height, unit)
 
-                return template.format(PAGE_ATTACH_DIR, fname, size, unit, "width")
+                return template.format(PAGE_ATTACH_DIR, fname, size, unit2, "width")
 
             func = self.thumbmaker.createThumbByWidth
 
