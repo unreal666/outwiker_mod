@@ -20,25 +20,27 @@ class TableToken(object):
         self.parser = parser
 
     def getToken(self):
+        SOL = LineStart()
+        EOL = LineEnd()
         emptyToken = Empty().setParseAction(self.__initVars)
 
         tableCell = Regex(r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)%s'
                           % TagAttrsPattern.value)
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
-        tableRow = LineStart() + \
+        tableRow = SOL + \
                    Regex(r'\|{2,4}(?!\|)%s' % TagAttrsPattern.value) + \
-                   OneOrMore(tableCell) + Optional(LineEnd())
+                   OneOrMore(tableCell) + Optional(EOL)
         tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
-        tableCaption = LineStart() + \
+        tableCaption = SOL + \
                        Regex(r'(?P<start>\|{5})%s(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*'
                              % TagAttrsPattern.value) + \
-                       Optional(LineEnd())
+                       Optional(EOL)
         tableCaption.leaveWhitespace().setParseAction(self.__convertTableCaption)
 
-        table = LineStart() + Regex(r'\|\| *(?P<params>.+)?') + \
-                Suppress(LineEnd()) + emptyToken + \
+        table = SOL + Regex(r'\|\| *(?P<params>.+)?') + \
+                Suppress(EOL) + emptyToken + \
                 Suppress(Optional(tableCaption)) + OneOrMore(tableRow)
         table = table.setParseAction(self.__convertTable)('table')
 
@@ -83,7 +85,7 @@ class TableToken(object):
 
         attrs = getAttributes(toks)
 
-        result = ''.join(['<tr', attrs, '>']) + ''.join(toks[1: lastindex]) + '</tr>'
+        result = '<tr%s>%s</tr>' % (attrs, ''.join(toks[1: lastindex]))
 
         if rowStart in TableToken.rowGroupsLabels:
             self.rowGroups[TableToken.rowGroupsLabels[rowStart]] += result
