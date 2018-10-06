@@ -3,8 +3,6 @@
 import wx
 
 from outwiker.core.tagslist import TagsList
-from outwiker.core.commands import testPageTitle, MessageBox
-from outwiker.core.tree import RootWikiPage
 from outwiker.core.events import (PageDialogPageTypeChangedParams,
                                   PageDialogPageTitleChangedParams,
                                   PageDialogPageTagsChangedParams,
@@ -59,6 +57,14 @@ class GeneralPanel(wx.Panel):
         self.tagsSelector = TagsSelector(self)
         self.typeLabel = wx.StaticText(self, -1, _(u"Page type"))
 
+    @property
+    def pageTitle(self):
+        return self.titleTextCtrl.GetValue()
+
+    @pageTitle.setter
+    def pageTitle(self, value):
+        self.titleTextCtrl.SetValue(value)
+
 
 class GeneralController(BasePageDialogController):
     def __init__(self, generalPanel, application, dialog):
@@ -86,6 +92,10 @@ class GeneralController(BasePageDialogController):
     @property
     def pageTitle(self):
         return self._generalPanel.titleTextCtrl.GetValue().strip()
+
+    @pageTitle.setter
+    def pageTitle(self, value):
+        self._generalPanel.titleTextCtrl.SetValue(value)
 
     @property
     def selectedFactory(self):
@@ -143,37 +153,10 @@ class GeneralController(BasePageDialogController):
         self._generalPanel.typeCombo.Disable()
         self.__onPageTypeChanged(None)
 
-    def _validateCommon(self, parentPage, pageAlias):
-        if not pageAlias and not testPageTitle(self.pageTitle):
-            self._generalPanel.titleTextCtrl.SetFocus()
-            self._generalPanel.titleTextCtrl.SetSelection(-1, -1)
-            return False
-
-        return True
-
     def validateBeforeCreation(self, parentPage):
-        if not self._validateCommon(parentPage, None):
-            return False
-
-        if(parentPage is not None and
-                not RootWikiPage.testDublicate(parentPage, self.pageTitle)):
-            MessageBox(_(u"A page with some title already exists"),
-                       _(u"Error"),
-                       wx.ICON_ERROR | wx.OK)
-            return False
-
         return True
 
     def validateBeforeEditing(self, page):
-        if not self._validateCommon(page.parent, page.alias):
-            return False
-
-        if page.alias is not None and not page.canRename(self.pageTitle):
-            MessageBox(_(u"Can't rename page when page with that title already exists"),
-                       _(u"Error"),
-                       wx.ICON_ERROR | wx.OK)
-            return False
-
         return True
 
     def clear(self):

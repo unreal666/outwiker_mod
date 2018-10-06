@@ -4,11 +4,12 @@ import os.path
 import unittest
 from tempfile import mkdtemp
 
-from outwiker.pages.text.textpage import TextPageFactory
 from outwiker.core.attachment import Attachment
 from outwiker.core.application import Application
 from outwiker.core.exceptions import DuplicateTitle
 from outwiker.core.tree import WikiDocument
+from outwiker.pages.text.textpage import TextPageFactory
+
 from test.utils import removeDir
 
 

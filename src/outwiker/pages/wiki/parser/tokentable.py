@@ -22,18 +22,23 @@ class TableToken(object):
     def getToken(self):
         emptyToken = Empty().setParseAction(self.__initVars)
 
-        tableCell = Regex(r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)' + TagAttrsPattern.value)
+        tableCell = Regex(r'(?P<text>(.|(?:\\\n))*?)(?:\\\n\s*)*(?P<end>\|\|\|?)%s'
+                          % TagAttrsPattern.value)
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
-        tableRow = LineStart() + Regex(r'\|{2,4}(?!\|)' + TagAttrsPattern.value) + \
+        tableRow = LineStart() + \
+                   Regex(r'\|{2,4}(?!\|)%s' % TagAttrsPattern.value) + \
                    OneOrMore(tableCell) + Optional(LineEnd())
         tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
-        tableCaption = LineStart() + Regex(r'(?P<start>\|{5})' + TagAttrsPattern.value +
-                                            r'(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*') + Optional(LineEnd())
+        tableCaption = LineStart() + \
+                       Regex(r'(?P<start>\|{5})%s(?P<text>(.|(?:\\\n))*)(?:\\\n\s*)*'
+                             % TagAttrsPattern.value) + \
+                       Optional(LineEnd())
         tableCaption.leaveWhitespace().setParseAction(self.__convertTableCaption)
 
-        table = LineStart() + Regex(r'\|\| *(?P<params>.+)?') + Suppress(LineEnd()) + emptyToken + \
+        table = LineStart() + Regex(r'\|\| *(?P<params>.+)?') + \
+                Suppress(LineEnd()) + emptyToken + \
                 Suppress(Optional(tableCaption)) + OneOrMore(tableRow)
         table = table.setParseAction(self.__convertTable)('table')
 
@@ -44,17 +49,18 @@ class TableToken(object):
         self.rowGroups = {'thead': '', 'tfoot': '', 'caption': ''}
 
     def __convertTableCell(self, s, loc, toks):
+        isTh = toks['end'] == '|||'
+        attrs = getAttributes(toks)
+
         text = toks['text']
-
-        isTh = False if toks['end'] != '|||' else True
-
         leftAlign = text[-1] in ' \t'
         rightAlign = text[0] in ' \t'
+        text = text.strip()
 
         align = ''
 
-        attrs = getAttributes(toks)
-
+        if not text:
+            pass
         if leftAlign and rightAlign:
             align = ' align="center"'
         elif isTh and leftAlign:
@@ -64,7 +70,7 @@ class TableToken(object):
 
         pattern = '<th%s%s>%s</th>' if isTh else '<td%s%s>%s</td>'
 
-        return pattern % (align, attrs, self.parser.parseWikiMarkup(text.strip()))
+        return pattern % (align, attrs, self.parser.parseWikiMarkup(text))
 
     def __convertTableRow(self, s, loc, toks):
         rowStart = toks[0]

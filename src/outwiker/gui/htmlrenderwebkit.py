@@ -39,10 +39,11 @@ class HtmlRenderWebKit(HtmlRender):
         self.SetSizer(sizer)
 
         self.canOpenUrl = False                # Можно ли открывать ссылки
+        self._navigate_id = 1
 
         self.Bind(wx.EVT_MENU, self.__onCopyFromHtml, id=wx.ID_COPY)
         self.Bind(wx.EVT_MENU, self.__onCopyFromHtml, id=wx.ID_CUT)
-        self.Bind(webview.EVT_WEBVIEW_NAVIGATING, self.__onNavigate)
+        self.Bind(webview.EVT_WEBVIEW_NAVIGATING, self.__onNavigating)
 
         self._path = None
 
@@ -55,25 +56,18 @@ class HtmlRenderWebKit(HtmlRender):
             url += Application.sharedData[APP_DATA_KEY_ANCHOR]
             del Application.sharedData[APP_DATA_KEY_ANCHOR]
 
-        self.canOpenUrl = True
-
-        try:
-            with open(fname) as fp:
-                text = fp.read()
-        except IOError:
+        if os.path.exists(fname) and os.path.isfile(fname):
+            self.canOpenUrl = True
+            self.ctrl.LoadURL(url)
+        else:
             text = _(u"Can't read file %s") % (fname)
             self.SetPage(text, os.path.dirname(fname))
 
-        self.ctrl.LoadURL(url)
-        self.canOpenUrl = False
-
     def SetPage(self, htmltext, basepath):
-        self.canOpenUrl = True
         self._path = "file://" + urllib.parse.quote(basepath) + "/"
 
+        self.canOpenUrl = True
         self.ctrl.SetPage(htmltext, self._path)
-
-        self.canOpenUrl = False
 
     def __onCopyFromHtml(self, event):
         self.ctrl.Copy()
@@ -93,21 +87,38 @@ class HtmlRenderWebKit(HtmlRender):
 
         return (None, None, None, None)
 
-    def __onNavigate(self, event):
+    def __onNavigating(self, event):
+        nav_id = self._navigate_id
+        self._navigate_id += 1
+
+        logger.debug('__onNavigating ({nav_id}) begin'.format(nav_id=nav_id))
+
         # Проверка на то, что мы не пытаемся открыть вложенный фрейм
         frame = event.GetTarget()
-
-        if len(frame) != 0:
+        if frame:
+            logger.debug('__onNavigating ({nav_id}) frame={frame}'.format(nav_id=nav_id, frame=frame))
+            logger.debug('__onNavigating ({nav_id}) end'.format(nav_id=nav_id))
             return
 
         href = event.GetURL()
         curr_href = self.ctrl.GetCurrentURL()
+        logger.debug('__onNavigating ({nav_id}). href={href}; curr_href={curr_href}; canOpenUrl={canOpenUrl}'.format(
+            nav_id=nav_id, href=href, curr_href=curr_href, canOpenUrl=self.canOpenUrl))
 
-        if not(self.canOpenUrl or href == curr_href):
+        if not self.canOpenUrl and href != curr_href:
             button = 1
             modifier = 0
-            if self.__onLinkClicked(href, button, modifier):
+            manual_process = self.__onLinkClicked(href, button, modifier)
+            if manual_process:
+                logger.debug('__onNavigating ({nav_id}). Veto'.format(nav_id=nav_id))
                 event.Veto()
+            else:
+                self.canOpenUrl = True
+
+        else:
+            self.canOpenUrl = False
+
+        logger.debug('__onNavigating ({nav_id}) end'.format(nav_id=nav_id))
 
     def __gtk2OutWikerKeyCode(self, gtk_key_modifier):
         """

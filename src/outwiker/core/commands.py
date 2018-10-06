@@ -425,19 +425,28 @@ def renamePage(page, newtitle):
                    wx.ICON_ERROR | wx.OK)
         return
 
-    if page.alias is None and not testPageTitle(newtitle):
+    newtitle = newtitle.strip()
+
+    if newtitle == page.display_title:
         return
 
+    siblings = [child.title
+                for child in page.parent.children
+                if child != page]
+
+    real_title = getAlternativeTitle(newtitle, siblings)
+
     try:
-        page.display_title = newtitle
-    except outwiker.core.exceptions.DuplicateTitle:
-        MessageBox(_(u"Can't move page when page with that title already exists"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        page.title = real_title
     except OSError:
         MessageBox(_(u'Can\'t rename page "{}" to "{}"').format(page.title, newtitle),
                    _(u"Error"),
                    wx.ICON_ERROR | wx.OK)
+
+    if real_title != newtitle:
+        page.alias = newtitle
+    else:
+        page.alias = None
 
 
 def testPageTitle(title):
@@ -611,12 +620,20 @@ def getAlternativeTitle(title,
     regexp = re.compile(r'[><|?*:"\\/#%]')
     newtitle = regexp.sub(substitution, newtitle)
 
-    # 2. Make unique title
+    # 2. Replace double underline in the begin title
+    if newtitle.startswith('__'):
+        newtitle = '--' + newtitle[2:]
+
+    # 3. Check for special names
+    if re.match(r'^\.+$', newtitle):
+        newtitle = ''
+
+    # 4. Make unique title
     result = newtitle
     n = 1
     while (len(result.strip()) == 0 or
            result.lower() in siblings_lower):
-        result = format.format(title=newtitle, number=n)
+        result = format.format(title=newtitle, number=n).strip()
         n += 1
 
     result = result.strip()

@@ -5,7 +5,10 @@ import wx
 import outwiker.core.commands
 from .basepagedialog import BasePageDialog
 from outwiker.core.application import Application
-from outwiker.core.commands import pageExists, MessageBox
+from outwiker.core.commands import (pageExists,
+                                    MessageBox,
+                                    getAlternativeTitle,
+                                    renamePage)
 
 
 @outwiker.core.commands.testreadonly
@@ -26,13 +29,14 @@ def editPage(parentWnd, currentPage):
 
     with EditPageDialog(parentWnd, currentPage, Application) as dlg:
         if dlg.ShowModal() == wx.ID_OK:
-            try:
-                currentPage.display_title = dlg.pageTitle
-            except EnvironmentError as e:
-                MessageBox(_(u"Can't rename page\n") + str(e),
-                           _(u"Error"),
-                           wx.ICON_ERROR | wx.OK)
-
+            # try:
+            #     currentPage.display_title = dlg.pageTitle
+            # except EnvironmentError as e:
+            #     MessageBox(_(u"Can't rename page\n") + str(e),
+            #                _(u"Error"),
+            #                wx.ICON_ERROR | wx.OK)
+            #
+            renamePage(currentPage, dlg.pageTitle)
             if not dlg.setPageProperties(currentPage):
                 return None
 
@@ -42,6 +46,8 @@ def createPageWithDialog(parentwnd, parentpage):
     """
     Показать диалог настроек и создать страницу
     """
+    assert parentpage is not None
+
     if parentpage.readonly:
         raise outwiker.core.exceptions.ReadonlyException
 
@@ -50,10 +56,14 @@ def createPageWithDialog(parentwnd, parentpage):
     with CreatePageDialog(parentwnd, parentpage, Application) as dlg:
         if dlg.ShowModal() == wx.ID_OK:
             factory = dlg.selectedFactory
-            title = dlg.pageTitle
+            alias = dlg.pageTitle
+            siblings = [child_page.title for child_page in parentpage.children]
+            title = getAlternativeTitle(alias, siblings)
 
             try:
                 page = factory.create(parentpage, title, [])
+                if title != alias:
+                    page.alias = alias
             except EnvironmentError:
                 MessageBox(_(u"Can't create page"),
                            "Error",
