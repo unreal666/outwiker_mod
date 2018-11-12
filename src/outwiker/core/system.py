@@ -94,6 +94,13 @@ class Windows(System):
         from outwiker.gui.htmlrenderie import HtmlRenderIE
         return HtmlRenderIE(parent)
 
+    def getSpellChecker(self, langlist, folders):
+        """
+        Return wrapper for "real" spell checker (hunspell, enchant, etc)
+        """
+        from .spellchecker.enchantwrapper import EnchantWrapper
+        return EnchantWrapper(langlist, folders)
+
 
 class Unix(System):
     @property
@@ -141,6 +148,15 @@ class Unix(System):
     def getHtmlRender(self, parent):
         from outwiker.gui.htmlrenderwebkit import HtmlRenderWebKit
         return HtmlRenderWebKit(parent)
+
+    def getSpellChecker(self, langlist, folders):
+        """
+        Return wrapper for "real" spell checker (hunspell, enchant, etc)
+        """
+        from .spellchecker.hunspellwrapper import HunspellWrapper
+        return HunspellWrapper(langlist, folders)
+        # from .spellchecker.enchantwrapper import EnchantWrapper
+        # return EnchantWrapper(langlist, folders)
 
 
 def getOS():
