@@ -29,7 +29,7 @@ class TableToken(object):
         tableCell.leaveWhitespace().setParseAction(self.__convertTableCell)
 
         tableRow = SOL + \
-                   Regex(r'\|{2,4}(?!\|)%s' % TagAttrsPattern.value) + \
+                   Regex(r'\|{2,4}(?!\|)') + Regex(TagAttrsPattern.value) + \
                    OneOrMore(tableCell) + Optional(EOL)
         tableRow.leaveWhitespace().setParseAction(self.__convertTableRow)
 
@@ -85,7 +85,7 @@ class TableToken(object):
 
         attrs = getAttributes(toks)
 
-        result = '<tr%s>%s</tr>' % (attrs, ''.join(toks[1: lastindex]))
+        result = '<tr%s>%s</tr>' % (attrs, ''.join(toks[2: lastindex]))
 
         if rowStart in TableToken.rowGroupsLabels:
             self.rowGroups[TableToken.rowGroupsLabels[rowStart]] += result
