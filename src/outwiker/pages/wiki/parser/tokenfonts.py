@@ -2,7 +2,7 @@
 
 import re
 
-from outwiker.libs.pyparsing import QuotedString, Regex, OneOrMore, Suppress, Combine, ZeroOrMore, NotAny, CharsNotIn
+from outwiker.libs.pyparsing import QuotedString, Regex, Suppress
 
 from .tokenblock import TextBlockToken
 from .utils import returnNone, TagAttrsPattern, getAttributes
@@ -94,12 +94,12 @@ class CodeToken(TextBlockToken):
     """
     Токен для кода
     """
-    def getToken (self):
-        return Regex (r"@@" + TagAttrsPattern.value + r"(?P<text>.*?)@@",
-                      re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction (self.__parse)("code")
+    def getToken(self):
+        return Regex(r"@@" + TagAttrsPattern.value + r"(?P<text>.*?)@@",
+                     re.MULTILINE | re.UNICODE | re.DOTALL).setParseAction(self.__parse)("code")
 
 
-    def __parse (self, s, l, t):
+    def __parse(self, s, l, t):
         attrs = getAttributes(t)
 
         return u'<code%s>%s</code>' % (attrs, self.parser.parseTextLevelMarkup (t["text"]))
@@ -167,18 +167,12 @@ class ItalicToken(TextBlockToken):
     """
     start = "''"
     end = "''"
-    anyExcept = Combine( ZeroOrMore( NotAny (start) + CharsNotIn('', exact=1) ) )
 
-    def getToken (self):
-        if not hasattr(self.parser, 'bolded'):
-            if hasattr(self.parser, 'isFakeParser'):
-                self.parser.bolded = FontsFactory.makeBold (None).setParseAction(returnNone)
-            else:
-                self.parser.bolded = FontsFactory.makeBold (self.parser)
-
-        return (Suppress(ItalicToken.start) + ( OneOrMore( ItalicToken.anyExcept + self.parser.bolded) +
-                                                      ItalicToken.anyExcept | ItalicToken.anyExcept ) +
-                Suppress(ItalicToken.end)).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
+    def getToken(self):
+        return (Suppress(ItalicToken.start)
+                + Regex(".+?(?<!')(?=%s([^']|$))" % ItalicToken.end)
+                + Suppress(ItalicToken.end)
+               ).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
 
 
 
