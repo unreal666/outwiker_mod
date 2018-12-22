@@ -65,6 +65,14 @@ class NotesTree(wx.Panel):
         self.__BindApplicationEvents()
         self.__BindGuiEvents()
 
+    def SetBackgroundColour(self, colour):
+        super().SetBackgroundColour(colour)
+        self.treeCtrl.SetBackgroundColour(colour)
+
+    def SetForegroundColour(self, colour):
+        super().SetForegroundColour(colour)
+        self.treeCtrl.SetForegroundColour(colour)
+
     def getTreeItem(self, page):
         """
         Получить элемент дерева по странице.
@@ -84,7 +92,6 @@ class NotesTree(wx.Panel):
         self._application.onPageSelect += self.__onPageSelect
         self._application.onPageRemove += self.__onPageRemove
         self._application.onPageUpdate += self.__onPageUpdate
-
         self._application.onStartTreeUpdate += self.__onStartTreeUpdate
         self._application.onEndTreeUpdate += self.__onEndTreeUpdate
 
@@ -99,7 +106,6 @@ class NotesTree(wx.Panel):
         self._application.onPageSelect -= self.__onPageSelect
         self._application.onPageRemove -= self.__onPageRemove
         self._application.onPageUpdate -= self.__onPageUpdate
-
         self._application.onStartTreeUpdate -= self.__onStartTreeUpdate
         self._application.onEndTreeUpdate -= self.__onEndTreeUpdate
 

@@ -9,7 +9,7 @@ from outwiker.core.system import getOS, getImagesDir
 from outwiker.core.attachment import Attachment
 from outwiker.actions.attachfiles import AttachFilesAction
 from outwiker.actions.openattachfolder import OpenAttachFolderAction
-from outwiker.gui.guiconfig import AttachConfig
+from outwiker.gui.guiconfig import AttachConfig, MainWindowConfig
 
 
 class AttachPanel(wx.Panel):
@@ -37,6 +37,14 @@ class AttachPanel(wx.Panel):
 
         self.__bindGuiEvents()
         self.__bindAppEvents()
+
+    def SetBackgroundColour(self, colour):
+        super().SetBackgroundColour(colour)
+        self.__attachList.SetBackgroundColour(colour)
+
+    def SetForegroundColour(self, colour):
+        super().SetForegroundColour(colour)
+        self.__attachList.SetForegroundColour(colour)
 
     def __bindGuiEvents(self):
         self.Bind(wx.EVT_LIST_BEGIN_DRAG,

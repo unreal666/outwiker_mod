@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import wx
 
@@ -600,6 +600,15 @@ class MainWindowConfig(object):
     DATETIME_STATUS_WIDTH_SECTION = u'datetime_status_width'
     DATETIME_STATUS_WIDTH_DEFAULT = 250
 
+    STATUSBAR_VISIBLE_SECTION = 'statusbar_visible'
+    STATUSBAR_VISIBLE_DEFAULT = True
+
+    MAIN_PANES_BACKGROUND_COLOR_SECTION = 'main_panes_background_color'
+    MAIN_PANES_BACKGROUND_COLOR_DEFAULT = '#ffffff'
+
+    MAIN_PANES_TEXT_COLOR_SECTION = 'main_panes_text_color'
+    MAIN_PANES_TEXT_COLOR_DEFAULT = '#000000'
+
     def __init__(self, config):
         self.config = config
 
@@ -642,8 +651,25 @@ class MainWindowConfig(object):
             self.config,
             MainWindowConfig.MAIN_WINDOW_SECTION,
             self.DATETIME_STATUS_WIDTH_SECTION,
-            self.DATETIME_STATUS_WIDTH_DEFAULT
-        )
+            self.DATETIME_STATUS_WIDTH_DEFAULT)
+
+        self.statusbar_visible = BooleanOption(
+            self.config,
+            MainWindowConfig.MAIN_WINDOW_SECTION,
+            self.STATUSBAR_VISIBLE_SECTION,
+            self.STATUSBAR_VISIBLE_DEFAULT)
+
+        self.mainPanesBackgroundColor = StringOption(
+            self.config,
+            MainWindowConfig.MAIN_WINDOW_SECTION,
+            self.MAIN_PANES_BACKGROUND_COLOR_SECTION,
+            self.MAIN_PANES_BACKGROUND_COLOR_DEFAULT)
+
+        self.mainPanesTextColor = StringOption(
+            self.config,
+            MainWindowConfig.MAIN_WINDOW_SECTION,
+            self.MAIN_PANES_TEXT_COLOR_SECTION,
+            self.MAIN_PANES_TEXT_COLOR_DEFAULT)
 
 
 class TreeConfig(object):

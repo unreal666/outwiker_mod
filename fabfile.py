@@ -28,9 +28,8 @@ from buildtools.utilites import (getPython,
                                  linux_only
                                  )
 from buildtools.defines import (
-    # UBUNTU_RELEASE_NAMES,
     BUILD_DIR,
-    # DEB_SOURCE_BUILD_DIR,
+    BUILD_LIB_DIR,
     DEB_BINARY_BUILD_DIR,
     PLUGINS_DIR,
     PLUGINS_LIST,
@@ -40,8 +39,6 @@ from buildtools.defines import (
     FILES_FOR_UPLOAD_UNSTABLE_LINUX,
     FILES_FOR_UPLOAD_STABLE_LINUX,
     NEED_FOR_BUILD_DIR,
-    # PPA_UNSTABLE_PATH,
-    # PPA_STABLE_PATH,
     VM_BUILD_PARAMS,
     LINUX_BUILD_DIR,
     WINDOWS_BUILD_DIR,
@@ -750,13 +747,43 @@ def docker_build_create():
 @task
 def docker_build(*args):
     '''
-    Run the build process inside Docker container
+    Run the build process inside the Docker container
     '''
+    docker_build_create()
+
     tasks_str = ' '.join(args)
     current_dir = os.path.abspath('.')
-    command = 'docker run -v "{path}:/home/user/project" --user $(id -u):$(id -g) outwiker/build_linux {tasks}'.format(
+    command = 'docker run -v "{path}:/home/user/project" --user $(id -u):$(id -g) -i -t outwiker/build_linux {tasks}'.format(
         path=current_dir,
         tasks=tasks_str
+    )
+    local(command)
+
+
+@task
+def docker_build_wx(ubuntu_version: str, wx_version: str):
+    # Create dest dir
+    build_dir = os.path.abspath(os.path.join(BUILD_DIR, BUILD_LIB_DIR))
+    if not os.path.exists(build_dir):
+        os.mkdir(build_dir)
+
+    # Create Docker image
+    docker_image = 'wxpython/ubuntu_{ubuntu_version}_webkit1'.format(ubuntu_version=ubuntu_version)
+
+    dockerfile_path = os.path.join(
+        NEED_FOR_BUILD_DIR,
+        'build_wxpython',
+        'ubuntu_{ubuntu_version}'.format(ubuntu_version=ubuntu_version)
+    )
+
+    with lcd(dockerfile_path):
+        local('docker build -t {docker_image} .'.format(docker_image=docker_image))
+
+    # Build wxPython
+    command = 'docker run -v "{path}:/home/user/build" --rm --user $(id -u):$(id -g) -i -t -e "WX_VERSION={wx_version}" {docker_image}'.format(
+        path=build_dir,
+        docker_image=docker_image,
+        wx_version=wx_version
     )
     local(command)
 
