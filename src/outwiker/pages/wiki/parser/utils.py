@@ -53,3 +53,10 @@ def isImage(fname):
 
 def returnNone(s, l, t):
     return None
+
+
+
+def escapeTextForRE(text):
+    for char in r'\^$.*+?[]{}()|#':
+        text = text.replace(char, '\\' + char)
+    return text
