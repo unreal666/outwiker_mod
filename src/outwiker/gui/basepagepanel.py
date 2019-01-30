@@ -106,6 +106,12 @@ class BasePagePanel(wx.Panel):
         """
         pass
 
+    def checkForExternalEditAndSave(self):
+        """
+        Проверить, изменилась ли страница внешними средствами. Если изменилась,
+        отреагировать на эти изменения.
+        """
+
     @property
     def page(self):
         return self._currentpage
@@ -126,7 +132,6 @@ class BasePagePanel(wx.Panel):
         Закрытие панели.
         Вызывать вручную!!!
         """
-        # self.mainWindow.toolbars.updatePanesInfo()
         self.Save()
         self.CloseWithoutSave()
 

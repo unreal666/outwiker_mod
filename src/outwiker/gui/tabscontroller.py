@@ -2,12 +2,11 @@
 
 import os.path
 
-import wx
 import wx.lib.agw.flatnotebook as fnb
 
 from outwiker.core.config import StringListSection, IntegerOption
 from outwiker.core.tree import RootWikiPage
-from outwiker.core.commands import MessageBox
+from outwiker.core.commands import showError
 from .pagepopupmenu import PagePopupMenu
 
 
@@ -154,7 +153,6 @@ class TabsController (object):
         self._application.onPageCreate += self.__onPageUpdate
         self._application.onTreeUpdate += self.__onPageUpdate
         self._application.onPageRemove += self.__onPageUpdate
-        self._application.onPageRename += self.__onPageRename
         self._application.onEndTreeUpdate += self.__onPageUpdate
 
         self.__bindGuiEvents()
@@ -166,7 +164,6 @@ class TabsController (object):
         self._application.onPageCreate -= self.__onPageUpdate
         self._application.onTreeUpdate -= self.__onPageUpdate
         self._application.onPageRemove -= self.__onPageUpdate
-        self._application.onPageRename -= self.__onPageRename
         self._application.onEndTreeUpdate -= self.__onPageUpdate
 
         self.__unbindGuiEvents()
@@ -240,14 +237,12 @@ class TabsController (object):
 
                 selectedTab = self._tabsCtrl.GetSelection()
                 self._application.wikiroot.params.set(
-                    self._tabSelectedSection, self._tabSelectedOption, str(selectedTab))
+                    self._tabSelectedSection,
+                    self._tabSelectedOption,
+                    str(selectedTab))
             except IOError as e:
-                MessageBox(_(u"Can't save file %s") % (str(e.filename)),
-                           _(u"Error"),
-                           wx.ICON_ERROR | wx.OK)
-
-    def __onPageRename(self, page, oldSubpath):
-        self.__onPageUpdate(self._application.selectedPage)
+                showError(self._application.mainWindow,
+                          _(u"Can't save file %s") % (str(e.filename)))
 
     def __onWikiOpen(self, root):
         self.__loadTabs(root)

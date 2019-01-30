@@ -4,6 +4,7 @@ import logging
 
 from outwiker.core.config import Config
 from outwiker.core.event import Event, CustomEvents
+from outwiker.core.events import PostWikiCloseParams, PreWikiCloseParams
 from outwiker.core.recent import RecentWiki
 from outwiker.core.pluginsloader import PluginsLoader
 from outwiker.core.pageuiddepot import PageUidDepot
@@ -40,12 +41,14 @@ class ApplicationParams(object):
 
         # Closing wiki event
         # Parameters:
-        #     root - closed wiki root (it may be None)
-        self.onWikiClose = Event()
+        #     page - current (selected) page
+        #     params - instance of the outwiker.core.events.PreWikiCloseParams
+        #              class
+        self.onPreWikiClose = Event()
 
         # Updating page wiki event
         # Parameters:
-        #     sender - updated page
+        #     page - updated page
         #     **kwargs
         # kwargs contain 'change' key, which contain changing flags
         self.onPageUpdate = Event()
@@ -208,7 +211,7 @@ class ApplicationParams(object):
 
         # Event occurs after page dialog creation
         # Parameters:
-        #     page - current(selected) page
+        #     page - current (selected) page
         #     params - instance of the PageDialogInitParams class
         self.onPageDialogInit = Event()
 
@@ -270,7 +273,7 @@ class ApplicationParams(object):
         self.onPageUpdateNeeded = Event()
 
         # Event occurs before wiki opening
-        # Parameters:D:\0enter\jenyay\projects\outwiker\plugins\statistics\statistics\locale\sv\LC_MESSAGES\
+        # Parameters:
         #    page - current (selected) page
         #    params - instance of the PreWikiOpenParams class
         self.onPreWikiOpen = Event()
@@ -280,6 +283,11 @@ class ApplicationParams(object):
         #    page - current (selected) page
         #    params - instance of the PostWikiOpenParams class
         self.onPostWikiOpen = Event()
+
+        # Event occurs after wiki closing
+        # Parameters:
+        #    params - instance of the PostWikiCloseParams class
+        self.onPostWikiClose = Event()
 
         # Event occurs in the IconsPanel after generation list of
         # the icons groups.
@@ -291,14 +299,40 @@ class ApplicationParams(object):
         # Event occurs after switch mode of a page: text / preview / HTML / ...
         # Parameters:
         #     page - current (selected) page
-        #     params - instance if the PageModeChangeParams class
+        #     params - instance of the PageModeChangeParams class
         self.onPageModeChange = Event()
 
         # Event occurs after change attached file list.
         # Parameters:
         #     page - current (selected) page
-        #     params - instance if the AttachListChangedParams class
+        #     params - instance of the AttachListChangedParams class
         self.onAttachListChanged = Event()
+
+        # Event occurs after key pressing in the notes text editor
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the TextEditorKeyDownParams class
+        self.onTextEditorKeyDown = Event()
+
+        # Event occurs after caret moving in a text editor
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the TextEditorCaretMoveParams class
+        self.onTextEditorCaretMove = Event()
+
+        # Event occurs after page content reading. The content can be changed
+        # by event handlers
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PostContentReadingParams class
+        self.onPostContentReading = Event()
+
+        # Event occurs before page content writing. The content can be changed
+        # by event handlers
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PreContentWritingParams class
+        self.onPreContentWriting = Event()
 
     def init(self, fullConfigPath):
         """
@@ -339,15 +373,24 @@ class ApplicationParams(object):
         """
         Set wiki as current
         """
-        self.onWikiClose(self.__wikiroot)
-
         if self.__wikiroot is not None:
+            wikiPath = self.__wikiroot.path
+
+            preWikiCloseParams = PreWikiCloseParams(self.__wikiroot)
+            self.onPreWikiClose(self.selectedPage, preWikiCloseParams)
+            if preWikiCloseParams.abortClose:
+                logger.debug('Wiki closing aborted: {}'.format(wikiPath))
+                return
+
             self.__unbindWikiEvents(self.__wikiroot)
             try:
                 self.__wikiroot.save()
             except OSError:
                 logger.error("Can't save notes tree settings: {}".format(self.__wikiroot.path))
                 self.__wikiroot = None
+
+            postWikiCloseParams = PostWikiCloseParams(wikiPath)
+            self.onPostWikiClose(postWikiCloseParams)
 
         self.__wikiroot = value
 
@@ -386,6 +429,8 @@ class ApplicationParams(object):
         wiki.onPageRemove += self.onPageRemove
         wiki.onAttachListChanged += self.onAttachListChanged
         wiki.bookmarks.onBookmarksChanged += self.onBookmarksChanged
+        wiki.onPostContentReading += self.onPostContentReading
+        wiki.onPreContentWriting += self.onPreContentWriting
 
     def __unbindWikiEvents(self, wiki):
         """
@@ -402,6 +447,8 @@ class ApplicationParams(object):
         wiki.onPageRemove -= self.onPageRemove
         wiki.onAttachListChanged -= self.onAttachListChanged
         wiki.bookmarks.onBookmarksChanged -= self.onBookmarksChanged
+        wiki.onPostContentReading -= self.onPostContentReading
+        wiki.onPreContentWriting -= self.onPreContentWriting
 
     @property
     def selectedPage(self):

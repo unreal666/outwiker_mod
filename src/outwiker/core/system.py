@@ -9,6 +9,7 @@ import os.path as op
 import shutil
 import sys
 import subprocess
+import logging
 
 from .pagetitletester import WindowsPageTitleTester, LinuxPageTitleTester
 from outwiker.gui.fileicons import WindowsFileIcons, UnixFileIcons
@@ -34,6 +35,8 @@ DEFAULT_OLD_CONFIG_DIR = u".outwiker"
 # http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 DEFAULT_CONFIG_DIR = u"outwiker"
 
+logger = logging.getLogger('outwiker.core.system')
+
 
 class System(object):
     def migrateConfig(self,
@@ -56,6 +59,10 @@ class Windows(System):
     @property
     def name(self):
         return u'windows'
+
+    @property
+    def python(self):
+        return 'python'
 
     def startFile(self, path):
         """
@@ -106,6 +113,10 @@ class Unix(System):
     @property
     def name(self):
         return u'unix'
+
+    @property
+    def python(self):
+        return 'python3'
 
     def startFile(self, path):
         """
@@ -287,8 +298,10 @@ def openInNewWindow(path, args=[]):
     """ Open wiki tree in the new OutWiker window
     """
     exeFile = getExeFile()
-
     params = [exeFile, path] + args
+    python = getOS().python
+
+    logger.debug('openInNewWindow. Params: {}'.format(params))
 
     env = os.environ.copy()
 
@@ -296,6 +309,6 @@ def openInNewWindow(path, args=[]):
         DETACHED_PROCESS = 0x00000008
         subprocess.Popen(params, creationflags=DETACHED_PROCESS, env=env)
     elif exeFile.endswith(".py"):
-        subprocess.Popen(["python"] + params, env=env)
+        subprocess.Popen([python] + params, env=env)
     else:
         subprocess.Popen(params, env=env)

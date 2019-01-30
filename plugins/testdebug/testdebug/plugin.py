@@ -8,12 +8,13 @@ import time
 import wx
 
 from outwiker.core.commands import MessageBox
-from outwiker.gui.dialogs.buttonsdialog import ButtonsDialog
-from outwiker.gui.hotkey import HotKey
 from outwiker.core.pluginbase import Plugin
 from outwiker.core.system import getImagesDir
+from outwiker.gui.dialogs.buttonsdialog import ButtonsDialog
+from outwiker.gui.hotkey import HotKey
 from outwiker.gui.pagedialogpanels.iconspanel import IconsGroupInfo
 from outwiker.gui.defines import TOOLBAR_PLUGINS
+from outwiker.utilites.text import positionInside
 
 from .debugaction import DebugAction
 from .eventswatcher import EventsWatcher
@@ -32,12 +33,14 @@ class PluginDebug(Plugin):
         self._watcher = EventsWatcher(self._application)
         self._timer = Timer()
         self._startWikiOpenTime = None
+        self._prePostContentPrefix = "'''DEBUG PrePostContent'''"
 
         self.ID_PLUGINSLIST = wx.NewId()
         self.ID_BUTTONSDIALOG = wx.NewId()
         self.ID_START_WATCH_EVENTS = wx.NewId()
         self.ID_STOP_WATCH_EVENTS = wx.NewId()
         self.ID_RAISE_EXCEPTION = wx.NewId()
+        self.ID_SHOW_TOASTER = wx.NewId()
 
     def enableFeatures(self):
         config = DebugConfig(self._application.config)
@@ -52,6 +55,9 @@ class PluginDebug(Plugin):
         self._enablePageDialogEvents = config.enablePageDialogEvents.value
         self._enableOpeningTimeMeasure = config.enableOpeningTimeMeasure.value
         self._enableOnIconsGroupsListInit = config.enableOnIconsGroupsListInit.value
+        self._enableOnTextEditorKeyDown = config.enableOnTextEditorKeyDown.value
+        self._enableOnPrePostContent = config.enableOnPrePostContent.value
+        self._enableOnTextEditorCaretMove = config.enableOnTextEditorCaretMove.value
 
         config.enablePreprocessing.value = self._enablePreProcessing
         config.enablePostprocessing.value = self._enablePostProcessing
@@ -63,6 +69,9 @@ class PluginDebug(Plugin):
         config.enablePageDialogEvents.value = self._enablePageDialogEvents
         config.enableOpeningTimeMeasure.value = self._enableOpeningTimeMeasure
         config.enableOnIconsGroupsListInit.value = self._enableOnIconsGroupsListInit
+        config.enableOnTextEditorKeyDown.value = self._enableOnTextEditorKeyDown
+        config.enableOnPrePostContent.value = self._enableOnPrePostContent
+        config.enableOnTextEditorCaretMove.value = self._enableOnTextEditorCaretMove
 
     def initialize(self):
         set_(self.gettext)
@@ -99,6 +108,10 @@ class PluginDebug(Plugin):
             self._application.onPreWikiOpen += self.__onPreWikiOpen
             self._application.onPostWikiOpen += self.__onPostWikiOpen
             self._application.onIconsGroupsListInit += self.__onIconsGroupsListInit
+            self._application.onTextEditorKeyDown += self.__onTextEditorKeyDown
+            self._application.onPreContentWriting += self.__onPreContentWriting
+            self._application.onPostContentReading += self.__onPostContentReading
+            self._application.onTextEditorCaretMove += self.__onTextEditorCaretMove
 
     def destroy(self):
         """
@@ -127,6 +140,10 @@ class PluginDebug(Plugin):
                                                 handler=self.__onStopWatchEvents,
                                                 id=self.ID_STOP_WATCH_EVENTS)
 
+            self._application.mainWindow.Unbind(wx.EVT_MENU,
+                                                handler=self.__onShowToaster,
+                                                id=self.ID_SHOW_TOASTER)
+
             index = mainMenu.FindMenu(self.__menuName)
             assert index != wx.NOT_FOUND
 
@@ -150,6 +167,9 @@ class PluginDebug(Plugin):
             self._application.onPreWikiOpen -= self.__onPreWikiOpen
             self._application.onPostWikiOpen -= self.__onPostWikiOpen
             self._application.onIconsGroupsListInit -= self.__onIconsGroupsListInit
+            self._application.onTextEditorKeyDown -= self.__onTextEditorKeyDown
+            self._application.onPreContentWriting -= self.__onPreContentWriting
+            self._application.onPostContentReading -= self.__onPostContentReading
 
     def __createMenu(self):
         self.menu = wx.Menu(u"")
@@ -158,6 +178,7 @@ class PluginDebug(Plugin):
         self.menu.Append(self.ID_START_WATCH_EVENTS, _(u"Start watch events"))
         self.menu.Append(self.ID_STOP_WATCH_EVENTS, _(u"Stop watch events"))
         self.menu.Append(self.ID_RAISE_EXCEPTION, _(u"Raise exception"))
+        self.menu.Append(self.ID_SHOW_TOASTER, _(u"Show toaster"))
 
         self._application.mainWindow.menuController.getRootMenu().Append(self.menu, self.__menuName)
 
@@ -180,6 +201,10 @@ class PluginDebug(Plugin):
         self._application.mainWindow.Bind(wx.EVT_MENU,
                                           self.__onRaiseException,
                                           id=self.ID_RAISE_EXCEPTION)
+
+        self._application.mainWindow.Bind(wx.EVT_MENU,
+                                          self.__onShowToaster,
+                                          id=self.ID_SHOW_TOASTER)
 
     def __createTestAction(self):
         mainWindow = self._application.mainWindow
@@ -381,6 +406,38 @@ class PluginDebug(Plugin):
                 path=params.path,
                 time=interval)
             logging.info(text)
+
+    def __onTextEditorKeyDown(self, page, params):
+        if self._enableOnTextEditorKeyDown:
+            if params.processed:
+                return
+
+            if params.keyUnicode == ord('('):
+                params.editor.turnText('(', ')')
+                params.disableOutput = True
+                params.processed = True
+
+    def __onPreContentWriting(self, page, params):
+        if self._enableOnPrePostContent:
+            params.content = self._prePostContentPrefix + params.content
+
+    def __onPostContentReading(self, page, params):
+        if self._enableOnPrePostContent:
+            if params.content.startswith(self._prePostContentPrefix):
+                params.content = params.content[len(self._prePostContentPrefix):]
+
+    def __onTextEditorCaretMove(self, page, params):
+        if self._enableOnTextEditorCaretMove:
+            text = params.editor.GetText()
+            print(params.startSelection, params.endSelection)
+
+            if (params.startSelection == params.endSelection
+                    and positionInside(text, params.startSelection, '{$', '$}')):
+                print('Equation!')
+
+    def __onShowToaster(self, event):
+        text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nPellentesque malesuada mollis tortor, eget mattis nisi lobortis et. Vestibulum accumsan vehicula volutpat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vestibulum bibendum arcu augue, sit amet finibus augue posuere et.\nSed sem purus, fermentum et hendrerit eget, laoreet faucibus massa.'
+        self._application.mainWindow.toaster.showError(text)
 
     ###################################################
     # Свойства и методы, которые необходимо определить

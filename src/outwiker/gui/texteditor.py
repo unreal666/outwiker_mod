@@ -11,7 +11,9 @@ import outwiker.core.system
 from outwiker.core.application import Application
 from outwiker.core.spellchecker.spellchecker import SpellChecker
 from outwiker.core.spellchecker.defines import CUSTOM_DICT_FILE_NAME
-from outwiker.core.events import EditorPopupMenuParams
+from outwiker.core.events import (EditorPopupMenuParams,
+                                  TextEditorKeyDownParams,
+                                  TextEditorCaretMoveParams)
 from outwiker.gui.controls.texteditorbase import TextEditorBase
 from outwiker.gui.guiconfig import EditorConfig
 from outwiker.gui.texteditormenu import TextEditorMenu
@@ -43,6 +45,9 @@ class TextEditor(TextEditorBase):
         self._spellStartByteError = -1
         self._spellEndByteError = -1
 
+        self._oldStartSelection = None
+        self._oldEndSelection = None
+
         # Уже были установлены стили текста(раскраска)
         self._styleSet = False
 
@@ -65,29 +70,14 @@ class TextEditor(TextEditorBase):
         self.__bindEvents()
 
     def __bindEvents(self):
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onCopyFromEditor,
-                           id=wx.ID_COPY)
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onCutFromEditor,
-                           id=wx.ID_CUT)
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onPasteToEditor,
-                           id=wx.ID_PASTE)
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onUndo,
-                           id=wx.ID_UNDO)
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onRedo,
-                           id=wx.ID_REDO)
-        self.textCtrl.Bind(wx.EVT_MENU,
-                           self.__onSelectAll,
-                           id=wx.ID_SELECTALL)
+        self._bindStandardMenuItems()
 
         self.textCtrl.Bind(wx.EVT_CONTEXT_MENU, self.__onContextMenu)
-
-        # self.textCtrl.Bind(wx.stc.EVT_STC_STYLENEEDED, self._onStyleNeeded)
         self.textCtrl.Bind(wx.EVT_IDLE, self._onStyleNeeded)
+        self.textCtrl.Bind(wx.EVT_LEFT_DOWN, self._onMouseLeftDown)
+        self.textCtrl.Bind(wx.EVT_LEFT_UP, self._onMouseLeftUp)
+        self.textCtrl.Bind(wx.EVT_KEY_UP, self._onKeyUp)
+
         self.Bind(EVT_APPLY_STYLE, self._onApplyStyle)
 
         # При перехвате этого сообщения в других классах,
@@ -111,24 +101,6 @@ class TextEditor(TextEditorBase):
         self._styleSet = False
         self._lastEdit = datetime.now()
         self.__setMarginWidth(self.textCtrl)
-
-    def __onCopyFromEditor(self, event):
-        self.textCtrl.Copy()
-
-    def __onCutFromEditor(self, event):
-        self.textCtrl.Cut()
-
-    def __onPasteToEditor(self, event):
-        self.textCtrl.Paste()
-
-    def __onUndo(self, event):
-        self.textCtrl.Undo()
-
-    def __onRedo(self, event):
-        self.textCtrl.Redo()
-
-    def __onSelectAll(self, event):
-        self.textCtrl.SelectAll()
 
     def setDefaultSettings(self):
         """
@@ -401,3 +373,45 @@ class TextEditor(TextEditorBase):
         self.textCtrl.SetSelection(self._spellStartByteError,
                                    self._spellEndByteError)
         self.textCtrl.ReplaceSelection(word)
+
+    def onKeyDown(self, event: wx.KeyEvent):
+        eventParams = TextEditorKeyDownParams(self,
+                                              event.GetKeyCode(),
+                                              event.GetUnicodeKey(),
+                                              event.ControlDown(),
+                                              event.ShiftDown(),
+                                              event.AltDown(),
+                                              event.CmdDown(),
+                                              event.MetaDown())
+        Application.onTextEditorKeyDown(Application.selectedPage,
+                                        eventParams)
+
+        if not eventParams.disableOutput:
+            super().onKeyDown(event)
+
+        self._checkCaretMoving()
+
+    def _onKeyUp(self, event):
+        self._checkCaretMoving()
+
+    def _checkCaretMoving(self):
+        new_start_selection = self.GetSelectionStart()
+        new_end_selection = self.GetSelectionEnd()
+
+        if (self._oldStartSelection != new_start_selection or
+                self._oldEndSelection != new_end_selection):
+            self._oldStartSelection = new_start_selection
+            self._oldEndSelection = new_end_selection
+            event_params = TextEditorCaretMoveParams(self,
+                                                     new_start_selection,
+                                                     new_end_selection)
+            Application.onTextEditorCaretMove(Application.selectedPage,
+                                              event_params)
+
+    def _onMouseLeftDown(self, event):
+        self._checkCaretMoving()
+        event.Skip()
+
+    def _onMouseLeftUp(self, event):
+        self._checkCaretMoving()
+        event.Skip()

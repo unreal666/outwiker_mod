@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from functools import reduce
 from typing import List
 
 import wx
@@ -15,11 +14,11 @@ from .controls.pagelist_columns import BaseColumn, ColumnsFactory
 class TagsCloudPanel(wx.Panel):
     def __init__(self, parent, application):
         super().__init__(parent)
-        self._popupHeight = 200
         self._application = application
 
         self._createGUI()
         self._controller = TagsPanelController(self, application)
+        self._pageListPopup = None
 
     def _getPageListColumns(self) -> List[BaseColumn]:
         colFactory = ColumnsFactory()
@@ -34,19 +33,41 @@ class TagsCloudPanel(wx.Panel):
 
         return columns
 
+    def _onPopupClose(self, event):
+        assert self._pageListPopup is not None
+        config = TagsConfig(self._application.config)
+        self._savePopupSize(config)
+        self._saveHeaders(config)
+        self._pageListPopup.Unbind(wx.EVT_CLOSE, handler=self._onPopupClose)
+        self._pageListPopup.Destroy()
+        self._pageListPopup = None
+        event.Skip()
+
+    def _saveHeaders(self, config: TagsConfig):
+        columns = self._pageListPopup.getColumns()
+        headers_str = ColumnsFactory.toString(columns)
+        config.popupHeaders.value = headers_str
+
+    def _savePopupSize(self, config: TagsConfig):
+        width, height = self._pageListPopup.GetClientSize()
+        config.popupWidth.value = width
+        config.popupHeight.value = height
+
     def showPopup(self, pages):
+        assert self._pageListPopup is None
+
+        config = TagsConfig(self._application.config)
         columns = self._getPageListColumns()
-        width = reduce(lambda w, col: w + (col.width if col.visible else 0),
-                       columns,
-                       25)
+        width = config.popupWidth.value
+        height = config.popupHeight.value
 
-        pageListPopup = PageListPopup(self,
-                                      self._application.mainWindow,
-                                      columns)
-
-        pageListPopup.SetSize((width, self._popupHeight))
-        pageListPopup.setPageList(pages)
-        pageListPopup.Popup()
+        self._pageListPopup = PageListPopup(self)
+        self._pageListPopup.setColumns(columns)
+        self._pageListPopup.setPageList(pages)
+        self._pageListPopup.sortByColumn(0)
+        self._pageListPopup.SetClientSize((width, height))
+        self._pageListPopup.Popup(self._application.mainWindow)
+        self._pageListPopup.Bind(wx.EVT_CLOSE, handler=self._onPopupClose)
 
     def clearTags(self):
         self._tagscloud.clear()

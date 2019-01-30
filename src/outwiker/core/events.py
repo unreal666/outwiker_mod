@@ -16,6 +16,9 @@ PAGE_UPDATE_TAGS = 4
 # Changed page style
 PAGE_UPDATE_STYLE = 8
 
+# Changed page style
+PAGE_UPDATE_TITLE = 16
+
 
 class LinkClickParams(object):
     """
@@ -227,6 +230,7 @@ class PreWikiOpenParams(object):
     def __init__(self, path, readonly):
         self.path = path
         self.readonly = readonly
+        self.abortOpen = False
 
 
 class PostWikiOpenParams(object):
@@ -237,6 +241,14 @@ class PostWikiOpenParams(object):
         self.path = path
         self.readonly = readonly
         self.success = success
+
+
+class PostWikiCloseParams(object):
+    """
+    Set of parameters for the onPostWikiClose event
+    """
+    def __init__(self, path):
+        self.path = path
 
 
 class IconsGroupsListInitParams(object):
@@ -264,7 +276,78 @@ class PageModeChangeParams(object):
 
 class AttachListChangedParams(object):
     """
-    Set of parameters for the onAttachListChanged event
+    Parameters set for the onAttachListChanged event
     """
     def __init__(self):
         pass
+
+
+class TextEditorKeyDownParams(object):
+    '''
+    Parameters set for onTextEditorKeyDown event
+    '''
+    def __init__(self,
+                 editor: 'outwiker.gui.texteditor.TextEditor',
+                 keyCode: int,
+                 keyUnicode: int,
+                 ctrl: bool,
+                 shift: bool,
+                 alt: bool,
+                 cmd: bool,
+                 meta: bool):
+        self.editor = editor
+        self.keyCode = keyCode
+        self.keyUnicode = keyUnicode
+        self.ctrl = ctrl
+        self.shift = shift
+        self.alt = alt
+        self.cmd = cmd
+        self.meta = meta
+
+        # Set True if the event was processed
+        self.processed = False
+
+        # Set True if current character should not be added to editor
+        self.disableOutput = False
+
+    def hasModifiers(self):
+        return self.ctrl or self.shift or self.alt or self.cmd or self.meta
+
+
+class PreWikiCloseParams(object):
+    '''
+    Parameters set for onPreWikiClose event
+    '''
+    def __init__(self, wikiroot: 'outwiker.core.tree.WikiDocument'):
+        self.wikiroot = wikiroot
+        self.abortClose = False
+
+
+class PostContentReadingParams(object):
+    '''
+    Parameters set for onPostContentReading event
+    '''
+    def __init__(self, content):
+        self.content = content
+
+
+class PreContentWritingParams(object):
+    '''
+    Parameters set for onPreContentWriting event
+    '''
+    def __init__(self, content):
+        self.content = content
+
+
+class TextEditorCaretMoveParams(object):
+    '''
+    Parameters for onTextEditorCaretMove event
+    '''
+    def __init__(self,
+                 editor: 'outwiker.gui.texteditor.TextEditor',
+                 startSelection: int,
+                 endSelection: int
+                 ):
+        self.editor = editor
+        self.startSelection = startSelection
+        self.endSelection = endSelection

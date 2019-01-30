@@ -70,3 +70,21 @@ class DebugConfig(object):
             self.SECTION,
             u'enableOnIconsGroupsListInit',
             False)
+
+        self.enableOnTextEditorKeyDown = BooleanOption(
+            self.config,
+            self.SECTION,
+            u'enableOnTextEditorKeyDown',
+            False)
+
+        self.enableOnPrePostContent = BooleanOption(
+            self.config,
+            self.SECTION,
+            u'enableOnPrePostContent',
+            False)
+
+        self.enableOnTextEditorCaretMove = BooleanOption(
+            self.config,
+            self.SECTION,
+            u'enableOnTextEditorCaretMove',
+            False)

@@ -34,7 +34,7 @@ class TextEditorBase(wx.Panel):
         self._setDefaultSettings()
 
     def _bind(self):
-        self.textCtrl.Bind(wx.EVT_KEY_DOWN, self.__onKeyDown)
+        self.textCtrl.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
 
     def _do_layout(self):
         mainSizer = wx.FlexGridSizer(rows=2, cols=0, vgap=0, hgap=0)
@@ -52,7 +52,7 @@ class TextEditorBase(wx.Panel):
         encoding = outwiker.core.system.getOS().inputEncoding
         self.mbcsEnc = codecs.getencoder(encoding)
 
-    def __onKeyDown(self, event):
+    def onKeyDown(self, event):
         key = event.GetKeyCode()
 
         if key == wx.WXK_ESCAPE:
@@ -247,23 +247,32 @@ class TextEditorBase(wx.Panel):
     def SetReadOnly(self, readonly):
         self.textCtrl.SetReadOnly(readonly)
 
-    def GetReadOnly(self):
+    def GetReadOnly(self) -> bool:
         return self.textCtrl.GetReadOnly()
 
-    def GetText(self):
+    def GetText(self) -> str:
         return self.textCtrl.GetText()
 
-    def SetText(self, text):
+    def SetText(self, text: str) -> None:
         self.textCtrl.SetText(text)
 
     def EmptyUndoBuffer(self):
         self.textCtrl.EmptyUndoBuffer()
 
-    def GetSelectedText(self):
+    def GetSelectedText(self) -> str:
         return self.textCtrl.GetSelectedText()
 
-    def GetCurrentLine(self):
+    def GetCurrentLine(self) -> int:
+        '''
+        Returns the line number of the line with the caret.
+        '''
         return self.textCtrl.GetCurrentLine()
+
+    def GetCurrentLineText(self) -> str:
+        '''
+        Retrieve the text of the line containing the caret.
+        '''
+        return self.textCtrl.GetCurLine()[0]
 
     def ScrollToLine(self, line):
         self.textCtrl.ScrollToLine(line)
@@ -343,7 +352,7 @@ class TextEditorBase(wx.Panel):
         """
         return self._calcCharPos(self.textCtrl.PositionFromLine(line))
 
-    def GetLineEndPosition(self, line):
+    def GetLineEndPosition(self, line: int) -> int:
         """
         Get the position after the last visible characters on a line
             in symbols (not bytes)
@@ -474,6 +483,20 @@ class TextEditorBase(wx.Panel):
         word = self.textCtrl.GetTextRange(word_start_bytes, word_end_bytes)
         return word
 
+    def GetLineSelStartPosition(self, line: int) -> int:
+        '''
+        Retrieve the position of the end of the selection at the given line
+        (wx.stc.STC_INVALID_POSITION if no selection on this line).
+        '''
+        return self.textCtrl.GetLineSelStartPosition(line)
+
+    def GetLineSelEndPosition(self, line: int) -> int:
+        '''
+        Retrieve the position of the end of the selection at the given line
+        (wx.stc.STC_INVALID_POSITION if no selection on this line).
+        '''
+        return self.textCtrl.GetLineSelEndPosition(line)
+
     def _calcCharPos(self, pos_bytes):
         """
         Пересчет позиции в байтах в позицию в символах
@@ -485,3 +508,41 @@ class TextEditorBase(wx.Panel):
     def _getTextForParse(self):
         # Табуляция в редакторе считается за несколько символов
         return self.textCtrl.GetText().replace("\t", " ")
+
+    def _bindStandardMenuItems(self):
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onCopyFromEditor,
+                           id=wx.ID_COPY)
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onCutFromEditor,
+                           id=wx.ID_CUT)
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onPasteToEditor,
+                           id=wx.ID_PASTE)
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onUndo,
+                           id=wx.ID_UNDO)
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onRedo,
+                           id=wx.ID_REDO)
+        self.textCtrl.Bind(wx.EVT_MENU,
+                           self.__onSelectAll,
+                           id=wx.ID_SELECTALL)
+
+    def __onCopyFromEditor(self, event):
+        self.textCtrl.Copy()
+
+    def __onCutFromEditor(self, event):
+        self.textCtrl.Cut()
+
+    def __onPasteToEditor(self, event):
+        self.textCtrl.Paste()
+
+    def __onUndo(self, event):
+        self.textCtrl.Undo()
+
+    def __onRedo(self, event):
+        self.textCtrl.Redo()
+
+    def __onSelectAll(self, event):
+        self.textCtrl.SelectAll()

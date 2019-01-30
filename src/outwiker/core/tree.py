@@ -21,6 +21,7 @@ from .iconcontroller import IconController
 from .system import getIconsDirList
 from .registrynotestree import NotesTreeRegistry, PickleSaver
 from . import events
+from outwiker.utilites.textfile import readTextFile, writeTextFile
 
 
 logger = logging.getLogger('core')
@@ -260,7 +261,7 @@ class RootWikiPage(object):
                 try:
                     page = WikiPage.load(fullpath, self, self.root.readonly)
                 except Exception as e:
-                    text = _(u'Error reading page {}').format(fullpath)
+                    text = 'Error reading page {}'.format(fullpath)
                     logging.error(text)
                     logging.error(u'    ' + str(e))
                     continue
@@ -330,6 +331,20 @@ class WikiDocument(RootWikiPage):
         #     page - current (selected) page
         #     params - instance if the AttachListChangedParams class
         self.onAttachListChanged = Event()
+
+        # Event occurs after page content reading. The content can be changed
+        # by event handlers
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PostContentReadingParams class
+        self.onPostContentReading = Event()
+
+        # Event occurs before page content writing. The content can be changed
+        # by event handlers
+        # Parameters:
+        #     page - current (selected) page
+        #     params - instance of the PreContentWritingParams class
+        self.onPreContentWriting = Event()
 
     @staticmethod
     def clearConfigFile(path):
@@ -482,6 +497,9 @@ class WikiPage(RootWikiPage):
         if self.readonly:
             raise ReadonlyException
 
+        if self._alias == value:
+            return
+
         if not value:
             self._alias = None
             self.params.aliasOption.remove_option()
@@ -489,7 +507,7 @@ class WikiPage(RootWikiPage):
             self._alias = value
             self.params.aliasOption.value = value
 
-        self.root.onTreeUpdate(self)
+        self.root.onPageUpdate(self, change=events.PAGE_UPDATE_TITLE)
 
     @property
     def display_title(self):
@@ -533,7 +551,7 @@ class WikiPage(RootWikiPage):
         self.root.registry.rename_page_sections(oldsubpath, self.subpath)
 
         self.root.onPageRename(self, oldsubpath)
-        self.root.onTreeUpdate(self)
+        self.root.onPageUpdate(self, change=events.PAGE_UPDATE_TITLE)
 
     def canRename(self, newtitle):
         return (self.title.lower() == newtitle.lower() or
@@ -749,14 +767,20 @@ class WikiPage(RootWikiPage):
         Прочитать файл-содержимое страницы
         """
         text = ""
+        path = os.path.join(self.path, RootWikiPage.contentFile)
 
-        try:
-            with open(os.path.join(self.path, RootWikiPage.contentFile), encoding='utf8') as fp:
-                text = fp.read()
-        except IOError:
-            pass
+        if os.path.exists(path):
+            try:
+                text = readTextFile(path)
+                text = text.replace('\r\n', '\n')
+            except Exception as e:
+                logger.error("Can't read page content for {}".format(path))
+                logger.error(str(e))
 
-        text = text.replace('\r\n', '\n')
+        params = events.PostContentReadingParams(text)
+        self.root.onPostContentReading(self, params)
+        text = params.content
+
         return text
 
     @content.setter
@@ -765,12 +789,15 @@ class WikiPage(RootWikiPage):
             raise ReadonlyException
 
         text = text.replace('\r\n', '\n')
+
+        params = events.PreContentWritingParams(text)
+        self.root.onPreContentWriting(self, params)
+        text = params.content
+
         if text != self.content or text == u"":
             path = os.path.join(self.path, RootWikiPage.contentFile)
 
-            with open(path, "w", encoding='utf8') as fp:
-                fp.write(text)
-
+            writeTextFile(path, text)
             self.updateDateTime()
             self.root.onPageUpdate(self, change=events.PAGE_UPDATE_CONTENT)
 

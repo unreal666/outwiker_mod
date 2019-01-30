@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
 import os
 from typing import List
 
@@ -22,11 +21,10 @@ class PageData(object):
 
 
 class PageList(wx.Panel):
-    def __init__(self,
-                 parent: wx.Window,
-                 columns: List[BaseColumn]):
+    def __init__(self, parent: wx.Window):
         super().__init__(parent)
-        self._columns = columns
+        self._columns = []                     # type: List[BaseColumn]
+        self._pages = []
         self._defaultIcon = os.path.join(getImagesDir(), "page.png")
         self._imageList = ImageListCache(self._defaultIcon)
 
@@ -52,7 +50,6 @@ class PageList(wx.Panel):
                                        wx.IMAGE_LIST_SMALL)
 
         self._sizer.Add(self._listCtrl, flag=wx.EXPAND)
-
         self.SetSizer(self._sizer)
 
     @property
@@ -78,9 +75,9 @@ class PageList(wx.Panel):
             wx.PostEvent(self, event)
 
     def _onColClick(self, event):
-        self._sortByColumn(event.GetColumn())
+        self.sortByColumn(event.GetColumn())
 
-    def _sortByColumn(self, col_index):
+    def sortByColumn(self, col_index: int):
         for n, column in enumerate(self._visibleColumns):
             if n != col_index:
                 column.set_sort_type(BaseColumn.SORT_NONE, self._listCtrl)
@@ -110,11 +107,22 @@ class PageList(wx.Panel):
         """
         pages - список страниц, отображаемый в списке
         """
+        self._pages = pages
+        self._updatePageList()
+
+    def setColumns(self, columns: List[BaseColumn]):
+        self._columns = columns
+        self._updatePageList()
+
+    def _updatePageList(self):
         self._listCtrl.Freeze()
         self.clear()
         self._createColumns()
+        self._fillPageList()
+        self._listCtrl.Thaw()
 
-        for page in pages:
+    def _fillPageList(self):
+        for page in self._pages:
             items = [column.getCellContent(page)
                      for column
                      in self._visibleColumns]
@@ -125,5 +133,14 @@ class PageList(wx.Panel):
             data = PageData(page)
             self._listCtrl.SetItemPyData(item_index, data)
 
-        self._sortByColumn(0)
-        self._listCtrl.Thaw()
+    def updateColumnsWidth(self):
+        n = 0
+        for col in self._columns:
+            if not col.visible:
+                continue
+
+            col.width = self._listCtrl.GetColumnWidth(n)
+            n += 1
+
+    def getColumns(self) -> List[BaseColumn]:
+        return self._columns

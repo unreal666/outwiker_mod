@@ -9,6 +9,7 @@ import os.path
 import re
 import shutil
 import logging
+from typing import List, Optional
 
 import wx
 
@@ -31,7 +32,7 @@ from outwiker.gui.testeddialog import TestedFileDialog
 from outwiker.utilites.textfile import readTextFile
 
 
-logger = logging.getLogger('core')
+logger = logging.getLogger('outwiker.core.commands')
 
 
 def MessageBox(*args, **kwargs):
@@ -50,6 +51,22 @@ def MessageBox(*args, **kwargs):
     return result
 
 
+def showError(mainWindow: "outwiker.gui.mainwindow.MainWindow", message: str):
+    '''
+    Show error message with Toaster
+    '''
+    mainWindow.toaster.showError(message)
+
+
+def showInfo(mainWindow: "outwiker.gui.mainwindow.MainWindow",
+             title: str,
+             message: str):
+    '''
+    Show info message with Toaster
+    '''
+    mainWindow.toaster.showInfo(message)
+
+
 def testreadonly(func):
     """
     Декоратор для отлавливания исключения
@@ -59,19 +76,20 @@ def testreadonly(func):
         try:
             return func(*args, **kwargs)
         except outwiker.core.exceptions.ReadonlyException:
-            MessageBox(_(u"Page is opened as read-only"),
-                       _(u"Error"),
-                       wx.ICON_ERROR | wx.OK)
+            showError(Application.mainWindow, _(u"Page is opened as read-only"))
 
     return readOnlyWrap
 
 
 @testreadonly
-def attachFiles(parent, page, files):
+def attachFiles(parent: wx.Window,
+                page: 'outwiker.core.tree.WikiPage',
+                files: List[str]):
     """
-    Прикрепить файлы к странице с диалогом о перезаписи при необходимости
-    parent - родительское окно
-    page - страница, куда прикрепляем файлы
+    Attach files to page. Show overwrite dialog if necessary
+    parent - parent for dialog window
+    page - page to attach
+    files - list of the files to attach
     """
     if page.readonly:
         raise outwiker.core.exceptions.ReadonlyException
@@ -83,44 +101,39 @@ def attachFiles(parent, page, files):
     # Список файлов, которые будут добавлены
     newAttaches = []
 
-    overwriteDialog = OverwriteDialog(parent)
-
-    for fname in files:
-        if fname in oldAttachesFull:
-            continue
-
-        if os.path.basename(fname).lower() in oldAttaches:
-            text = _(u"File '%s' exists already") % (os.path.basename(fname))
-            result = overwriteDialog.ShowDialog(text)
-
-            if result == overwriteDialog.ID_SKIP:
+    with OverwriteDialog(parent) as overwriteDialog:
+        for fname in files:
+            if fname in oldAttachesFull:
                 continue
-            elif result == wx.ID_CANCEL:
-                break
 
-        newAttaches.append(fname)
+            if os.path.basename(fname).lower() in oldAttaches:
+                text = _(u"File '%s' exists already") % (os.path.basename(fname))
+                result = overwriteDialog.ShowDialog(text)
 
-    try:
-        Attachment(page).attach(newAttaches)
-    except IOError as e:
-        text = _(u'Error copying files\n{0}').format(str(e))
-    except shutil.Error as e:
-        text = _(u'Error copying files\n{0}').format(str(e))
+                if result == overwriteDialog.ID_SKIP:
+                    continue
+                elif result == wx.ID_CANCEL:
+                    break
 
-    overwriteDialog.Destroy()
+            newAttaches.append(fname)
+
+        try:
+            Attachment(page).attach(newAttaches)
+        except (IOError, shutil.Error) as e:
+            text = _(u'Error copying files\n{0}').format(str(e))
+            logger.error(text)
+            showError(Application.mainWindow, text)
 
 
 @testreadonly
-def removePage(page):
+def removePage(page: 'outwiker.core.tree.WikiPage'):
     assert page is not None
 
     if page.readonly:
         raise outwiker.core.exceptions.ReadonlyException
 
     if page.parent is None:
-        MessageBox(_(u"You can't remove the root element"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"You can't remove the root element"))
         return
 
     if (MessageBox(_(u'Remove page "{}" and all subpages?\nAll attached files will also be deleted.').format(page.title),
@@ -129,9 +142,7 @@ def removePage(page):
         try:
             page.remove()
         except IOError:
-            MessageBox(_(u"Can't remove page"),
-                       _(u"Error"),
-                       wx.ICON_ERROR | wx.OK)
+            showError(Application.mainWindow, _(u"Can't remove page"))
 
 
 def openWikiWithDialog(parent, readonly=False):
@@ -170,25 +181,33 @@ def findPage(application, page_id):
         return application.pageUidDepot[page_id]
 
 
-def openWiki(path, readonly=False):
-    if not os.path.exists(path):
-        __canNotLoadWikiMessage(path)
-        return
-
-    # Если передан путь до файла настроек (а не до папки с вики),
-    # то оставим только папку
-    if not os.path.isdir(path):
-        path = os.path.split(path)[0]
-
+def openWiki(path: str, readonly: bool=False) -> Optional[WikiDocument]:
     def threadFunc(path, readonly):
         try:
             return WikiDocument.load(path, readonly)
         except BaseException as e:
             return e
 
+    logger.debug('Opening notes tree from: {}'.format(path))
+    if not os.path.exists(path):
+        __canNotLoadWikiMessage(path)
+        return
+
     preWikiOpenParams = PreWikiOpenParams(path, readonly)
     Application.onPreWikiOpen(Application.selectedPage,
                               preWikiOpenParams)
+    if preWikiOpenParams.abortOpen:
+        logger.debug('Opening notes tree aborted')
+        return
+
+    # The path may be changed in event handlers
+    path = preWikiOpenParams.path
+    logger.debug('Notes tree path after onPreWikiOpen: {}'.format(path))
+
+    # Если передан путь до файла настроек (а не до папки с вики),
+    # то оставим только папку
+    if not os.path.isdir(path):
+        path = os.path.split(path)[0]
 
     runner = LongProcessRunner(threadFunc,
                                Application.mainWindow,
@@ -247,9 +266,9 @@ def __canNotLoadWikiMessage(path):
     """
     Вывести сообщение о том, что невоможно открыть вики
     """
-    MessageBox(_(u"Can't load wiki '%s'") % path,
-               _(u"Error"),
-               wx.ICON_ERROR | wx.OK)
+    logger.warning("Can't load notes tree: {}".format(path))
+    text = _(u"Can't load notes tree:\n") + path
+    showError(Application.mainWindow, text)
 
 
 def __wantClearWikiOptions(path):
@@ -286,25 +305,20 @@ This is the first page. You can use a text formatting: '''bold''', ''italic'', {
             Application.wikiroot.selectedPage = firstPage
         except (IOError, OSError) as e:
             # TODO: проверить под Windows
-            MessageBox(_(u"Can't create wiki\n") + e.filename,
-                       _(u"Error"), wx.OK | wx.ICON_ERROR)
+            showError(Application.mainWindow, _(u"Can't create wiki\n") + e.filename)
 
     dlg.Destroy()
 
 
 def copyTextToClipboard(text):
     if not wx.TheClipboard.Open():
-        MessageBox(_(u"Can't open clipboard"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"Can't open clipboard"))
         return
 
     data = wx.TextDataObject(text)
 
     if not wx.TheClipboard.SetData(data):
-        MessageBox(_(u"Can't copy text to clipboard"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"Can't copy text to clipboard"))
 
     wx.TheClipboard.Flush()
     wx.TheClipboard.Close()
@@ -312,9 +326,7 @@ def copyTextToClipboard(text):
 
 def getClipboardText():
     if not wx.TheClipboard.Open():
-        MessageBox(_(u"Can't open clipboard"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"Can't open clipboard"))
         return
 
     data = wx.TextDataObject()
@@ -385,15 +397,10 @@ def movePage(page, newParent):
         page.moveTo(newParent)
     except outwiker.core.exceptions.DuplicateTitle:
         # Невозможно переместить из-за дублирования имен
-        MessageBox(_(u"Can't move page when page with that title already exists"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
-
+        showError(Application.mainWindow, _(u"Can't move page when page with that title already exists"))
     except outwiker.core.exceptions.TreeException:
         # Невозможно переместить по другой причине
-        MessageBox(_(u"Can't move page"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"Can't move page: {}".format(page.display_title)))
 
 
 def setStatusText(text, index=0):
@@ -420,9 +427,7 @@ def getCurrentVersion():
 @testreadonly
 def renamePage(page, newtitle):
     if page.parent is None:
-        MessageBox(_(u"You can't rename the root element"),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow, _(u"You can't rename the root element"))
         return
 
     newtitle = newtitle.strip()
@@ -439,9 +444,8 @@ def renamePage(page, newtitle):
     try:
         page.title = real_title
     except OSError:
-        MessageBox(_(u'Can\'t rename page "{}" to "{}"').format(page.title, newtitle),
-                   _(u"Error"),
-                   wx.ICON_ERROR | wx.OK)
+        showError(Application.mainWindow,
+                  _(u'Can\'t rename page "{}" to "{}"').format(page.display_title, newtitle))
 
     if real_title != newtitle:
         page.alias = newtitle
@@ -460,7 +464,7 @@ def testPageTitle(title):
 
     except PageTitleError as error:
         MessageBox(str(error),
-                   _(u"The invalid page title"),
+                   _(u"Invalid page title"),
                    wx.OK | wx.ICON_ERROR)
         return False
 

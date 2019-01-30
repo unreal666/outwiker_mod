@@ -880,6 +880,12 @@ class TagsConfig(object):
     POPUP_HEADERS_SECTION = 'PopupHeaders'
     POPUP_HEADERS_DEFAULT = ''
 
+    POPUP_WIDTH_SECTION = 'TagsPopupWidth'
+    POPUP_WIDTH_DEFAULT = 825
+
+    POPUP_HEIGHT_SECTION = 'TagsPopupHeight'
+    POPUP_HEIGHT_DEFAULT = 200
+
     def __init__(self, config):
         self.config = config
 
@@ -934,7 +940,21 @@ class TagsConfig(object):
 
         self.popupHeaders = StringOption(
             self.config,
-            MainWindowConfig.MAIN_WINDOW_SECTION,
+            self.SECTION,
             self.POPUP_HEADERS_SECTION,
             self.POPUP_HEADERS_DEFAULT
+        )
+
+        self.popupWidth = IntegerOption(
+            self.config,
+            self.SECTION,
+            self.POPUP_WIDTH_SECTION,
+            self.POPUP_WIDTH_DEFAULT
+        )
+
+        self.popupHeight = IntegerOption(
+            self.config,
+            self.SECTION,
+            self.POPUP_HEIGHT_SECTION,
+            self.POPUP_HEIGHT_DEFAULT
         )

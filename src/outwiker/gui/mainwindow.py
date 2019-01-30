@@ -7,7 +7,7 @@ import wx
 import wx.aui
 
 from outwiker.core.attachwatcher import AttachWatcher
-from outwiker.core.commands import MessageBox
+from outwiker.core.commands import showError
 from outwiker.core.system import getOS
 from outwiker.core.system import getImagesDir
 
@@ -69,6 +69,7 @@ from outwiker.pages.html.htmlpagecontroller import HtmlPageController
 from outwiker.pages.text.textpagecontroller import TextPageController
 from outwiker.pages.search.searchpagecontroller import SearchPageController
 from outwiker.gui.controls.toolbar2 import ToolBar2Container
+from outwiker.gui.controls.toastercontroller import ToasterController
 
 
 logger = logging.getLogger('outwiker.gui.mainwindow')
@@ -227,6 +228,7 @@ class MainWindow(wx.Frame):
         self.controller.updateRecentMenu()
         self.__panesController.updateViewMenu()
         self.treePanel.panel.addButtons()
+        self.toaster = ToasterController(self)
 
         if self.mainWindowConfig.fullscreen.value:
             self._application.actionController.check(FullScreenAction.stringId,
@@ -601,8 +603,7 @@ class MainWindow(wx.Frame):
 
             self.mainWindowConfig.maximized.value = self._realMaximized
         except Exception as e:
-            MessageBox(_(u"Can't save config\n%s") % (str(e)),
-                       _(u"Error"), wx.ICON_ERROR | wx.OK)
+            showError(self, _(u"Can't save config\n%s") % (str(e)))
 
     def _setIcon(self):
         """
@@ -621,9 +622,11 @@ class MainWindow(wx.Frame):
         """
         logger.debug(u'Begin MainWindow.Destroy.')
 
+        self.toaster.destroy()
+        self.pagePanel.panel.Save()
         self._application.plugins.clear()
         self._saveParams()
-        self.destroyPagePanel(True)
+        self.destroyPagePanel(False)
 
         self._application.clear()
         self._application.actionController.destroy()
