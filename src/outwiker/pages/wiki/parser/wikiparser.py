@@ -142,7 +142,7 @@ class Parser(object):
             self.lineBreak,
             self.lineJoin,
             self.noformat,
-            self.wikistyle_inline,
+            # self.wikistyle_inline,  # disabled due to program hang in some cases
         ]
 
         # Tokens for using inside headings
