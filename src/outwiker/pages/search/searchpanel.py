@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import wx
-import wx.html2
 
 from outwiker.core.search import (Searcher,
                                   AllTagsSearchStrategy,
@@ -53,7 +52,8 @@ class SearchPanel(BasePagePanel):
 
         self.clearTagsBtn = wx.Button(self, -1, _(u"Clear all tags"))
         self.searchBtn = wx.Button(self, -1, _(u"Find"))
-        self.resultWindow = wx.html2.WebView.New(self)
+        self.resultWindow = parent.borrowHtmlRender(self)
+        self.resultWindow.Show()
 
         self.sortLabel = wx.StaticText(self, -1, _(u"Sort by "))
         self.sortStrategy = wx.ComboBox(self,
@@ -149,7 +149,8 @@ class SearchPanel(BasePagePanel):
         self.resultWindow.Print()
 
     def Clear(self):
-        pass
+        self.GetParent().freeHtmlRender()
+        self.resultWindow = None
 
     def __updatePageInfo(self):
         """
@@ -223,6 +224,7 @@ class SearchPanel(BasePagePanel):
         """
         Обновить внешний вид страницы и отобразить найденные результаты
         """
+        self.resultWindow.page = page
         self._allTags = TagsList(self.page.root)
         self.__updatePageInfo()
 

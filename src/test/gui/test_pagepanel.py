@@ -14,6 +14,9 @@ from outwiker.pages.wiki.wikipageview import WikiPageView
 from outwiker.pages.search.searchpage import SearchPageFactory
 from outwiker.pages.search.searchpanel import SearchPanel
 
+from outwiker.gui.emptypageview import ClosedTreePanel
+from outwiker.gui.rootpagepanel import RootPagePanel
+
 from test.basetestcases import BaseOutWikerGUIMixin
 
 
@@ -21,6 +24,7 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
     """
     Тесты окна с основным содержимым страницы
     """
+
     def setUp(self):
         self.initApplication()
         self.wikiroot = self.createWiki()
@@ -42,9 +46,13 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
         self.destroyWiki(self.wikiroot)
 
     def testEmpty(self):
+        self.assertEqual(ClosedTreePanel,
+                         type(self.mainWindow.pagePanel.pageView))
+
         self.application.wikiroot = self.wikiroot
         self.assertNotEqual(None, self.mainWindow.pagePanel.panel)
-        self.assertEqual(None, self.mainWindow.pagePanel.pageView)
+        self.assertEqual(RootPagePanel, type(
+            self.mainWindow.pagePanel.pageView))
 
     def testSelect(self):
         self.application.wikiroot = self.wikiroot
@@ -52,20 +60,24 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
         self.assertEqual(TextPanel, type(self.mainWindow.pagePanel.pageView))
 
         self.wikiroot.selectedPage = self.wikiroot["HTML-страница"]
-        self.assertEqual(HtmlPageView, type(self.mainWindow.pagePanel.pageView))
+        self.assertEqual(HtmlPageView, type(
+            self.mainWindow.pagePanel.pageView))
 
         self.wikiroot.selectedPage = self.wikiroot["Викистраница"]
-        self.assertEqual(WikiPageView, type(self.mainWindow.pagePanel.pageView))
+        self.assertEqual(WikiPageView, type(
+            self.mainWindow.pagePanel.pageView))
 
         self.wikiroot.selectedPage = self.wikiroot["Поисковая страница"]
         self.assertEqual(SearchPanel, type(self.mainWindow.pagePanel.pageView))
 
         self.wikiroot.selectedPage = None
-        self.assertEqual(None, self.mainWindow.pagePanel.pageView)
+        self.assertEqual(RootPagePanel, type(
+            self.mainWindow.pagePanel.pageView))
 
     def testSelectTextTypes(self):
         """
-        Проверка на то, что при выборе страницы того же типа контрол не пересоздается, а данные загружаются в старый
+        Проверка на то, что при выборе страницы того же типа контрол
+не пересоздается, а данные загружаются в старый
         """
         self.application.wikiroot = self.wikiroot
 
@@ -80,7 +92,8 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
 
     def testSelectHtmlTypes(self):
         """
-        Проверка на то, что при выборе страницы того же типа контрол не пересоздается, а данные загружаются в старый
+        Проверка на то, что при выборе страницы того же типа контрол
+не пересоздается, а данные загружаются в старый
         """
         self.application.wikiroot = self.wikiroot
 
@@ -95,7 +108,8 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
 
     def testSelectWikiTypes(self):
         """
-        Проверка на то, что при выборе страницы того же типа контрол не пересоздается, а данные загружаются в старый
+        Проверка на то, что при выборе страницы того же типа контрол
+не пересоздается, а данные загружаются в старый
         """
         self.application.wikiroot = self.wikiroot
 
@@ -110,7 +124,8 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
 
     def testSelectSearchTypes(self):
         """
-        Проверка на то, что при выборе страницы того же типа контрол не пересоздается, а данные загружаются в старый
+        Проверка на то, что при выборе страницы того же типа контрол
+не пересоздается, а данные загружаются в старый
         """
         self.application.wikiroot = self.wikiroot
 
@@ -137,7 +152,8 @@ class PagePanelTest(unittest.TestCase, BaseOutWikerGUIMixin):
 
         # "Закроем" вики
         self.application.wikiroot = None
-        self.assertEqual(None, self.mainWindow.pagePanel.pageView)
+        self.assertEqual(ClosedTreePanel,
+                         type(self.mainWindow.pagePanel.pageView))
 
         # Откроем ее еще раз
         self.application.wikiroot = self.wikiroot

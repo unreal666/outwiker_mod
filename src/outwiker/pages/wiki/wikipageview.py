@@ -134,6 +134,7 @@ class WikiPageView(BaseWikiPageView):
             WikiDateCreationAction,
             WikiDateEditionAction,
             WikiStyleOnlyAction,
+            WikiStyleAdvancedAction,
         ]
 
     def _createWikiTools(self):

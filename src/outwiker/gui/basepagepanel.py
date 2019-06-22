@@ -4,18 +4,20 @@ import logging
 import os.path
 
 import wx
+from wx.lib.scrolledpanel import ScrolledPanel
 
 from outwiker.core.event import Event
 
 logger = logging.getLogger('outwiker.gui.pasepagepanel')
 
 
-class BasePagePanel(wx.Panel):
+class BasePagePanel(ScrolledPanel):
     """
     Базовый класс для панелей представления страниц
     """
     def __init__(self, parent, application):
-        super().__init__(parent, style=wx.TAB_TRAVERSAL)
+        style = wx.TAB_TRAVERSAL | wx.HSCROLL | wx.VSCROLL
+        super().__init__(parent, style=style)
 
         self._currentpage = None
         self._application = application
@@ -121,7 +123,7 @@ class BasePagePanel(wx.Panel):
         self.Save()
         self._currentpage = page
 
-        if not os.path.exists(page.path):
+        if page is not None and not os.path.exists(page.path):
             return
 
         self._onSetPage(page)
@@ -140,5 +142,5 @@ class BasePagePanel(wx.Panel):
         Закрытие панели без сохранения.
         """
         self.Clear()
-        super(BasePagePanel, self).Close()
+        super().Close()
         self.Destroy()
