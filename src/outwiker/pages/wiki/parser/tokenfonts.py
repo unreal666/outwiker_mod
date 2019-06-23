@@ -170,7 +170,7 @@ class ItalicToken(TextBlockToken):
 
     def getToken(self):
         return (Suppress(ItalicToken.start)
-                + Regex(".+?(?<!')(?=%s([^']|$))" % ItalicToken.end)
+                + Regex("(?s).+?(?<!')(?=%s([^']|$))" % ItalicToken.end)
                 + Suppress(ItalicToken.end)
                ).leaveWhitespace().setParseAction(self.convertToHTML("<i>", "</i>"))("italic")
 
