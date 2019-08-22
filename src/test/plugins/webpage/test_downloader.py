@@ -299,6 +299,134 @@ class DownloaderTest(unittest.TestCase):
         self.assertTrue(os.path.exists(fname3))
         self.assertTrue(os.path.exists(fname4))
 
+    def testDownloading_img_urlquote(self):
+        from webpage.downloader import Downloader, DownloadController
+
+        template = '<img src="{path}"'
+
+        controller = DownloadController(self._tempDir, self._staticDirName)
+        downloader = Downloader()
+
+        examplePath = '../test/webpage/example_urlquote/'
+        exampleHtmlPath = os.path.join(examplePath, 'example_urlquote.html')
+
+        downloader.start(self._path2url(exampleHtmlPath), controller)
+
+        downloadDir = os.path.join(self._tempDir, self._staticDirName)
+
+        fname = os.path.join(self._tempDir, self._staticDirName, 'рисунок.png')
+
+        self.assertTrue(os.path.exists(downloadDir))
+        self.assertTrue(os.path.exists(fname))
+
+        self.assertIn(
+            template.format(path=self._staticDirName + '/рисунок.png'),
+            downloader.contentResult)
+
+    def testDownloading_favicon(self):
+        from webpage.downloader import Downloader, DownloadController
+
+        template = 'href="{path}"'
+        downloadDir = os.path.join(self._tempDir, self._staticDirName)
+
+        controller = DownloadController(self._tempDir, self._staticDirName)
+        downloader = Downloader()
+
+        examplePath = '../test/webpage/example_favicon/'
+        exampleHtmlPath = os.path.join(examplePath, 'example.html')
+
+        downloader.start(self._path2url(exampleHtmlPath), controller)
+
+        fname_1 = os.path.join(self._tempDir, self._staticDirName, 'favicon_1.png')
+        fname_2 = os.path.join(self._tempDir, self._staticDirName, 'favicon_2.png')
+
+        self.assertTrue(os.path.exists(downloadDir))
+        self.assertTrue(os.path.exists(fname_1))
+        self.assertTrue(os.path.exists(fname_2))
+
+        self.assertIn(
+            template.format(path=self._staticDirName + '/favicon_1.png'),
+            downloader.contentResult)
+
+        self.assertIn(
+            template.format(path=self._staticDirName + '/favicon_2.png'),
+            downloader.contentResult)
+
+    def testDownloading_css_rename(self):
+        from webpage.downloader import Downloader, DownloadController
+
+        template = 'href="{path}"'
+        downloadDir = os.path.join(self._tempDir, self._staticDirName)
+
+        controller = DownloadController(self._tempDir, self._staticDirName)
+        downloader = Downloader()
+
+        examplePath = '../test/webpage/example_css_rename/'
+        exampleHtmlPath = os.path.join(examplePath, 'example.html')
+
+        downloader.start(self._path2url(exampleHtmlPath), controller)
+
+        fname = os.path.join(self._tempDir, self._staticDirName, 'style.php.css')
+
+        self.assertTrue(os.path.exists(downloadDir))
+        self.assertTrue(os.path.exists(fname))
+
+        self.assertIn(
+            template.format(path=self._staticDirName + '/style.php.css'),
+            downloader.contentResult)
+
+    def testDownloading_img_srcset_files(self):
+        from webpage.downloader import Downloader, DownloadController
+
+        controller = DownloadController(self._tempDir, self._staticDirName)
+        downloader = Downloader()
+
+        examplePath = '../test/webpage/example3/'
+        exampleHtmlPath = os.path.join(examplePath, 'example3.html')
+
+        downloader.start(self._path2url(exampleHtmlPath), controller)
+
+        downloadDir = os.path.join(self._tempDir, self._staticDirName)
+
+        fname1 = os.path.join(self._tempDir,
+                              self._staticDirName,
+                              'image_01.png')
+
+        fname2 = os.path.join(self._tempDir,
+                              self._staticDirName,
+                              'image_02.png')
+
+        fname3 = os.path.join(self._tempDir,
+                              self._staticDirName,
+                              'image_03.png')
+
+        fname4 = os.path.join(self._tempDir,
+                              self._staticDirName,
+                              'image_04.png')
+
+        self.assertTrue(os.path.exists(downloadDir))
+        self.assertTrue(os.path.exists(fname1))
+        self.assertTrue(os.path.exists(fname2))
+        self.assertTrue(os.path.exists(fname3))
+        self.assertTrue(os.path.exists(fname4))
+
+    def testDownloading_img_srcset_content(self):
+        from webpage.downloader import Downloader, DownloadController
+
+        controller = DownloadController(self._tempDir, self._staticDirName)
+        downloader = Downloader()
+
+        examplePath = '../test/webpage/example3/'
+        exampleHtmlPath = os.path.join(examplePath, 'example3.html')
+
+        downloader.start(self._path2url(exampleHtmlPath), controller)
+        downloadDir = os.path.join(self._tempDir, self._staticDirName)
+        content = downloader.contentResult
+
+        sample = 'srcset="{path}/image_02.png 2x, {path}/image_03.png w600, {path}/image_04.png"'.format(path=self._staticDirName)
+
+        self.assertIn(sample, content)
+
     def testDownloading_css_01(self):
         from webpage.downloader import Downloader, DownloadController
 

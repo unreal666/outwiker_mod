@@ -23,6 +23,7 @@ from .tokentext import TextFactory
 from .tokenquote import QuoteFactory
 from .tokendefinitionlist import DefinitionListFactory
 from .tokenwikistyle import WikiStyleInlineFactory, WikiStyleBlockFactory
+from .tokencomment import CommentFactory
 
 from ..thumbnails import Thumbnails
 from outwiker.libs.pyparsing import NoMatch
@@ -83,6 +84,7 @@ class Parser(object):
         if not hasattr(self, 'text'): self.text = TextFactory.make(self)
         if not hasattr(self, 'wikistyle_inline'): self.wikistyle_inline = WikiStyleInlineFactory.make(self)
         if not hasattr(self, 'wikistyle_block'): self.wikistyle_block = WikiStyleBlockFactory.make(self)
+        if not hasattr(self, 'comment'): self.comment = CommentFactory.make(self)
 
         # Common wiki tokens
         self.wikiTokens = [
@@ -106,6 +108,7 @@ class Parser(object):
             self.quote,
             self.preformat,
             self.noformat,
+            self.comment,
             self.thumb,
             self.underlined,
             self.strike,
@@ -165,6 +168,7 @@ class Parser(object):
             self.big,
             self.mark,
             self.noformat,
+            self.comment,
             self.thumb,
             self.underlined,
             self.strike,
@@ -194,6 +198,7 @@ class Parser(object):
             self.small,
             self.big,
             self.noformat,
+            self.comment,
             self.thumb,
             self.underlined,
             self.strike,
@@ -203,7 +208,7 @@ class Parser(object):
             self.command,
         ]
 
-        # Tokens for using inside list items(bullets and numeric)
+        # Tokens for using inside list items (bullets and numeric)
         self.listItemsTokens = [
             self.attaches,
             self.urlImage,
@@ -221,6 +226,7 @@ class Parser(object):
             self.big,
             self.preformat,
             self.noformat,
+            self.comment,
             self.thumb,
             self.underlined,
             self.strike,

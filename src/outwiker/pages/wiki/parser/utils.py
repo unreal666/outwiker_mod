@@ -41,16 +41,6 @@ def convertToHTML(opening, closing, parser):
     return conversionParseAction
 
 
-def isImage(fname):
-    images_ext = [".png", ".bmp", ".gif", ".tif", ".tiff", ".jpg", ".jpeg", ".svg"]
-
-    for ext in images_ext:
-        if fname.lower().endswith(ext):
-            return True
-
-    return False
-
-
 def returnNone(s, l, t):
     return None
 

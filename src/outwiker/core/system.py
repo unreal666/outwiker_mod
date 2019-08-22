@@ -104,8 +104,16 @@ class Windows(System):
             from outwiker.gui.htmlrenderfake import HtmlRenderFake
             return HtmlRenderFake(parent)
         else:
-            from outwiker.gui.htmlrenderie import HtmlRenderIE
-            return HtmlRenderIE(parent)
+            from outwiker.gui.htmlrenderie import HtmlRenderIEGeneral
+            return HtmlRenderIEGeneral(parent)
+
+    def getHtmlRenderForPage(self, parent):
+        if wx.GetApp().use_fake_html_render:
+            from outwiker.gui.htmlrenderfake import HtmlRenderFake
+            return HtmlRenderFake(parent)
+        else:
+            from outwiker.gui.htmlrenderie import HtmlRenderIEForPage
+            return HtmlRenderIEForPage(parent)
 
     def getSpellChecker(self, langlist, folders):
         """
@@ -167,8 +175,16 @@ class Unix(System):
             from outwiker.gui.htmlrenderfake import HtmlRenderFake
             return HtmlRenderFake(parent)
         else:
-            from outwiker.gui.htmlrenderwebkit import HtmlRenderWebKit
-            return HtmlRenderWebKit(parent)
+            from outwiker.gui.htmlrenderwebkit import HtmlRenderWebKitGeneral
+            return HtmlRenderWebKitGeneral(parent)
+
+    def getHtmlRenderForPage(self, parent):
+        if wx.GetApp().use_fake_html_render:
+            from outwiker.gui.htmlrenderfake import HtmlRenderFake
+            return HtmlRenderFake(parent)
+        else:
+            from outwiker.gui.htmlrenderwebkit import HtmlRenderWebKitForPage
+            return HtmlRenderWebKitForPage(parent)
 
     def getSpellChecker(self, langlist, folders):
         """

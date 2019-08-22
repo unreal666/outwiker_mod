@@ -533,17 +533,16 @@ def insertCurrentDate(parent, editor):
             config.recentDateTimeFormat.value = dlg.Value
 
 
-def isImage(fname):
+def isImage(fname, svg=True):
     """
     If fname is image then the function return True. Otherwise - False.
     """
+    images_ext1 = [".png", ".bmp", ".gif", ".jpg", ".svg"]
+    images_ext2 = [".jpeg", ".webp"]
     fnameLower = fname.lower()
+    if not svg: images_ext1.pop()
 
-    return (fnameLower.endswith(".png") or
-            fnameLower.endswith(".jpg") or
-            fnameLower.endswith(".jpeg") or
-            fnameLower.endswith(".bmp") or
-            fnameLower.endswith(".gif"))
+    return fnameLower[-4:] in images_ext1 or fnameLower[-5:] in images_ext2
 
 
 def dictToStr(paramsDict):

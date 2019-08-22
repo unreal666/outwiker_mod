@@ -1,11 +1,24 @@
 # -*- coding: utf-8 -*-
 
-from .htmlrender import HtmlRender
+import wx
+
+from .htmlrender import HtmlRenderBase
 
 
-class HtmlRenderFake(HtmlRender):
+class HtmlRenderFake(HtmlRenderBase):
     def __init__(self, parent):
-        HtmlRender.__init__(self, parent)
+        super().__init__(parent)
+
+    def _createRender(self):
+        return wx.Panel(self)
+
+    @property
+    def page(self):
+        return None
+
+    @page.setter
+    def page(self, value):
+        pass
 
     def Print(self):
         pass

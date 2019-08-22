@@ -9,12 +9,13 @@ from .parser.tokenlinebreak import LineBreakFactory
 from .parser.tokennoformat import NoFormatFactory
 from .parser.tokenpreformat import PreFormatFactory
 from .parser.tokentext import TextFactory
+from .parser.tokencomment import CommentFactory
 from .parser.utils import returnNone
 
 from outwiker.gui.texteditorhelper import TextEditorHelper
 
 
-class WikiColorizer(object):
+class WikiColorizer (object):
     def __init__(self, editor, colorizeSyntax, enableSpellChecking, runEvent):
         self._editor = editor
         self._helper = TextEditorHelper()
@@ -36,6 +37,7 @@ class WikiColorizer(object):
         if not hasattr(self, 'lineBreak'): self.lineBreak = LineBreakFactory.make(self).setParseAction(_returnNone)
         if not hasattr(self, 'noformat'): self.noformat = NoFormatFactory.make(self).setParseAction(_returnNone)
         if not hasattr(self, 'preformat'): self.preformat = PreFormatFactory.make(self).setParseAction(_returnNone)
+        if not hasattr(self, 'comment'): self.comment = CommentFactory.make(self).setParseAction(_returnNone)
 
         if colorizeSyntax:
             self.colorParser = (
@@ -45,6 +47,7 @@ class WikiColorizer(object):
                 self.link |
                 self.noformat |
                 self.preformat |
+                self.comment |
                 self.command |
                 self.boldItalicized |
                 self.bolded |
@@ -59,6 +62,7 @@ class WikiColorizer(object):
                 self.link |
                 self.noformat |
                 self.preformat |
+                self.comment |
                 self.boldItalicized |
                 self.bolded |
                 self.italicized |
@@ -67,14 +71,13 @@ class WikiColorizer(object):
             self.colorParser = self.text
             self.insideBlockParser = self.text
 
-
     def colorize(self, fullText):
         textlength = self._helper.calcByteLen(fullText)
         stylelist = [0] * textlength
-        self._colorizeText(fullText, fullText, 0, textlength, self.colorParser, stylelist)
+        self._colorizeText(fullText, fullText, 0, textlength,
+                           self.colorParser, stylelist)
 
         return stylelist
-
 
     def _colorizeText(self, fullText, text, start, end, parser, stylelist):
         tokens = parser.scanString(text[start: end])
@@ -168,6 +171,17 @@ class WikiColorizer(object):
                                       bytepos_start,
                                       bytepos_end)
 
+            elif tokenname == "comment":
+                self._helper.setStyle(stylelist,
+                                      self._editor.STYLE_COMMENT_ID,
+                                      bytepos_start,
+                                      bytepos_end)
+                if self._enableSpellChecking:
+                    self._editor.runSpellChecking(stylelist,
+                                                  fullText,
+                                                  pos_start,
+                                                  pos_end)
+
             elif tokenname == "link":
                 self._helper.addStyle(stylelist,
                                       self._editor.STYLE_LINK_ID,
@@ -184,7 +198,6 @@ class WikiColorizer(object):
                                       self._editor.STYLE_LINK_ID,
                                       bytepos_start,
                                       bytepos_end)
-
 
     def _linkSpellChecking(self, fullText, text, stylelist, pos_start, pos_end):
         separator1 = u'->'
@@ -205,5 +218,6 @@ class WikiColorizer(object):
             if self._enableSpellChecking:
                 self._editor.runSpellChecking(stylelist,
                                               fullText,
-                                              pos_start + sep2_pos + len(separator2),
+                                              pos_start + sep2_pos +
+                                              len(separator2),
                                               pos_end)

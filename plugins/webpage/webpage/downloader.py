@@ -9,6 +9,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import gzip
+from typing import Callable
 
 import wx
 
@@ -26,12 +27,11 @@ class BaseDownloader(object):
         self._encoding = None
 
     def download(self, url):
-        if not os.path.isfile(url) and not url.startswith('file:/'):
-            url = self.fix_url(url)
-
         opener = urllib.request.build_opener()
-        opener.addheaders = [('User-agent', 'Mozilla/5.0(Windows NT 6.1) AppleWebKit/537.36(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 OutWiker/1'),
-                             ('Accept-encoding', 'gzip')]
+        opener.addheaders = [
+            ('User-agent', 'Mozilla/5.0(Windows NT 6.1) AppleWebKit/537.36(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 OutWiker/1'),
+            ('Accept-encoding', 'gzip'),
+        ]
         response = opener.open(url, timeout=self._timeout)
         if response.info().get('Content-Encoding') == 'gzip':
             buf = BytesIO(response.read())
@@ -52,16 +52,21 @@ class BaseDownloader(object):
             scheme = urllib.parse.quote(scheme)
             netloc = netloc.encode('idna').decode('utf8')
             path = urllib.parse.quote(path)
-            query = urllib.parse.quote(query)
+
+            # Restore '@' symbol after quote
+            # For example: https://vk.com/@etorabotaet-10-luchshih-non-fiction-knig-2017-goda
+            path = path.replace('%40', '@')
+            # query = urllib.parse.quote(query)
             fragment = urllib.parse.quote(fragment)
-            result = urllib.parse.urlunsplit((scheme, netloc, path, query, fragment))
+            result = urllib.parse.urlunsplit(
+                (scheme, netloc, path, query, fragment))
 
         return result
 
 
 class Downloader(BaseDownloader):
     def __init__(self, timeout=20):
-        super(Downloader, self).__init__(timeout)
+        super().__init__(timeout)
 
         self._contentSrc = None
         self._pageTitle = None
@@ -75,6 +80,10 @@ class Downloader(BaseDownloader):
     def start(self, url, controller):
         from bs4 import BeautifulSoup
         self._success = False
+
+        if not os.path.isfile(url) and not url.startswith('file:/'):
+            url = self.fix_url(url)
+
         obj = self.download(url)
         html = obj.read()
 
@@ -116,49 +125,74 @@ class Downloader(BaseDownloader):
     def success(self):
         return self._success
 
-    def _downloadImages(self, soup, controller, url):
-        images = soup.find_all(u'img')
-        for image in images:
-            if image.has_attr(u'src'):
+    def _downloadImageSrc(self, controller, startUrl, image_node):
+        if image_node.has_attr(u'src'):
+            try:
+                controller.processImg(startUrl, image_node['src'], image_node)
+            except BaseException as e:
+                controller.log(str(e))
+
+    def _downloadImageSrcSet(self, controller, startUrl, image_node):
+        if image_node.has_attr(u'srcset'):
+            srcset = image_node['srcset']
+            srcset_items_processed = []
+
+            for srcset_item in srcset.split(','):
+                srcset_item = srcset_item.strip()
+                srcset_params = srcset_item.split(' ')
+                url = srcset_params[0]
+
                 try:
-                    controller.processImg(url, image['src'], image)
+                    relative_path = controller.processImg(startUrl, url, None)
+                    item_processed = ' '.join(
+                        [relative_path] + srcset_params[1:])
+                    srcset_items_processed.append(item_processed)
                 except BaseException as e:
                     controller.log(str(e))
 
-    def _downloadCSS(self, soup, controller, url):
+            srcset_processed = ', '.join(srcset_items_processed)
+            image_node['srcset'] = srcset_processed
+
+    def _downloadImages(self, soup, controller, startUrl):
+        images = soup.find_all(u'img')
+        for image_node in images:
+            self._downloadImageSrc(controller, startUrl, image_node)
+            self._downloadImageSrcSet(controller, startUrl, image_node)
+
+    def _downloadCSS(self, soup, controller, startUrl):
         links = soup.find_all(u'link')
         for link in links:
-            if(link.has_attr('rel') and
+            if (link.has_attr('rel') and
                     link.has_attr('href') and
                     link['rel'][0].lower() == u'stylesheet'):
                 try:
-                    controller.processCSS(url, link['href'], link)
+                    controller.processCSS(startUrl, link['href'], link)
                 except BaseException as e:
                     controller.log(str(e))
 
-    def _downloadScripts(self, soup, controller, url):
+    def _downloadScripts(self, soup, controller, startUrl):
         scripts = soup.find_all(u'script')
         for script in scripts:
             if script.has_attr('src'):
                 try:
-                    controller.processScript(url, script['src'], script)
+                    controller.processScript(startUrl, script['src'], script)
                 except BaseException as e:
                     controller.log(str(e))
 
-    def _downloadFavicon(self, soup, controller, url):
+    def _downloadFavicon(self, soup, controller, startUrl):
         links = soup.find_all(u'link')
         for link in links:
             if (link.has_attr('rel') and
                     link.has_attr('href') and
                     u'icon' in link['rel']):
                 try:
-                    controller.processFavicon(url, link['href'], link)
+                    controller.processFavicon(startUrl, link['href'], link)
                 except BaseException as e:
                     controller.log(str(e))
 
         if controller.favicon is None:
             try:
-                controller.processFavicon(url, u'/favicon.ico', None)
+                controller.processFavicon(startUrl, u'/favicon.ico', None)
             except BaseException as e:
                 controller.log(str(e))
 
@@ -183,8 +217,9 @@ class BaseDownloadController(BaseDownloader, metaclass=ABCMeta):
     '''
     Instance the class select action for every downloaded file
     '''
+
     def __init__(self, timeout=20):
-        super(BaseDownloadController, self).__init__(timeout)
+        super().__init__(timeout)
         self.favicon = None
 
     @abstractmethod
@@ -211,29 +246,23 @@ class BaseDownloadController(BaseDownloader, metaclass=ABCMeta):
     def log(self, text):
         pass
 
-    def _changeNodeUrl(self, node, url):
-        if node is None:
-            return
-
-        if node.name == 'img':
-            node['src'] = url
-        elif node.name == 'link':
-            node['href'] = url
-        elif node.name == 'script':
-            node['src'] = url
-
 
 class DownloadController(BaseDownloadController):
     """
     Class with main logic for downloading
     """
+
     def __init__(self, rootDownloadDir, staticDir, timeout=20):
-        super(DownloadController, self).__init__(timeout)
+        super().__init__(timeout)
 
         self._rootDownloadDir = rootDownloadDir
         self._staticDir = staticDir
         self._fullStaticDir = os.path.join(rootDownloadDir,
                                            staticDir).replace(u'\\', u'/')
+
+        # Create a directory for downloaded files
+        if not os.path.exists(self._fullStaticDir):
+            os.mkdir(self._fullStaticDir)
 
         # Key - url from source HTML page,
         # value - relative path to downloaded file
@@ -241,14 +270,31 @@ class DownloadController(BaseDownloadController):
 
     def processImg(self, startUrl, url, node):
         if not(url.startswith(u'data:') or url.startswith(u'mhtml:')):
-            self._process(startUrl, url, node, self._processFuncNone)
+            relative_path = self._process(startUrl, url, node)
+
+            if node is not None and node.name == 'img':
+                node['src'] = relative_path
+
+            return relative_path
 
     def processCSS(self, startUrl, url, node):
-        self.log(_(u'Processing: {}\n').format(url))
-        self._process(startUrl, url, node, self._processFuncCSS)
+        self.log(_(u'Processing CSS: {}\n').format(url))
+        relative_path = self._process(
+            startUrl, url, node, self._processFuncCSS,
+            self._processFuncCSSFileName)
+
+        if node is not None and node.name == 'link':
+            node['href'] = relative_path
+
+        return relative_path
 
     def processScript(self, startUrl, url, node):
-        self._process(startUrl, url, node, self._processFuncNone)
+        relative_path = self._process(startUrl, url, node)
+
+        if node is not None and node.name == 'script':
+            node['src'] = relative_path
+
+        return relative_path
 
     def processFavicon(self, startUrl, url, node):
         """
@@ -256,18 +302,14 @@ class DownloadController(BaseDownloadController):
         url - favicon url.
         node - link node instance if this tag exists or None otherwise.
         """
-        if self.favicon is None:
-            relativeDownloadPath = self._process(startUrl,
-                                                 url,
-                                                 node,
-                                                 self._processFuncNone)
-            fullDownloadPath = os.path.join(self._rootDownloadDir,
-                                            relativeDownloadPath)
-            if os.path.exists(fullDownloadPath):
+        relativeDownloadPath = self._process(startUrl, url, node)
+        fullDownloadPath = os.path.join(self._rootDownloadDir,
+                                        relativeDownloadPath)
+        if os.path.exists(fullDownloadPath):
+            if self.favicon is None:
                 self.favicon = fullDownloadPath
 
-    def _processFuncNone(self, startUrl, url, node, text):
-        return text
+            node['href'] = relativeDownloadPath
 
     def _processFuncCSS(self, startUrl, url, node, text):
         text = self.toUnicode(text)
@@ -296,7 +338,6 @@ class DownloadController(BaseDownloadController):
 
     def _processCSSContent(self, startUrl, url, text, regexp, replace_tpl):
         delta = 0
-
         result = text
 
         for match in regexp.finditer(text):
@@ -316,7 +357,7 @@ class DownloadController(BaseDownloadController):
 
             processFunc = (self._processFuncCSS
                            if url_found.endswith(u'.css')
-                           else self._processFuncNone)
+                           else None)
 
             relativeDownloadPath = self._process(startUrl,
                                                  relativeurl,
@@ -328,10 +369,17 @@ class DownloadController(BaseDownloadController):
                                                  1)
             )
 
-            result = result[:match.start() + delta] + replace + result[match.end() + delta:]
+            result = result[:match.start() + delta] + replace + \
+                result[match.end() + delta:]
             delta += len(replace) - (match.end() - match.start())
 
         return result
+
+    def _processFuncCSSFileName(self, startUrl, url, node, relativeDownloadPath):
+        if not relativeDownloadPath.endswith('.css'):
+            return relativeDownloadPath + '.css'
+
+        return relativeDownloadPath
 
     def urljoin(self, startUrl, url):
         if u'://' in url:
@@ -339,33 +387,39 @@ class DownloadController(BaseDownloadController):
 
         return urllib.parse.urljoin(startUrl, url)
 
-    def _process(self, startUrl, url, node, processFunc):
-        # Create dir for downloading
-        if not os.path.exists(self._fullStaticDir):
-            os.mkdir(self._fullStaticDir)
-
+    def _process(self,
+                 startUrl: str,
+                 url: str,
+                 node: 'bs4.element.Tag',
+                 processDataFunc: Callable[[str, str, 'bs4.element.Tag', bytes], str] = None,
+                 processFileName: Callable[[str, str, 'bs4.element.Tag', str], str] = None) -> str:
         fullUrl = self.urljoin(startUrl, url)
 
         relativeDownloadPath = self._getRelativeDownloadPath(fullUrl)
+        if processFileName is not None:
+            relativeDownloadPath = processFileName(startUrl, url, node,
+                                                   relativeDownloadPath)
+
         fullDownloadPath = os.path.join(self._rootDownloadDir,
                                         relativeDownloadPath)
 
         if fullUrl not in self._staticFiles:
-            self.log(_(u'Download: {}\n').format(url))
+            self._staticFiles[fullUrl] = relativeDownloadPath
+            self.log(_('Download: {}\n').format(fullUrl))
             try:
                 obj = self.download(fullUrl)
-                with open(fullDownloadPath, 'wb') as fp:
-                    text = processFunc(startUrl, url, node, obj.read())
-                    if isinstance(text, str):
-                        fp.write(text.encode(u'utf8'))
-                    else:
-                        fp.write(text)
-            except(urllib.error.URLError, IOError):
-                self.log(_(u"Can't download {}\n").format(url))
-            self._staticFiles[fullUrl] = relativeDownloadPath
+                data = obj.read()
 
-        if node is not None:
-            self._changeNodeUrl(node, relativeDownloadPath)
+                if processDataFunc is not None:
+                    data = processDataFunc(startUrl, url, node, data)
+
+                if isinstance(data, str):
+                    data = data.encode('utf8')
+
+                with open(fullDownloadPath, 'wb') as fp:
+                    fp.write(data)
+            except(urllib.error.URLError, IOError):
+                self.log(_("Can't download {}\n").format(fullUrl))
 
         return relativeDownloadPath
 
@@ -386,6 +440,8 @@ class DownloadController(BaseDownloadController):
             fname = path[slashpos + 1:]
         else:
             fname = path
+
+        fname = urllib.parse.unquote(fname)
 
         relativeDownloadPath = u'{}/{}'.format(self._staticDir, fname)
         result = relativeDownloadPath
@@ -419,36 +475,29 @@ class WebPageDownloadController(DownloadController):
     Downloading can be terminated with event.
     Log will be send with UpdateLogEvent
     """
+
     def __init__(self, runEvent, rootDownloadDir, staticDir, dialog, timeout=20):
-        super(WebPageDownloadController, self).__init__(rootDownloadDir,
-                                                        staticDir,
-                                                        timeout)
+        super().__init__(rootDownloadDir,
+                         staticDir,
+                         timeout)
         self._runEvent = runEvent
         self._dialog = dialog
 
     def processImg(self, startUrl, url, node):
         if self._runEvent.is_set():
-            super(WebPageDownloadController, self).processImg(startUrl,
-                                                              url,
-                                                              node)
+            return super().processImg(startUrl, url, node)
 
     def processCSS(self, startUrl, url, node):
         if self._runEvent.is_set():
-            super(WebPageDownloadController, self).processCSS(startUrl,
-                                                              url,
-                                                              node)
+            return super().processCSS(startUrl, url, node)
 
     def processScript(self, startUrl, url, node):
         if self._runEvent.is_set():
-            super(WebPageDownloadController, self).processScript(startUrl,
-                                                                 url,
-                                                                 node)
+            return super().processScript(startUrl, url, node)
 
     def processFavicon(self, startUrl, url, node):
         if self._runEvent.is_set():
-            super(WebPageDownloadController, self).processFavicon(startUrl,
-                                                                  url,
-                                                                  node)
+            return super().processFavicon(startUrl, url, node)
 
     def log(self, text):
         event = UpdateLogEvent(text=text)

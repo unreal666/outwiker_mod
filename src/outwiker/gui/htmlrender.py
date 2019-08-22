@@ -6,19 +6,24 @@ import wx
 
 import outwiker.core
 from outwiker.core.application import Application
-from outwiker.core.events import LinkClickParams, HoverLinkParams
+from outwiker.core.events import LinkClickParams
+from outwiker.gui.defines import ID_KEY_CTRL, ID_KEY_SHIFT
 
 
-class HtmlRender (wx.Panel):
+class HtmlRenderBase(wx.Panel):
     """
     Базовый класс для HTML-рендеров
     """
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
 
-        # Номер элемента статусной панели, куда выводится текст
-        self._status_item = 0
-        self._currentPage = None
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self._render = self._createRender()
+        sizer = wx.FlexGridSizer(1)
+        sizer.AddGrowableCol(0)
+        sizer.AddGrowableRow(0)
+        sizer.Add(self._render, 0, wx.EXPAND)
+        self.SetSizer(sizer)
 
     def LoadPage(self, fname):
         """
@@ -41,13 +46,15 @@ class HtmlRender (wx.Panel):
     def Awake(self):
         pass
 
-    @property
-    def page(self):
-        return self._currentPage
+    def _createRender(self):
+        '''
+        Must return instance of HTML render engine
+        '''
+        pass
 
-    @page.setter
-    def page(self, value):
-        self._currentPage = value
+    @property
+    def render(self):
+        return self._render
 
     def openUrl(self, href):
         """
@@ -73,7 +80,7 @@ class HtmlRender (wx.Panel):
 
         return link[:pos + len(endProtocol)]
 
-    def _decodeIDNA(self, link):
+    def decodeIDNA(self, link):
         """
         Decode link like protocol://xn--80afndtacjikc
         """
@@ -93,14 +100,16 @@ class HtmlRender (wx.Panel):
 
         return link
 
-    def _getClickParams(self,
-                        href,
-                        button,
-                        modifier,
-                        isurl,
-                        ispage,
-                        isfilename,
-                        isanchor):
+
+class HTMLRenderForPageMixin:
+    def getClickParams(self,
+                       href,
+                       button,
+                       modifier,
+                       isurl,
+                       ispage,
+                       isfilename,
+                       isanchor):
         linktype = None
 
         if isanchor:
@@ -120,13 +129,13 @@ class HtmlRender (wx.Panel):
             linktype=linktype,
         )
 
-    def setStatusText(self, link, text):
-        """
-        Execute onHoverLink event and set status text
-        """
-        link_decoded = self._decodeIDNA(link)
+    def getKeyCode(self):
+        modifier = 0
 
-        params = HoverLinkParams(link=link_decoded, text=text)
-        Application.onHoverLink(page=self._currentPage, params=params)
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            modifier |= ID_KEY_SHIFT
 
-        outwiker.core.commands.setStatusText(params.text, self._status_item)
+        if wx.GetKeyState(wx.WXK_CONTROL):
+            modifier |= ID_KEY_CTRL
+
+        return modifier

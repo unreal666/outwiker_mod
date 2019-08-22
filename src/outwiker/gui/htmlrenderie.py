@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -11,23 +12,29 @@ import outwiker.core.system
 import outwiker.core.commands
 from outwiker.core.application import Application
 from outwiker.core.defines import APP_DATA_KEY_ANCHOR
-from outwiker.gui.htmlrender import HtmlRender
-from outwiker.gui.htmlcontrollerie import UriIdentifierIE
+from outwiker.gui.htmlrender import HtmlRenderBase, HTMLRenderForPageMixin
 from outwiker.gui.defines import (ID_MOUSE_LEFT,
                                   ID_KEY_CTRL,
                                   ID_KEY_SHIFT)
 from outwiker.gui.guiconfig import GeneralGuiConfig
+from outwiker.core.events import HoverLinkParams
+
+from .urirecognizers import (
+    URLRecognizer, AnchorRecognizerIE, FileRecognizerIE, PageRecognizerIE)
 
 
-class HtmlRenderIE (HtmlRender):
-    """
-    Класс для рендеринга HTML с использованием движка IE под Windows
-    """
+logger = logging.getLogger('outwiker.gui.htmlrenderie')
+
+
+class HtmlRenderIEBase(HtmlRenderBase):
+    '''
+    A base class for HTML render. Engine - Internet Explorer.
+    '''
+
     def __init__(self, parent):
-        HtmlRender.__init__(self, parent)
-        config = GeneralGuiConfig(Application.config)
+        super().__init__(parent)
 
-        self.render = wx.lib.iewin.IEHtmlWindow(self)
+        config = GeneralGuiConfig(Application.config)
         self.render.silent = not config.debug.value
 
         # Подпишемся на события IE
@@ -35,10 +42,11 @@ class HtmlRenderIE (HtmlRender):
 
         self.canOpenUrl = False                # Можно ли открывать ссылки
 
-        self.__layout()
+        self.Bind(wx.EVT_MENU, self._onCopyFromHtml, id=wx.ID_COPY)
+        self.Bind(wx.EVT_MENU, self._onCopyFromHtml, id=wx.ID_CUT)
 
-        self.Bind(wx.EVT_MENU, self.__onCopyFromHtml, id=wx.ID_COPY)
-        self.Bind(wx.EVT_MENU, self.__onCopyFromHtml, id=wx.ID_CUT)
+    def _createRender(self):
+        return wx.lib.iewin.IEHtmlWindow(self)
 
     def Print(self):
         self.render.Print(True)
@@ -60,11 +68,80 @@ class HtmlRenderIE (HtmlRender):
     def Awake(self):
         pass
 
+    def _onCopyFromHtml(self, event):
+        document = self.render.document
+        selection = document.selection
+
+        if selection is not None:
+            selrange = selection.createRange()
+            if selrange is not None:
+                outwiker.core.commands.copyTextToClipboard(selrange.text)
+                event.Skip()
+
+    def _cleanUpUrl(self, href):
+        """
+        Почистить ссылку, убрать file:///
+        """
+        result = self._removeFileProtokol(href)
+        result = urllib.parse.unquote(result)
+        result = result.replace("/", u"\\")
+
+        return result
+
+    def _removeFileProtokol(self, href):
+        """
+        Избавиться от протокола file:///, то избавимся от этой надписи
+        """
+        fileprotocol = u"file:///"
+        if href.startswith(fileprotocol):
+            return href[len(fileprotocol):]
+
+        return href
+
+    def BeforeNavigate2(self, this, pDisp, URL, Flags,
+                        TargetFrameName, PostData, Headers, Cancel):
+        href = urllib.parse.unquote(URL[0])
+        curr_href = self._cleanUpUrl(self.render.locationurl)
+
+        # Пока другого признака о том, что пытаемся открыть встроенный фрейм,
+        # не нашел
+        if 'LocationURL' in dir(pDisp) and pDisp.LocationURL == "about:blank":
+            Cancel[0] = False
+            return
+
+        if self.canOpenUrl or href == curr_href:
+            Cancel[0] = False
+            self.canOpenUrl = False
+        else:
+            Cancel[0] = True
+            self._onLinkClicked(href)
+
+
+class HtmlRenderIEForPage(HtmlRenderIEBase, HTMLRenderForPageMixin):
+    """
+    HTML render for using as note page render. Engine - Internet Explorer.
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._currentPage = None
+
+        # Номер элемента статусной панели, куда выводится текст
+        self._status_item = 0
+
+    @property
+    def page(self):
+        return self._currentPage
+
+    @page.setter
+    def page(self, value):
+        self._currentPage = value
+
     def StatusTextChange(self, status):
         statustext = u""
 
         if len(status) != 0:
-            (url, page, filename, anchor) = self.__identifyUri(status)
+            (url, page, filename, anchor) = self._identifyUri(status)
 
             if page is not None:
                 text = page.display_subpath
@@ -79,24 +156,18 @@ class HtmlRenderIE (HtmlRender):
             else:
                 statustext = status
 
-        self.setStatusText(status, statustext)
+        self._setStatusText(status, statustext)
 
-    def __onCopyFromHtml(self, event):
-        document = self.render.document
-        selection = document.selection
+    def _setStatusText(self, link, text):
+        """
+        Execute onHoverLink event and set status text
+        """
+        link_decoded = self.decodeIDNA(link)
 
-        if selection is not None:
-            selrange = selection.createRange()
-            if selrange is not None:
-                outwiker.core.commands.copyTextToClipboard(selrange.text)
-                event.Skip()
+        params = HoverLinkParams(link=link_decoded, text=text)
+        Application.onHoverLink(page=self._currentPage, params=params)
 
-    def __layout(self):
-        self.box = wx.BoxSizer(wx.VERTICAL)
-        self.box.Add(self.render, 1, wx.EXPAND)
-
-        self.SetSizer(self.box)
-        self.Layout()
+        outwiker.core.commands.setStatusText(params.text, self._status_item)
 
     def LoadPage(self, fname):
         self.canOpenUrl = True
@@ -108,89 +179,55 @@ class HtmlRenderIE (HtmlRender):
 
         self.render.Navigate(path)
 
-    def __cleanUpUrl(self, href):
-        """
-        Почистить ссылку, убрать file:///
-        """
-        result = self.__removeFileProtokol(href)
-        result = urllib.parse.unquote(result)
-        result = result.replace("/", u"\\")
-
-        return result
-
-    def __removeFileProtokol(self, href):
-        """
-        Избавиться от протокола file:///, то избавимся от этой надписи
-        """
-        fileprotocol = u"file:///"
-        if href.startswith(fileprotocol):
-            return href[len(fileprotocol):]
-
-        return href
-
-    def BeforeNavigate2(self, this, pDisp, URL, Flags,
-                        TargetFrameName, PostData, Headers, Cancel):
-        href = URL[0]
-        curr_href = self.__cleanUpUrl(self.render.locationurl)
-
-        # Пока другого признака о том, что пытаемся открыть встроенный фрейм,
-        # не нашел
-        if 'LocationURL' in dir(pDisp) and pDisp.LocationURL == "about:blank":
-            Cancel[0] = False
-            return
-
-        if self.canOpenUrl or href == curr_href:
-            Cancel[0] = False
-            self.canOpenUrl = False
-        else:
-            Cancel[0] = True
-            self.__onLinkClicked(href)
-
     def NewWindow3(self, this, pDisp, Cancel, dwFlags, currentURL, href):
         Cancel[0] = True
 
-        (url, page, filename, anchor) = self.__identifyUri(href)
+        (url, page, filename, anchor) = self._identifyUri(href)
         if page is not None:
             Application.mainWindow.tabsController.openInTab(page, True)
 
-    def __identifyUri(self, href):
+    def _identifyUri(self, href):
         """
-        Определить тип ссылки и вернуть кортеж (url, page, filename)
+        Определить тип ссылки и вернуть кортеж (url, page, filename, anchor)
         """
-        identifier = UriIdentifierIE(
-            self._currentPage,
-            self.__cleanUpUrl(self.render.locationurl)
-        )
+        location = self.render.locationurl
+        basepath = self._cleanUpUrl(location)
 
-        return identifier.identify(href)
+        logger.debug('_identifyUri. href={href}'.format(href=href))
+        logger.debug(
+            '_identifyUri. current location={location}'.format(location=location))
+        logger.debug(
+            '_identifyUri. basepath={basepath}'.format(basepath=basepath))
 
-    def __getKeyCode(self):
-        modifier = 0
+        url = URLRecognizer(basepath).recognize(href)
+        page = PageRecognizerIE(basepath, Application).recognize(href)
+        anchor = AnchorRecognizerIE(basepath).recognize(href)
+        filename = FileRecognizerIE(basepath).recognize(href)
 
-        if wx.GetKeyState(wx.WXK_SHIFT):
-            modifier |= ID_KEY_SHIFT
+        logger.debug('_identifyUri. url={url}'.format(url=url))
+        logger.debug('_identifyUri. page={page}'.format(page=page))
+        logger.debug(
+            '_identifyUri. filename={filename}'.format(filename=filename))
+        logger.debug('_identifyUri. anchor={anchor}'.format(anchor=anchor))
 
-        if wx.GetKeyState(wx.WXK_CONTROL):
-            modifier |= ID_KEY_CTRL
+        return (url, page, filename, anchor)
 
-        return modifier
-
-    def __onLinkClicked(self, href):
+    def _onLinkClicked(self, href):
         """
         Клик по ссылке
         """
-        (url, page, filename, anchor) = self.__identifyUri(href)
+        (url, page, filename, anchor) = self._identifyUri(href)
 
         button = ID_MOUSE_LEFT
-        modifier = self.__getKeyCode()
+        modifier = self.getKeyCode()
 
-        params = self._getClickParams(self._decodeIDNA(href),
-                                      button,
-                                      modifier,
-                                      url,
-                                      page,
-                                      filename,
-                                      anchor)
+        params = self.getClickParams(self.decodeIDNA(href),
+                                     button,
+                                     modifier,
+                                     url,
+                                     page,
+                                     filename,
+                                     anchor)
 
         Application.onLinkClick(self._currentPage, params)
         if params.process:
@@ -206,6 +243,64 @@ class HtmlRenderIE (HtmlRender):
             if anchor is not None:
                 Application.sharedData[APP_DATA_KEY_ANCHOR] = anchor
             self._currentPage.root.selectedPage = page
+        elif filename is not None:
+            try:
+                outwiker.core.system.getOS().startFile(filename)
+            except OSError:
+                text = _(u"Can't execute file '%s'") % filename
+                outwiker.core.commands.showError(Application.mainWindow, text)
+        elif anchor is not None:
+            self.LoadPage(href)
+
+
+class HtmlRenderIEGeneral(HtmlRenderIEBase):
+    """
+    HTML render for common using. Engine - Internet Explorer.
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def LoadPage(self, fname):
+        self.canOpenUrl = True
+        self.render.Navigate(fname)
+
+    def NewWindow3(self, this, pDisp, Cancel, dwFlags, currentURL, href):
+        Cancel[0] = True
+        self._onLinkClicked(href)
+
+    def _identifyUri(self, href):
+        """
+        Определить тип ссылки и вернуть кортеж (url, page, filename, anchor)
+        """
+        location = self.render.locationurl
+        basepath = self._cleanUpUrl(location)
+
+        logger.debug('_identifyUri. href={href}'.format(href=href))
+        logger.debug(
+            '_identifyUri. current location={location}'.format(location=location))
+        logger.debug(
+            '_identifyUri. basepath={basepath}'.format(basepath=basepath))
+
+        url = URLRecognizer(basepath).recognize(href)
+        anchor = AnchorRecognizerIE(basepath).recognize(href)
+        filename = FileRecognizerIE(basepath).recognize(href)
+
+        logger.debug('_identifyUri. url={url}'.format(url=url))
+        logger.debug(
+            '_identifyUri. filename={filename}'.format(filename=filename))
+        logger.debug('_identifyUri. anchor={anchor}'.format(anchor=anchor))
+
+        return (url, filename, anchor)
+
+    def _onLinkClicked(self, href):
+        """
+        Клик по ссылке
+        """
+        (url, filename, anchor) = self._identifyUri(href)
+
+        if url is not None:
+            self.openUrl(url)
         elif filename is not None:
             try:
                 outwiker.core.system.getOS().startFile(filename)

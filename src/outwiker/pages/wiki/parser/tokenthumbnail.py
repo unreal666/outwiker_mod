@@ -44,7 +44,7 @@ class ThumbnailToken(object):
                            (?P<soft>\s+soft)?
                            (?P<nolink>\s+nolink)?
                            \s*%\s*
-                           Attach:(?P<fname>.*?\.(?:jpe?g|bmp|gif|tiff?|png|svg))\s*%%""",
+                           Attach:(?P<fname>.*?\.(?:gif|png|jpe?g|bmp|tiff?|webp|svg))\s*%%""",
                            re.IGNORECASE | re.VERBOSE)
         result = result.setParseAction(self.__convertThumb)("thumbnail")
         return result
