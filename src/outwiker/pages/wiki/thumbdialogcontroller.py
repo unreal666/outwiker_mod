@@ -36,7 +36,8 @@ class ThumbDialogController (object):
             selectedFile = ""
 
         dlg = self._dialog = self._createDialog(self._parent, filesList, selectedFile)
-        self.__onStateChanged()
+        self.__onSoftModeStateChanged()
+        self.__onfileSelected()
         resultDlg = dlg.ShowModal()
 
         self.result = self.__generateText(dlg)
@@ -49,7 +50,7 @@ class ThumbDialogController (object):
         dialog = ThumbDialog(parent, filesList, selectedFile)
 
         dialog.filesListCombo.Bind(wx.EVT_COMBOBOX, handler=self.__onfileSelected)
-        dialog.softmodeCheckBox.Bind(wx.EVT_CHECKBOX, handler=self.__onStateChanged)
+        dialog.softmodeCheckBox.Bind(wx.EVT_CHECKBOX, handler=self.__onSoftModeStateChanged)
 
         return dialog
 
@@ -86,10 +87,10 @@ class ThumbDialogController (object):
 
         return result
 
-    def __onfileSelected(self, event):
+    def __onfileSelected(self, event=None):
         dlg = self._dialog
 
-        if dlgfileName.lower().endswith(".svg"):
+        if dlg.fileName.lower().endswith(".svg"):
             self.__prevStateSoftMode = dlg.softMode
             dlg.softMode = True
             dlg.softmodeCheckBox.Enable(False)
@@ -99,7 +100,7 @@ class ThumbDialogController (object):
 
         self.__changeStateUnit()
 
-    def __onStateChanged(self, event=None):
+    def __onSoftModeStateChanged(self, event=None):
         dlg = self._dialog
 
         self.__prevStateSoftMode = dlg.softMode
