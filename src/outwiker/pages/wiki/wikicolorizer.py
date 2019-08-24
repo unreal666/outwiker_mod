@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from .parser import wikitokens
+from .parser.tokenfonts import FontsFactory, BoldToken, ItalicToken, BoldItalicToken, UnderlineToken
 from .parser.utils import returnNone
+from .parser import wikitokens
 
 from outwiker.gui.texteditorhelper import TextEditorHelper
 from outwiker.core.application import Application
