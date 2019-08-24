@@ -1,15 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from .parser.tokenfonts import FontsFactory, BoldToken, ItalicToken, BoldItalicToken, UnderlineToken
-from .parser.tokenheading import HeadingFactory
-from .parser.tokencommand import CommandFactory
-from .parser.tokenlink import LinkFactory
-from .parser.tokenurl import UrlFactory
-from .parser.tokenlinebreak import LineBreakFactory
-from .parser.tokennoformat import NoFormatFactory
-from .parser.tokenpreformat import PreFormatFactory
-from .parser.tokentext import TextFactory
-from .parser.tokencomment import CommentFactory
+from .parser import wikitokens
 from .parser.utils import returnNone
 
 from outwiker.gui.texteditorhelper import TextEditorHelper
@@ -22,21 +13,10 @@ class WikiColorizer (object):
         self._enableSpellChecking = enableSpellChecking
         self._runEvent = runEvent
 
-        _returnNone = returnNone
-
-        if not hasattr(self, 'text'): self.text = TextFactory.make(self)
-        if not hasattr(self, 'bolded'): self.bolded = FontsFactory.makeBold(self).setParseAction(_returnNone)
-        if not hasattr(self, 'italicized'): self.italicized = FontsFactory.makeItalic(self).setParseAction(_returnNone)
-        if not hasattr(self, 'boldItalicized'): self.boldItalicized = FontsFactory.makeBoldItalic(self).setParseAction(_returnNone)
-        if not hasattr(self, 'underlined'): self.underlined = FontsFactory.makeUnderline(self).setParseAction(_returnNone)
-        if not hasattr(self, 'headings'): self.headings = HeadingFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'command'): self.command = CommandFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'link'): self.link = LinkFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'url'): self.url = UrlFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'lineBreak'): self.lineBreak = LineBreakFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'noformat'): self.noformat = NoFormatFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'preformat'): self.preformat = PreFormatFactory.make(self).setParseAction(_returnNone)
-        if not hasattr(self, 'comment'): self.comment = CommentFactory.make(self).setParseAction(_returnNone)
+        wikitokens.initTokens(self, returnNone,
+            ['text', 'bolded', 'italicized', 'boldItalicized', 'underlined',
+             'headings', 'command', 'link', 'url', 'lineBreak', 'noformat',
+             'preformat', 'comment'])
 
         if colorizeSyntax:
             self.colorParser = (
