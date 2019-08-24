@@ -23,6 +23,7 @@ class LinkToken(object):
 
     def __init__(self, parser):
         self.parser = parser
+        if not hasattr(parser, 'customProps'): parser.customProps = {}
         parser.customProps.setdefault("parsing", {})["escapeLinkComments"] = True
 
     def getToken(self):
