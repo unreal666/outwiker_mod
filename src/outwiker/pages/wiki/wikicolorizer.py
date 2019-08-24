@@ -22,7 +22,6 @@ class WikiColorizer (object):
         self._enableSpellChecking = enableSpellChecking
         self._runEvent = runEvent
 
-        self.isFakeParser = True
         _returnNone = returnNone
 
         if not hasattr(self, 'text'): self.text = TextFactory.make(self)
