@@ -48,6 +48,9 @@ class WikiWikiPage(WikiPage):
     def __init__(self, path, title, parent, readonly=False):
         WikiPage.__init__(self, path, title, parent, readonly)
 
+        # Dictionary with nonstandard parameters(for plugins for example)
+        self.customProps = {}
+
     @staticmethod
     def getTypeString():
         return u"wiki"

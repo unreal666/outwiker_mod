@@ -4,6 +4,7 @@ from .parser import wikitokens
 from .parser.utils import returnNone
 
 from outwiker.gui.texteditorhelper import TextEditorHelper
+from outwiker.core.application import Application
 
 
 class WikiColorizer (object):
@@ -12,6 +13,7 @@ class WikiColorizer (object):
         self._helper = TextEditorHelper()
         self._enableSpellChecking = enableSpellChecking
         self._runEvent = runEvent
+        self.customProps = Application.selectedPage.customProps
 
         wikitokens.initTokens(self, returnNone,
             ['text', 'bolded', 'italicized', 'boldItalicized', 'underlined',
