@@ -6,51 +6,51 @@ from outwiker.libs.pyparsing import Regex, OneOrMore, Optional, LineEnd, LineSta
 from .utils import TagAttrsPattern, getAttributes
 
 
-class DefinitionListFactory (object):
+class DefinitionListFactory(object):
     @staticmethod
-    def make (parser):
+    def make(parser):
         return DefinitionListToken(parser).getToken()
 
 
-class DefinitionListToken (object):
+class DefinitionListToken(object):
     """
     Токен для таблиц
     """
-    def __init__ (self, parser):
+    def __init__(self, parser):
         self.parser = parser
 
 
-    def getToken (self):
-        term = Regex (r"(?P<text>(?:(?:\\\n)|.)*)\s*(?=\n)")
-        term = LineStart() + Regex (r"\^\^") + Regex(TagAttrsPattern.value) + term + LineEnd()
+    def getToken(self):
+        term = Regex(r"(?P<text>(?:(?!(?<!\\)\n(?:<}}|\$\$.|\^\^.)).)*)", re.S)
+        term = LineStart() + Regex(r"\^\^") + Regex(TagAttrsPattern.value) + term + LineEnd()
         term.setParseAction(self.__convertTerm).leaveWhitespace()
 
-        description = Regex (r"(?P<text>(?:(?!(?<!\\)\n(?:<}}|\$\$.|\^\^.)).)*)", re.DOTALL)
-        description = LineStart() + Regex (r"\$\$") + Regex(TagAttrsPattern.value) + description + LineEnd()
+        description = Regex(r"(?P<text>(?:(?!(?<!\\)\n(?:<}}|\$\$.|\^\^.)).)*)", re.S)
+        description = LineStart() + Regex(r"\$\$") + Regex(TagAttrsPattern.value) + description + LineEnd()
         description.setParseAction(self.__convertDescription).leaveWhitespace()
 
-        definitionList = LineStart() + Regex (r"{{> *(?P<params>.+)?\s*") + \
-                         OneOrMore (term | description) + Suppress("<}}") + Optional (FollowedBy (LineEnd()))
+        definitionList = LineStart() + Regex(r"{{> *(?P<params>.+)?\s*") + \
+                         OneOrMore(term | description) + Suppress("<}}") + Optional(FollowedBy(LineEnd()))
         definitionList.setParseAction(self.__convertDefinitionList)("definitionlist").leaveWhitespace()
 
         return definitionList
 
 
-    def __convertTerm (self, s, loc, toks):
+    def __convertTerm(self, s, loc, toks):
         text = u''.join(toks[2:len(toks)]).strip()
         attrs = getAttributes(toks)
 
         return u'<dt%s>%s</dt>' % (attrs, self.parser.parseWikiMarkup (text))
 
 
-    def __convertDescription (self, s, loc, toks):
+    def __convertDescription(self, s, loc, toks):
         text = u''.join(toks[2:len(toks)]).strip()
         attrs = getAttributes(toks)
 
         return u'<dd%s>%s</dd>' % (attrs, self.parser.parseWikiMarkup (text))
 
 
-    def __convertDefinitionList (self, s, loc, toks):
+    def __convertDefinitionList(self, s, loc, toks):
         attrs = toks[0][3:].strip()
         attrs = u' %s' % attrs if attrs else ''
         result = []
