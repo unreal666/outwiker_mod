@@ -20,7 +20,7 @@ class IconMaker(object):
         if scale > 1:
             img_src = img_src.resize((int(width_src / scale),
                                       int(height_src / scale)),
-                                     Image.ANTIALIAS)
+                                     Image.LANCZOS)
 
         # Paste source image to result image
         dx = int((ICON_WIDTH - img_src.size[0]) / 2.0)
